@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام خرائط أدرار - إدارة المراكز والأنشطة</title>
+    
+    <!-- مكتبة Leaflet الأساسية -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- مكتبة قياس المسافات والمساحات -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
+    <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
+
+    <!-- مكتبة الرسم واستخراج GeoJSON -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; background: #111; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
+        
+        /* القائمة الجانبية المنزلقة */
+        #sidebar { 
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 350px; 
+            height: 100vh; 
+            background: rgba(26, 26, 26, 0.97); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            border-left: 2px solid #2E7D32; 
+            z-index: 2500; 
+            box-shadow: -5px 0 20px rgba(0,0,0,0.7);
+            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform: translateX(0);
+        }
+
+        #sidebar.collapsed { transform: translateX(100%); }
+
+        /* زر الثلاث خطوط (☰) */
+        #toggle-sidebar-btn {
+            position: fixed;
+            top: 10px;
+            right: 12px;
+            z-index: 2600;
+            background: rgba(27, 94, 32, 0.95);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            width: 40px;
+            height: 38px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            padding: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: background 0.2s;
+        }
+        #toggle-sidebar-btn:hover { background: #1B5E20; }
+        #toggle-sidebar-btn .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
+
+        #sidebar h2 { text-align: center; padding: 14px 45px 14px 15px; background: #2E7D32; margin: 0; font-size: 17px; }
+        
+        .sidebar-tools { padding: 10px; background: #222; border-bottom: 1px solid #333; display: flex; flex-direction: column; gap: 8px; }
+        #listSearch { width: 93%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #333; color: white; outline: none; margin: 0 auto; font-size: 13px; }
+        #listSearch:focus { border-color: #4CAF50; }
+        
+        /* تحسين أزرار الفلترة لتلائم الفئات الجديدة */
+        .filter-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+        .filter-btn { flex: 1 1 30%; padding: 5px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; font-size: 11px; font-weight: bold; transition: 0.2s; text-align: center; }
+        .filter-btn.active, .filter-btn:hover { background: #2E7D32; border-color: #4CAF50; }
+
+        .action-buttons { display: flex; gap: 4px; }
+        .action-btn { flex: 1; padding: 7px 3px; cursor: pointer; border: none; border-radius: 5px; font-size: 10px; font-weight: bold; color: white; transition: 0.2s; text-align: center; }
+        .btn-nearest { background: #1565C0; }
+        .btn-nearest:hover { background: #1976D2; }
+        .btn-excel { background: #2E7D32; }
+        .btn-excel:hover { background: #388E3C; }
+        .btn-backup { background: #6A1B9A; }
+        .btn-backup:hover { background: #8E24AA; }
+        .btn-reset { background: #c62828; }
+        .btn-reset:hover { background: #e53935; }
+
+        #stats-bar { padding: 8px; background: #262626; border-bottom: 1px solid #333; font-size: 12px; text-align: center; color: #81C784; display: flex; justify-content: space-around; }
+        
+        #locations-list { flex-grow: 1; overflow-y: auto; }
+        .list-item { padding: 11px 15px; border-bottom: 1px solid #2d2d2d; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; font-size: 13px; }
+        .list-item:hover { background: #2E7D32; }
+        .badge-out { background: #d32f2f; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+        
+        #map { width: 100vw; height: 100vh; position: relative; background: #222; }
+        
+        .map-title { 
+            position: fixed; 
+            top: 10px; 
+            right: 365px; 
+            z-index: 1000; 
+            background: rgba(46, 125, 50, 0.92); 
+            color: white; 
+            padding: 8px 20px; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 900; 
+            border-right: 5px solid #fff; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+            pointer-events: none; 
+            transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .map-title.expanded { right: 62px; }
+        
+        .ui-controls { position: fixed; top: 15px; left: 60px; z-index: 1000; display: none; }
+        .btn-home { background: #2E7D32; color: white; border: 2px solid #fff; padding: 8px 18px; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.6); font-size: 13px; }
+        .btn-home:hover { background: #1B5E20; }
+        
+        /* لوحة التفاصيل */
+        #info-panel { position: fixed; bottom: 20px; left: 20px; width: 340px; background: rgba(26, 26, 26, 0.96); border: 2px solid #2E7D32; border-radius: 12px; z-index: 3000; color: white; padding: 15px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
+        #info-panel h5 { margin: 0 0 12px 0; color: #4CAF50; font-size: 17px; border-bottom: 1px solid #444; padding-bottom: 8px; padding-left: 20px; }
+        .info-detail { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; border-bottom: 1px dashed #333; padding-bottom: 4px; }
+
+        .panel-actions { display: flex; gap: 6px; margin-top: 12px; }
+        .panel-btn { flex: 1; text-align: center; padding: 8px 5px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 11px; cursor: pointer; border: none; color: white; }
+        .gps-btn { background: #2E7D32; }
+        .gps-btn:hover { background: #4CAF50; }
+        .edit-btn { background: #F57C00; }
+        .edit-btn:hover { background: #FB8C00; }
+        .delete-btn { background: #d32f2f; }
+        .delete-btn:hover { background: #c62828; }
+        .print-btn { background: #455A64; }
+        .print-btn:hover { background: #607D8B; }
+
+        /* النوافذ المنبثقة */
+        .custom-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: #1e1e1e; border: 2px solid #4CAF50; border-radius: 10px; z-index: 5000; padding: 20px; color: white; box-shadow: 0 15px 40px rgba(0,0,0,0.9); }
+        .custom-modal h4 { margin: 0 0 15px 0; color: #4CAF50; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: #ccc; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 95%; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #2b2b2b; color: white; font-size: 13px; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        
+        /* مفتاح الخريطة */
+        .legend { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 365px; 
+            z-index: 1000; 
+            background: rgba(26, 26, 26, 0.95); 
+            padding: 10px; 
+            border-radius: 8px; 
+            border: 2px solid #2E7D32; 
+            color: white; 
+            width: 195px; 
+            transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .legend.expanded { right: 20px; }
+        .legend-title { font-weight: bold; border-bottom: 1px solid #444; margin-bottom: 8px; padding-bottom: 4px; color: #4CAF50; text-align: center; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 11px; }
+        .legend-img { width: 22px; height: 22px; margin-left: 8px; }
+        .legend-box-selected { width: 20px; height: 12px; border: 2px solid #ff0000; background: rgba(255,0,0,0.25); margin-left: 10px; }
+        .legend-box-all { width: 20px; height: 12px; border: 2px solid #ff9800; background: rgba(255,152,0,0.15); margin-left: 10px; }
+        
+        .label-style { background: rgba(0,0,0,0.85); color: #fff; border: 1px solid #4CAF50; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .leaflet-control-measure, .leaflet-control-layers { background: #1a1a1a !important; color: white !important; border: 2px solid #2E7D32 !important; }
+
+        @media (max-width: 768px) {
+            #sidebar { width: 100%; max-width: 300px; }
+            .map-title { font-size: 13px; padding: 6px 12px; right: 55px; top: 12px; }
+            .map-title.expanded { right: 55px; }
+            .legend { display: none; }
+            #info-panel { width: 88%; left: 6%; bottom: 10px; padding: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- زر الثلاث خطوط للإخفاء والإظهار -->
+    <button id="toggle-sidebar-btn" onclick="toggleSidebar()" title="إخفاء / إظهار القائمة">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+    </button>
+
+    <!-- القائمة الجانبية -->
+    <div id="sidebar">
+        <h2>مراكز التخزين - ولاية أدرار</h2>
+        <div class="sidebar-tools">
+            <input type="text" id="listSearch" placeholder="🔍 بحث باسم المركز..." onkeyup="applyFilters()">
+            
+            <!-- أزرار الفلترة المحدثة مع الفئات الجديدة -->
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="setCropFilter('all', this)">الكل</button>
+                <button class="filter-btn" onclick="setCropFilter('إستهلاكي', this)">استهلاكي</button>
+                <button class="filter-btn" onclick="setCropFilter('بذور', this)">بذور</button>
+                <button class="filter-btn" onclick="setCropFilter('بقوليات', this)">بقوليات</button>
+                <button class="filter-btn" onclick="setCropFilter('شعير', this)">شعير</button>
+                <button class="filter-btn" onclick="setCropFilter('أسمدة', this)">أسمدة</button>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn btn-nearest" onclick="findNearestCenter()">📍 الأقرب</button>
+                <button class="action-btn btn-excel" onclick="openExcelModal()">📊 تصدير</button>
+                <button class="action-btn btn-backup" onclick="exportBackup()">📤 تصدير</button>
+                <button class="action-btn btn-backup" onclick="document.getElementById('import-file').click()">📥 استيراد</button>
+                <input type="file" id="import-file" style="display:none" accept=".json" onchange="importBackup(event)">
+                <button class="action-btn btn-reset" onclick="resetStorage()" title="استرجاع البيانات الأصلية">🔄 ضبط</button>
+            </div>
+        </div>
+
+        <div id="stats-bar">
+            <span>المراكز: <b id="sidebar-count">0</b></span>
+            <span>السعة الإجمالية: <b id="total-cap">0</b> ق</span>
+        </div>
+        <div id="locations-list"></div>
+    </div>
+
+    <div id="map">
+        <div id="map-title" class="map-title">مراكز جمع وتخزين المحصول في ولاية أدرار</div>
+
+        <div id="ui-home" class="ui-controls">
+            <button class="btn-home" onclick="goHome()">🏠 العودة للرؤية الشاملة (<span id="count-display">0</span> مركز)</button>
+        </div>
+        
+        <div id="info-panel">
+            <span style="float: left; cursor: pointer; color: #ff4d4d; font-size: 22px; font-weight: bold; line-height: 1;" onclick="this.parentElement.style.display='none'">×</span>
+            <div id="info-content"></div>
+        </div>
+
+        <div id="map-legend" class="legend">
+            <div class="legend-title">مفتاح الخريطة</div>
+            <div class="legend-item"><img src="https://cdn-icons-png.flaticon.com/512/1611/1611175.png" class="legend-img"> <span><b>ميزان شاحنات</b></span></div>
+            <div class="legend-item"><img src="https://cdn-icons-png.flaticon.com/512/2897/2897832.png" class="legend-img"> <span><b>مخزن حبوب</b></span></div>
+            <div class="legend-item"><div class="legend-box-selected"></div> <span><b>حدود المركز المحدد</b></span></div>
+            <div class="legend-item"><div class="legend-box-all"></div> <span><b>حدود باقي المراكز</b></span></div>
+        </div>
+    </div>
+
+    <!-- نافذة اختيار نوع التصدير لملف Excel -->
+    <div id="excel-modal" class="custom-modal">
+        <h4>📊 خيارات تصدير ملف Excel</h4>
+        <div class="form-group">
+            <label>اختر المخازن المراد تصديرها:</label>
+            <select id="excel-type-select">
+                <option value="all">جميع المخازن والأنشطة</option>
+                <option value="consumption">مخازن القمح الاستهلاكي فقط</option>
+                <option value="seeds">مخازن البذور فقط</option>
+                <option value="bougholiat">محلات بيع البقوليات فقط</option>
+                <option value="chaar">الشعير فقط</option>
+                <option value="asmida">الأسمدة فقط</option>
+            </select>
+        </div>
+        <div class="modal-btns">
+            <button onclick="confirmExportExcel()" style="flex:1; padding:9px; background:#2E7D32; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">📥 تحميل ملف Excel</button>
+            <button onclick="document.getElementById('excel-modal').style.display='none'" style="padding:9px 15px; background:#555; color:white; border:none; border-radius:5px; cursor:pointer;">إلغاء</button>
+        </div>
+    </div>
+
+    <!-- نافذة تعديل / إضافة مركز -->
+    <div id="center-modal" class="custom-modal">
+        <h4 id="modal-title">✏️ تعديل بيانات المركز</h4>
+        <input type="hidden" id="edit-id">
+        <input type="hidden" id="edit-lat">
+        <input type="hidden" id="edit-lng">
+        <input type="hidden" id="edit-geojson">
+        
+        <div class="form-group">
+            <label>اسم المركز / المحل:</label>
+            <input type="text" id="edit-name" placeholder="مثال: محل بيع البقوليات الجديد">
+        </div>
+        <div class="form-group">
+            <label>نوع النشاط / المحصول:</label>
+            <select id="edit-area">
+                <option value="قمح إستهلاكي">قمح إستهلاكي</option>
+                <option value="بذور عادية">بذور عادية</option>
+                <option value="قمح إستهلاكي + بذور نظامية">قمح إستهلاكي + بذور نظامية</option>
+                <option value="محلات بيع البقوليات">محلات بيع البقوليات</option>
+                <option value="الشعير">الشعير</option>
+                <option value="الأسمدة">الأسمدة</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>السعة التخزينية (بالقنطار أو الكمية):</label>
+            <input type="text" id="edit-cap" placeholder="مثال: 50,000 ق">
+        </div>
+        <div class="form-group">
+            <label>حالة المركز:</label>
+            <select id="edit-status">
+                <option value="active">نشط (يعمل)</option>
+                <option value="inactive">خارج الخدمة</option>
+            </select>
+        </div>
+        <div class="modal-btns">
+            <button onclick="saveCenterChanges()" style="flex:1; padding:9px; background:#2E7D32; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">💾 حفظ في الهاتف</button>
+            <button onclick="closeModal()" style="padding:9px 15px; background:#555; color:white; border:none; border-radius:5px; cursor:pointer;">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth < 768) {
+                toggleSidebar();
+            }
+        });
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('map-title').classList.toggle('expanded');
+            document.getElementById('map-legend').classList.toggle('expanded');
+        }
+
+        const defaultGeoData = {
+            "TSABIT": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.1733331906579283,28.25670002602705],[-0.1732386330464275,28.25555071636412],[-0.1712169114702966,28.25555786330743],[-0.171240950299214,28.25665070526768],[-0.1733331906579283,28.25670002602705]]]},"properties":{"name":"CENTRE TSABIT"}}]},
+            "ENADITEX": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.2908841232626025,27.89172393907361],[-0.2908166518021438,27.89109628329911],[-0.2899343782675035,27.8911728194805],[-0.2899989950586113,27.89179233868948],[-0.2908841232626025,27.89172393907361]]]},"properties":{"name":"CENTRE ENADITEX"}}]},
+            "MG 13 EPMS": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.294159404485409,27.90538406552091],[-0.2942423135878125,27.90383577705334],[-0.2932328530193073,27.90385014152618],[-0.2932128653998178,27.90536830561671],[-0.294159404485409,27.90538406552091]]]},"properties":{"name":"MG 13 EPMS"}}]},
+            "SPA AMAIS 02": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[1.848647825233094,29.68440313248318],[1.847218645415043,29.68353707574159],[1.847574134646375,29.68308916188012],[1.849006083478484,29.68395936222448],[1.848647825233094,29.68440313248318]]]},"properties":{"name":"SPA AMAIS 02"}}]},
+            "SPA AMAIS 01": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[1.847784868873044,29.68960165343179],[1.84641310642621,29.68876393014552],[1.846762399205191,29.68836054366738],[1.848113650678824,29.68918397708761],[1.847784868873044,29.68960165343179]]]},"properties":{"name":"SPA AMAIS 01"}}]},
+            "Z_KUNTA_AIR": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.1938483341074571,27.23472167271942],[-0.1949479350763261,27.2341372790346],[-0.1946829996244592,27.23376124317669],[-0.1935938498374601,27.23433980408188],[-0.1938483341074571,27.23472167271942]]]},"properties":{"name":"Z_KUNTA_AIR"}}]},
+            "KAF MED 14": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.2484199807427689,28.0430124862304],[-0.2488362902365071,28.04319260879247],[-0.2491075087332084,28.04274628089811],[-0.2486906970088432,28.04257148344765],[-0.2484199807427689,28.0430124862304]]]},"properties":{"name":"KAF MED 14"}}]},
+            "ADRAR":{"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.2902261048445087,27.89984922195088],[-0.2912623789355162,27.89976882512838],[-0.2911126894501892,27.89716338875161],[-0.2900376337593302,27.89726342031042],[-0.2902261048445087,27.89984922195088]]]},"properties":{"name":"ADRAR"}}]},
+            "MAG11AIRLIBRE":{"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.2917728060384805,27.8939271309539],[-0.2936037269613745,27.89380737183614],[-0.2935188361093866,27.89281290477348],[-0.2916768215375831,27.89295484076652],[-0.2917728060384805,27.8939271309539]]]},"properties":{"name":"MAG11AIRLIBRE"}}]},
+            "MAG3":{"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.2987112710954654,27.91330806298504],[-0.300436634295197,27.91357779124658],[-0.3007540086263127,27.9120540916891],[-0.3004454319383909,27.91198485840317],[-0.3004888520540838,27.91174307788548],[-0.3008960882004086,27.90985506666081],[-0.2994710688618185,27.90964824191161],[-0.2987112710954654,27.91330806298504]]]},"properties":{"name":"MAG3"}}]},
+            "SBAA": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.1447073468144355,28.25287018050479],[-0.1467855327859857,28.25259782986037],[-0.1464080765035558,28.25030595217964],[-0.1445570266587326,28.25055107589883],[-0.1447073468144355,28.25287018050479]]]},"properties":{"name":"CENTRE SBAA"}}]},
+            "ADRAR1": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.1214564346977709,27.92914838003329],[-0.1226028934568879,27.92914769562604],[-0.1215961250684616,27.92716526289423],[-0.1203873778776621,27.92802189852863],[-0.1214564346977709,27.92914838003329]]]},"properties":{"name":"CENTRE ADRAR"}}]},
+            "TAMANTIT": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.01642600133103578,27.7290699224221],[-0.01540137218670523,27.72962943997814],[-0.01654685621245822,27.73131320536199],[-0.01749754678992965,27.73071739825207],[-0.01642600133103578,27.7290699224221]]]},"properties":{"name":"CENTRE TAMANTIT"}}]},
+            "TAMEST": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[-0.1705989876722069,27.41328116792744],[-0.1706097442806509,27.41147884937611],[-0.1693440152481662,27.41147959599315],[-0.1692901711649641,27.41322790330236],[-0.1705989876722069,27.41328116792744]]]},"properties":{"name":"CENTRE TAMEST"}}]},
+            "AOUELEF": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[1.109203495494246,26.95443542439143],[1.109537638675131,26.95353505746111],[1.109562567722437,26.95354170248062],[1.111899068437743,26.9542871351568],[1.111510651868495,26.95510154728361],[1.109203495494246,26.95443542439143]]]},"properties":{"name":"CENTRE AOUELEF"}}]},
+            "AOULEF AIR LIBRE": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[1.094701055822627,26.97591292624583],[1.094877116312394,26.97551885907124],[1.09530451291928,26.97567760839534],[1.095115898358749,26.97606101807001],[1.094701055822627,26.97591292624583]]]},"properties":{"name":"AOULEF AIR LIBRE"}}]},
+            "TIMOKTEN": {"type":"FeatureCollection", "features": [{"type":"Feature","geometry":{"type":"Polygon","coordinates":[[[1.015461617621722,27.04226933151809],[1.013210755387963,27.04140467429651],[1.013593725121609,27.04055580867675],[1.015927506571481,27.04145694703961],[1.015461617621722,27.04226933151809]]]},"properties":{"name":"CENTRE TIMOKTEN"}}]}
+        };
+
+        const defaultLocations = [
+            {id: "TSABIT", name: "تسابيت (مخزن + ميزان)", lat: 28.255594, lng: -0.171417, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+            {id: "SBAA", name: "سبع 1 و 2 (مخزنين + ميزان)", lat: 28.251440, lng: -0.145642, type: "both", area: "قمح إستهلاكي", cap: "100,000 ق", status: "active"},
+            {id: "ADRAR1", name: "أدرار (مخزن + ميزان)", lat: 27.928113, lng: -0.122285, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+            {id: "MAG11AIRLIBRE", name: "مخزن رقم 11 SIDAR (هواء الطلق + ميزان)", lat: 27.893730, lng: -0.293000, type: "scale", area: "بذور عادية", cap: "20,000 ق", status: "active"},
+            {id: "MAG3", name: "مخزن رقم 3 (مخزنين 2)", lat: 27.910692, lng: -0.299973, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"},
+            {id: "ADRAR", name: "مخزن رقم 1 (مخزن + ميزان)", lat: 27.897852, lng: -0.291008, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "60,000 ق", status: "active"},
+            {id: "TAMANTIT", name: "تمنطيط (مخزن + ميزان)", lat: 27.730184, lng: -0.016283, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+            {id: "FENOUGHIL", name: "فنوغيل (مخزن + ميزان)", lat: 27.555870, lng: -0.286989, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+            {id: "TAMEST", name: "تامست (مخزن + ميزان)", lat: 27.412380, lng: -0.169950, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+            {id: "Z_KUNTA", name: "زاوية كنتة (مخزن + ميزان)", lat: 27.233619, lng: -0.177985, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
+            {id: "Z_KUNTA_AIR", name: "زاوية كنتة هواء الطلق", lat: 27.234360, lng: -0.194057, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
+            {id: "INZGMIR", name: "انزجمير (مخزن + ميزان)", lat: 27.116716, lng: -0.111778, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+            {id: "TIMOKTEN", name: "تيمقطن (مخزن + ميزان)", lat: 27.041326, lng: 1.014281, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+            {id: "AOUELEF", name: "أولف (مخزن + ميزان)", lat: 26.954354, lng: 1.110375, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
+            {id: "AOULEF AIR LIBRE", name: "أولف هواء الطلق (مخزن + ميزان)", lat: 26.975765, lng: 1.094991, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+            {id: "SPA AMAIS 01", name: "SPA AMAIS 01", lat: 29.6889874, lng: 1.8471575, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+            {id: "SPA AMAIS 02", name: "SPA AMAIS 02", lat: 29.6837429, lng: 1.8481430, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+            {id: "MG 13 EPMS", name: "مخزن رقم 13 EPMS", lat: 27.9044880, lng: -0.2937545, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+            {id: "KAF MED 14", name: "مخزن 14 KAF MED", lat: 28.0429468, lng: -0.2487313, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+            {id: "ENADITEX", name: "مخزن رقم 2 ENADITEX", lat: 27.891472, lng: -0.290214, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"}
+        ];
+
+        let locations = JSON.parse(localStorage.getItem('adrar_locations')) || defaultLocations;
+        let geoDataStore = JSON.parse(localStorage.getItem('adrar_geodata')) || defaultGeoData;
+
+        function saveToPhoneStorage() {
+            localStorage.setItem('adrar_locations', JSON.stringify(locations));
+            localStorage.setItem('adrar_geodata', JSON.stringify(geoDataStore));
+        }
+
+        function resetStorage() {
+            if (confirm("هل تريد مسح التعديلات المحفوظة واسترجاع البيانات الأصلية؟")) {
+                localStorage.removeItem('adrar_locations');
+                localStorage.removeItem('adrar_geodata');
+                location.reload();
+            }
+        }
+
+        function exportBackup() {
+            let backupData = { locations: locations, geoDataStore: geoDataStore };
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+            let dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "adrar_maps_backup.json");
+            dlAnchorElem.click();
+        }
+
+        function importBackup(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if (imported.locations && imported.geoDataStore) {
+                        locations = imported.locations;
+                        geoDataStore = imported.geoDataStore;
+                        saveToPhoneStorage();
+                        alert("✅ تم استيراد بيانات المراكز بنجاح!");
+                        location.reload();
+                    } else {
+                        alert("❌ الملف غير صالح.");
+                    }
+                } catch (err) {
+                    alert("❌ حدث خطأ أثناء قراءة الملف.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        const homeLat = 27.601659; 
+        const homeLng = -0.249579; 
+        const homeZoom = 8.5;
+
+        var googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20, subdomains: ['mt0','mt1','mt2','mt3']
+        });
+        var osmRoads = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '© OpenStreetMap'
+        });
+
+        var map = L.map('map', { zoomControl: false, layers: [googleHybrid] }).setView([homeLat, homeLng], homeZoom);
+
+        L.control.layers({
+            "🛰️ الأقمار الصناعية": googleHybrid,
+            "🗺️ الطرق": osmRoads
+        }, null, { position: 'topleft' }).addTo(map);
+
+        L.control.measure({
+            position: 'topleft',
+            primaryLengthUnit: 'kilometers',
+            secondaryLengthUnit: 'meters',
+            primaryAreaUnit: 'hectares',
+            activeColor: '#4CAF50',
+            completedColor: '#2E7D32'
+        }).addTo(map);
+
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+        var drawControl = new L.Control.Draw({
+            position: 'topleft',
+            draw: {
+                polygon: { shapeOptions: { color: '#00E676' } },
+                polyline: false, rectangle: true, circle: false, marker: false, circlemarker: false
+            },
+            edit: { featureGroup: drawnItems }
+        });
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            drawnItems.addLayer(layer);
+            var centerBounds = layer.getBounds().getCenter();
+            var geojson = { type: "FeatureCollection", features: [layer.toGeoJSON()] };
+
+            document.getElementById('modal-title').innerText = "➕ إضافة مركز أو نشاط جديد وحفظه";
+            document.getElementById('edit-id').value = "NEW_" + Date.now();
+            document.getElementById('edit-lat').value = centerBounds.lat;
+            document.getElementById('edit-lng').value = centerBounds.lng;
+            document.getElementById('edit-geojson').value = JSON.stringify(geojson);
+            
+            document.getElementById('edit-name').value = "";
+            document.getElementById('edit-cap').value = "50,000 ق";
+            document.getElementById('edit-status').value = "active";
+            
+            document.getElementById('center-modal').style.display = 'block';
+        });
+
+        var currentGeoLayer = null;
+        var nearestLineLayer = null;
+        var currentCropFilter = 'all';
+
+        var scaleIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/1611/1611175.png', iconSize: [34, 34], iconAnchor: [17, 17] });
+        var warehouseIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/2897/2897832.png', iconSize: [34, 34], iconAnchor: [17, 17] });
+        var inactiveIcon = L.icon({ iconUrl: 'https://cdn-icons-png.flaticon.com/512/463/463612.png', iconSize: [30, 30], iconAnchor: [15, 15] });
+
+        Object.keys(geoDataStore).forEach(key => {
+            L.geoJSON(geoDataStore[key], {
+                style: { color: "#ff9800", weight: 2, fillOpacity: 0.15 }
+            }).addTo(map);
+        });
+
+        document.getElementById('count-display').innerText = locations.length;
+        document.getElementById('sidebar-count').innerText = locations.length;
+        let totalCap = locations.reduce((sum, item) => sum + (parseInt(item.cap.replace(/[^0-9]/g, '')) || 0), 0);
+        document.getElementById('total-cap').innerText = totalCap.toLocaleString();
+
+        locations.forEach(loc => {
+            let activeIconToUse = (loc.status === 'inactive') ? inactiveIcon : warehouseIcon;
+
+            if (loc.type === "both" || loc.type === "scale") {
+                let offsetLat = (loc.type === "both") ? 0.0002 : 0;
+                let m1 = L.marker([loc.lat + offsetLat, loc.lng + 0.0003], {icon: scaleIcon}).addTo(map);
+                m1.on('click', () => showDetails(loc));
+            }
+            if (loc.type === "both" || loc.type === "warehouse") {
+                let m2 = L.marker([loc.lat, loc.lng], {icon: activeIconToUse}).addTo(map);
+                let badgeText = (loc.status === 'inactive') ? " ⚠️ (خارج الخدمة)" : "";
+                m2.bindTooltip(loc.name + badgeText, {permanent: false, direction: 'top', className: 'label-style', offset: [0, -20]});
+                m2.on('click', () => showDetails(loc));
+            }
+
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.setAttribute('data-crop', loc.area);
+            
+            let statusBadge = (loc.status === 'inactive') ? `<span class="badge-out">خارج الخدمة</span>` : '';
+            item.innerHTML = `<span>🏠⚖️ <b>${loc.name}</b></span> ${statusBadge}`;
+            
+            item.onclick = () => {
+                showDetails(loc);
+                if (window.innerWidth < 768) toggleSidebar();
+            };
+            document.getElementById('locations-list').appendChild(item);
+        });
+
+        function showDetails(loc, extraNote = "") {
+            map.flyTo([loc.lat, loc.lng], 16);
+            document.getElementById('ui-home').style.display = 'block';
+            
+            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
+            if (geoDataStore[loc.id]) {
+                currentGeoLayer = L.geoJSON(geoDataStore[loc.id], {
+                    style: { color: (loc.status === 'inactive' ? "#777" : "#ff0000"), weight: 3, fillOpacity: 0.28, fillColor: (loc.status === 'inactive' ? "#777" : "#ff0000") }
+                }).addTo(map);
+            }
+
+            let statusText = (loc.status === 'inactive') ? '<span style="color:#ff4d4d">خارج الخدمة ⚠️</span>' : '<span style="color:#4CAF50">نشط (يعمل) ✅</span>';
+
+            const panel = document.getElementById('info-panel');
+            panel.style.display = 'block';
+            document.getElementById('info-content').innerHTML = `
+                <h5>${loc.name}</h5>
+                ${extraNote ? `<div style="background:#1565C0; padding:6px; border-radius:5px; margin-bottom:10px; font-size:12px; text-align:center;">${extraNote}</div>` : ''}
+                <div class="info-detail"><span>📌 الحالة:</span> <b>${statusText}</b></div>
+                <div class="info-detail"><span>🌾 نوع النشاط:</span> <b>${loc.area}</b></div>
+                <div class="info-detail"><span>📦 السعة / الكمية:</span> <b>${loc.cap}</b></div>
+                <div class="info-detail"><span>📍 الإحداثيات:</span> <b>${Number(loc.lat).toFixed(5)}, ${Number(loc.lng).toFixed(5)}</b></div>
+                <div class="panel-actions">
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
+                    <button onclick='openEditModal(${JSON.stringify(loc)})' class="panel-btn edit-btn">✏️ تعديل</button>
+                    <button onclick='deleteCenter("${loc.id}")' class="panel-btn delete-btn">🗑️ حذف</button>
+                </div>
+            `;
+        }
+
+        function openEditModal(loc) {
+            document.getElementById('modal-title').innerText = "✏️ تعديل بيانات المركز أو النشاط";
+            document.getElementById('edit-id').value = loc.id;
+            document.getElementById('edit-lat').value = loc.lat;
+            document.getElementById('edit-lng').value = loc.lng;
+            document.getElementById('edit-geojson').value = "";
+            
+            document.getElementById('edit-name').value = loc.name;
+            document.getElementById('edit-area').value = loc.area;
+            document.getElementById('edit-cap').value = loc.cap;
+            document.getElementById('edit-status').value = loc.status || 'active';
+            
+            document.getElementById('center-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('center-modal').style.display = 'none';
+        }
+
+        function saveCenterChanges() {
+            let id = document.getElementById('edit-id').value;
+            let name = document.getElementById('edit-name').value.trim();
+            let area = document.getElementById('edit-area').value;
+            let cap = document.getElementById('edit-cap').value.trim();
+            let status = document.getElementById('edit-status').value;
+            let lat = parseFloat(document.getElementById('edit-lat').value);
+            let lng = parseFloat(document.getElementById('edit-lng').value);
+            let rawGeo = document.getElementById('edit-geojson').value;
+
+            if (!name) {
+                alert("يرجى إدخال اسم المركز أو المحل.");
+                return;
+            }
+
+            let existingIndex = locations.findIndex(item => item.id === id);
+            if (existingIndex !== -1) {
+                locations[existingIndex].name = name;
+                locations[existingIndex].area = area;
+                locations[existingIndex].cap = cap;
+                locations[existingIndex].status = status;
+            } else {
+                locations.push({
+                    id: id,
+                    name: name,
+                    lat: lat,
+                    lng: lng,
+                    type: "both",
+                    area: area,
+                    cap: cap,
+                    status: status
+                });
+                if (rawGeo) {
+                    geoDataStore[id] = JSON.parse(rawGeo);
+                }
+            }
+
+            saveToPhoneStorage();
+            closeModal();
+            alert("✅ تم حفظ المعلومات بنجاح!");
+            location.reload();
+        }
+
+        function deleteCenter(id) {
+            if (confirm("هل أنت متأكد من رغبتك في حذف هذا العنصر نهائياً؟")) {
+                locations = locations.filter(loc => loc.id !== id);
+                delete geoDataStore[id];
+                saveToPhoneStorage();
+                alert("🗑️ تم الحذف بنجاح.");
+                location.reload();
+            }
+        }
+
+        function openExcelModal() {
+            document.getElementById('excel-modal').style.display = 'block';
+        }
+
+        function confirmExportExcel() {
+            let type = document.getElementById('excel-type-select').value;
+            document.getElementById('excel-modal').style.display = 'none';
+
+            let filtered = locations.filter(loc => {
+                if (type === 'consumption') return loc.area.includes('إستهلاكي');
+                if (type === 'seeds') return loc.area.includes('بذور');
+                if (type === 'bougholiat') return loc.area.includes('بقوليات');
+                if (type === 'chaar') return loc.area.includes('الشعير');
+                if (type === 'asmida') return loc.area.includes('الأسمدة');
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                alert("لا توجد بيانات مطابقة للتصدير.");
+                return;
+            }
+
+            let csvContent = "\uFEFFالاسم/المحل;الحالة;نوع النشاط;السعة/الكمية;الإحداثيات\n";
+            filtered.forEach(loc => {
+                let stLabel = (loc.status === 'inactive') ? 'خارج الخدمة' : 'نشط';
+                csvContent += `"${loc.name}";"${stLabel}";"${loc.area}";"${loc.cap}";"${loc.lat}, ${loc.lng}"\n`;
+            });
+
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `مراكز_وأنشطة_أدرار_${type}.csv`;
+            link.click();
+        }
+
+        function findNearestCenter() {
+            if (!navigator.geolocation) {
+                alert("متصفح هاتفك لا يدعم ميزة تحديد الموقع الجغرافي.");
+                return;
+            }
+
+            alert("جاري محاولة تحديد موقعك الحالي عبر الـ GPS، يرجى السماح للمتصفح بالوصول للموقع...");
+
+            navigator.geolocation.getCurrentPosition(pos => {
+                let userLat = pos.coords.latitude;
+                let userLng = pos.coords.longitude;
+                let nearest = null;
+                let minDist = Infinity;
+
+                locations.forEach(loc => {
+                    let dist = map.distance([userLat, userLng], [loc.lat, loc.lng]) / 1000;
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = loc;
+                    }
+                });
+
+                if (nearest) {
+                    if (nearestLineLayer) map.removeLayer(nearestLineLayer);
+                    nearestLineLayer = L.polyline([[userLat, userLng], [nearest.lat, nearest.lng]], {
+                        color: '#00E5FF', weight: 4, dashArray: '8, 8'
+                    }).addTo(map);
+                    showDetails(nearest, `📍 أقرب نقطة إليك تبعد حوالي <b>${minDist.toFixed(1)} كم</b>`);
+                    if (window.innerWidth < 768) toggleSidebar();
+                }
+            }, error => {
+                let msg = "تعذر تحديد الموقع.";
+                if (error.code === error.PERMISSION_DENIED) {
+                    msg = "تم رفض إذن الوصول للموقع من قبل المتصفح. يرجى تفعيله من إعدادات المتصفح.";
+                } else if (error.code === error.POSITION_UNAVAILABLE) {
+                    msg = "معلومات الموقع غير متوفرة حالياً.";
+                } else if (error.code === error.TIMEOUT) {
+                    msg = "انتهت مهلة طلب تحديد الموقع.";
+                }
+                alert(msg);
+            }, { timeout: 10000, enableHighAccuracy: true });
+        }
+
+        function goHome() { 
+            map.flyTo([homeLat, homeLng], homeZoom); 
+            document.getElementById('ui-home').style.display = 'none'; 
+            document.getElementById('info-panel').style.display = 'none'; 
+            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
+            if (nearestLineLayer) map.removeLayer(nearestLineLayer);
+        }
+
+        function setCropFilter(cropType, btnElement) {
+            currentCropFilter = cropType;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let searchText = document.getElementById('listSearch').value.toLowerCase();
+            let items = document.getElementsByClassName('list-item');
+            for (let i = 0; i < items.length; i++) {
+                let itemText = items[i].innerText.toLowerCase();
+                let itemCrop = items[i].getAttribute('data-crop');
+                let matchesSearch = itemText.includes(searchText);
+                let matchesCrop = (currentCropFilter === 'all') || itemCrop.includes(currentCropFilter);
+                items[i].style.display = (matchesSearch && matchesCrop) ? "flex" : "none";
+            }
+        }
+    </script>
+</body>
+</html>
