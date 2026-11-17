@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام خرائط المراكز - قاعدة بيانات JSON</title>
+    <title>نظام خرائط المراكز - قاعدة البيانات المدمجة</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,73 +13,6 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
-
-    <style>
-        body { margin: 0; padding: 0; background: #111; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
-        #sidebar { position: fixed; top: 0; right: 0; width: 350px; height: 100vh; background: rgba(26, 26, 26, 0.97); color: white; display: flex; flex-direction: column; border-left: 2px solid #2E7D32; z-index: 2500; transition: transform 0.35s; }
-        #sidebar.collapsed { transform: translateX(100%); }
-        #toggle-sidebar-btn { position: fixed; top: 10px; right: 12px; z-index: 2600; background: #2E7D32; color: white; border: none; width: 40px; height: 38px; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
-        #toggle-sidebar-btn .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
-        #sidebar h2 { text-align: center; padding: 14px; background: #2E7D32; margin: 0; font-size: 17px; }
-        .sidebar-tools { padding: 10px; background: #222; display: flex; flex-direction: column; gap: 8px; }
-        #listSearch { width: 93%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #333; color: white; outline: none; margin: 0 auto; }
-        .filter-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
-        .filter-btn { flex: 1 1 30%; padding: 5px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; font-size: 11px; text-align: center; }
-        .filter-btn.active { background: #2E7D32; }
-        .action-buttons { display: flex; gap: 4px; }
-        .action-btn { flex: 1; padding: 7px 3px; cursor: pointer; border: none; border-radius: 5px; font-size: 10px; font-weight: bold; color: white; text-align: center; }
-        .btn-nearest { background: #1565C0; }
-        .btn-excel { background: #2E7D32; }
-        #stats-bar { padding: 8px; background: #262626; font-size: 12px; text-align: center; color: #81C784; display: flex; justify-content: space-around; }
-        #locations-list { flex-grow: 1; overflow-y: auto; }
-        .list-item { padding: 11px 15px; border-bottom: 1px solid #2d2d2d; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
-        .list-item:hover { background: #2E7D32; }
-        .province-tag { color: #FFD54F; font-size: 11px; }
-        #map { width: 100vw; height: 100vh; background: #222; }
-        .map-title { position: fixed; top: 10px; right: 365px; z-index: 1000; background: rgba(46, 125, 50, 0.92); color: white; padding: 8px 20px; border-radius: 8px; font-size: 16px; font-weight: 900; }
-        #info-panel { position: fixed; bottom: 20px; left: 20px; width: 340px; background: rgba(26, 26, 26, 0.96); border: 2px solid #2E7D32; border-radius: 12px; z-index: 3000; color: white; padding: 15px; display: none; }
-        .info-detail { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; border-bottom: 1px dashed #333; padding-bottom: 4px; }
-        .panel-actions { display: flex; gap: 6px; margin-top: 12px; }
-        .panel-btn { flex: 1; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; border: none; color: white; text-decoration: none; }
-        .gps-btn { background: #2E7D32; }
-    </style>
-</head>
-<body>
-
-    <button id="toggle-sidebar-btn" onclick="toggleSidebar()">
-        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
-    </button>
-
-    <div id="sidebar">
-        <h2>نظام خرائط المراكز</h2>
-        <div class="sidebar-tools">
-            <input type="text" id="listSearch" placeholder="🔍 بحث باسم المركز أو الولاية..." onkeyup="applyFilters()">
-            <div class="filter-buttons">
-                <button class="filter-btn active" onclick="setCropFilter('all', this)">الكل</button>
-                <button class="filter-btn" onclick="setCropFilter('إستهلاكي', this)">استهلاكي</button>
-                <button class="filter-btn" onclick="setCropFilter('بذور', this)">بذور</button>
-                <button class="filter-btn" onclick="setرائع جداً! بناءً على الصورة التي أرسلتها، أنت الآن قمت برفع الملفين **`index.html`** و **`data.json`** بشكل صحيح في مستودعك على GitHub[cite: 4].
-
-لكن سبب ظهور خطأ التحميل السابق (`data.json`) يعود لأن كود الـ JavaScript في الكود الأول كان يحاول قراءة الملف، ودعماً لهذا الهيكل المنظم (فصل البيانات في ملف مستقل)، إليك الكود المحدث والمصحح تماماً لملف **`index.html`** والذي يتصل بملف `data.json` الخارجي بكل سلاسة ودون أي مشاكل:
-
-### انسخ هذا الكود وضعه داخل ملف `index.html` على GitHub:
-
-```html
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام خرائط المراكز - قاعدة بيانات JSON</title>
-    
-    <link rel="stylesheet" href="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.css](https://unpkg.com/leaflet@1.9.4/dist/leaflet.css)" />
-    <script src="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.js](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js)"></script>
-    
-    <link rel="stylesheet" href="[https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css](https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css)" />
-    <script src="[https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js](https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js)"></script>
-
-    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css](https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css)" />
-    <script src="[https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js](https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js)"></script>
 
     <style>
         body { margin: 0; padding: 0; background: #111; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
@@ -148,21 +81,37 @@
     </div>
 
     <script>
-        let locations = [];
-        let geoDataStore = {};
-        let map, currentGeoLayer = null, currentCropFilter = 'all';
+        // قاعدة البيانات المدمجة بالكامل (أدرار، تيميمون، تمنراست، عين صالح، برج باجي مختار)
+        const database = {
+            "locations": [
+                {id: "TSABIT", name: "تسابيت (مخزن + ميزان)", province: "أدرار", lat: 28.255594, lng: -0.171417, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+                {id: "SBAA", name: "سبع 1 و 2 (مخزنين + ميزان)", province: "أدرار", lat: 28.251440, lng: -0.145642, type: "both", area: "قمح إستهلاكي", cap: "100,000 ق", status: "active"},
+                {id: "ADRAR1", name: "أدرار (مخزن + ميزان)", province: "أدرار", lat: 27.928113, lng: -0.122285, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+                {id: "MAG11AIRLIBRE", name: "مخزن رقم 11 SIDAR (هواء الطلق + ميزان)", province: "أدرار", lat: 27.893730, lng: -0.293000, type: "scale", area: "بذور عادية", cap: "20,000 ق", status: "active"},
+                {id: "MAG3", name: "مخزن رقم 3 (مخزنين 2)", province: "أدرار", lat: 27.910692, lng: -0.299973, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"},
+                {id: "ADRAR", name: "مخزن رقم 1 (مخزن + ميزان)", province: "أدرار", lat: 27.897852, lng: -0.291008, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "60,000 ق", status: "active"},
+                {id: "TAMANTIT", name: "تمنطيط (مخزن + ميزان)", province: "أدرار", lat: 27.730184, lng: -0.016283, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+                {id: "FENOUGHIL", name: "فنوغيل (مخزن + ميزان)", province: "أدرار", lat: 27.555870, lng: -0.286989, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+                {id: "TAMEST", name: "تامست (مخزن + ميزان)", province: "أدرار", lat: 27.412380, lng: -0.169950, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+                {id: "Z_KUNTA", name: "زاوية كنتة (مخزن + ميزان)", province: "أدرار", lat: 27.233619, lng: -0.177985, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
+                {id: "Z_KUNTA_AIR", name: "زاوية كنتة هواء الطلق", province: "أدرار", lat: 27.234360, lng: -0.194057, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
+                {id: "INZGMIR", name: "انزجمير (مخزن + ميزان)", province: "أدرار", lat: 27.116716, lng: -0.111778, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+                {id: "TIMOKTEN", name: "تيمقطن (مخزن + ميزان)", province: "أدرار", lat: 27.041326, lng: 1.014281, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
+                {id: "AOUELEF", name: "أولف (مخزن + ميزان)", province: "أدرار", lat: 26.954354, lng: 1.110375, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
+                {id: "AOULEF AIR LIBRE", name: "أولف هواء الطلق (مخزن + ميزان)", province: "أدرار", lat: 26.975765, lng: 1.094991, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+                {id: "SPA AMAIS 01", name: "SPA AMAIS 01", province: "أدرار", lat: 29.6889874, lng: 1.8471575, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+                {id: "SPA AMAIS 02", name: "SPA AMAIS 02", province: "أدرار", lat: 29.6837429, lng: 1.8481430, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+                {id: "MG 13 EPMS", name: "مخزن رقم 13 EPMS", province: "أدرار", lat: 27.9044880, lng: -0.2937545, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+                {id: "KAF MED 14", name: "مخزن 14 KAF MED", province: "أدرار", lat: 28.0429468, lng: -0.2487313, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+                {id: "ENADITEX", name: "مخزن رقم 2 ENADITEX", province: "أدرار", lat: 27.891472, lng: -0.290214, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
+                {id: "TIMIMOUN", name: "مخزن تيميمون", province: "تيميمون", lat: 29.2639000, lng: 0.2310000, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "100,000 ق", status: "active"},
+                {id: "TAMANRASSET", name: "مخزن تمنراست", province: "تمنراست", lat: 22.7920873, lng: 5.5229175, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"},
+                {id: "AIN_SALAH", name: "مخزن عين صالح", province: "عين صالح", lat: 27.1999384, lng: 2.4825483, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"},
+                {id: "BORDJ_BADJI", name: "مخزن برج باجي مختار", province: "برج باجي مختار", lat: 21.3302465, lng: 0.9604341, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"}
+            ]
+        };
 
-        async function loadDatabase() {
-            try {
-                let response = await fetch('data.json');
-                let data = await response.json();
-                locations = data.locations;
-                geoDataStore = data.geoDataStore || {};
-                initMap();
-            } catch (err) {
-                alert("❌ تعذر تحميل قاعدة البيانات (data.json). تأكد من صحة تنسيق ملف الـ JSON.");
-            }
-        }
+        let map, currentCropFilter = 'all';
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
@@ -170,12 +119,9 @@
 
         function initMap() {
             map = L.map('map', { zoomControl: false }).setView([27.60, -0.24], 7.5);
-            L.tileLayer('https://{s}[.google.com/vt/lyrs=y&x=](https://.google.com/vt/lyrs=y&x=){x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0','mt1','mt2','mt3'] }).addTo(map);
+            L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0','mt1','mt2','mt3'] }).addTo(map);
 
-            Object.keys(geoDataStore).forEach(key => {
-                L.geoJSON(geoDataStore[key], { style: { color: "#ff9800", weight: 2, fillOpacity: 0.15 } }).addTo(map);
-            });
-
+            let locations = database.locations;
             document.getElementById('sidebar-count').innerText = locations.length;
             let totalCap = locations.reduce((sum, item) => sum + (parseInt(item.cap.replace(/[^0-9]/g, '')) || 0), 0);
             document.getElementById('total-cap').innerText = totalCap.toLocaleString();
@@ -196,10 +142,6 @@
 
         function showDetails(loc) {
             map.flyTo([loc.lat, loc.lng], 15);
-            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
-            if (geoDataStore[loc.id]) {
-                currentGeoLayer = L.geoJSON(geoDataStore[loc.id], { style: { color: "#ff0000", weight: 3, fillOpacity: 0.3 } }).addTo(map);
-            }
             document.getElementById('info-panel').style.display = 'block';
             document.getElementById('info-content').innerHTML = `
                 <h5>${loc.name}</h5>
@@ -207,7 +149,7 @@
                 <div class="info-detail"><span>🌾 النشاط:</span> <b>${loc.area}</b></div>
                 <div class="info-detail"><span>📦 السعة:</span> <b>${loc.cap}</b></div>
                 <div class="panel-actions">
-                    <a href="[https://www.google.com/maps/dir/?api=1&destination=$](https://www.google.com/maps/dir/?api=1&destination=$){loc.lat},${loc.lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
                 </div>
             `;
         }
@@ -216,7 +158,7 @@
             navigator.geolocation.getCurrentPosition(pos => {
                 let userLat = pos.coords.latitude, userLng = pos.coords.longitude;
                 let nearest = null, minDist = Infinity;
-                locations.forEach(loc => {
+                database.locations.forEach(loc => {
                     let dist = map.distance([userLat, userLng], [loc.lat, loc.lng]) / 1000;
                     if (dist < minDist) { minDist = dist; nearest = loc; }
                 });
@@ -243,7 +185,7 @@
 
         function exportExcel() {
             let csvContent = "\uFEFFالاسم;الولاية;النشاط;السعة\n";
-            locations.forEach(loc => {
+            database.locations.forEach(loc => {
                 csvContent += `"${loc.name}";"${loc.province}";"${loc.area}";"${loc.cap}"\n`;
             });
             let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -253,7 +195,7 @@
             link.click();
         }
 
-        loadDatabase();
+        initMap();
     </script>
 </body>
 </html>
