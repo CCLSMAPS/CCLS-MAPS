@@ -5,6 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام خرائط المراكز - قاعدة بيانات JSON</title>
     
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
+    <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; background: #111; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
+        #sidebar { position: fixed; top: 0; right: 0; width: 350px; height: 100vh; background: rgba(26, 26, 26, 0.97); color: white; display: flex; flex-direction: column; border-left: 2px solid #2E7D32; z-index: 2500; transition: transform 0.35s; }
+        #sidebar.collapsed { transform: translateX(100%); }
+        #toggle-sidebar-btn { position: fixed; top: 10px; right: 12px; z-index: 2600; background: #2E7D32; color: white; border: none; width: 40px; height: 38px; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
+        #toggle-sidebar-btn .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
+        #sidebar h2 { text-align: center; padding: 14px; background: #2E7D32; margin: 0; font-size: 17px; }
+        .sidebar-tools { padding: 10px; background: #222; display: flex; flex-direction: column; gap: 8px; }
+        #listSearch { width: 93%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #333; color: white; outline: none; margin: 0 auto; }
+        .filter-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+        .filter-btn { flex: 1 1 30%; padding: 5px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; font-size: 11px; text-align: center; }
+        .filter-btn.active { background: #2E7D32; }
+        .action-buttons { display: flex; gap: 4px; }
+        .action-btn { flex: 1; padding: 7px 3px; cursor: pointer; border: none; border-radius: 5px; font-size: 10px; font-weight: bold; color: white; text-align: center; }
+        .btn-nearest { background: #1565C0; }
+        .btn-excel { background: #2E7D32; }
+        #stats-bar { padding: 8px; background: #262626; font-size: 12px; text-align: center; color: #81C784; display: flex; justify-content: space-around; }
+        #locations-list { flex-grow: 1; overflow-y: auto; }
+        .list-item { padding: 11px 15px; border-bottom: 1px solid #2d2d2d; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
+        .list-item:hover { background: #2E7D32; }
+        .province-tag { color: #FFD54F; font-size: 11px; }
+        #map { width: 100vw; height: 100vh; background: #222; }
+        .map-title { position: fixed; top: 10px; right: 365px; z-index: 1000; background: rgba(46, 125, 50, 0.92); color: white; padding: 8px 20px; border-radius: 8px; font-size: 16px; font-weight: 900; }
+        #info-panel { position: fixed; bottom: 20px; left: 20px; width: 340px; background: rgba(26, 26, 26, 0.96); border: 2px solid #2E7D32; border-radius: 12px; z-index: 3000; color: white; padding: 15px; display: none; }
+        .info-detail { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; border-bottom: 1px dashed #333; padding-bottom: 4px; }
+        .panel-actions { display: flex; gap: 6px; margin-top: 12px; }
+        .panel-btn { flex: 1; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; border: none; color: white; text-decoration: none; }
+        .gps-btn { background: #2E7D32; }
+    </style>
+</head>
+<body>
+
+    <button id="toggle-sidebar-btn" onclick="toggleSidebar()">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+
+    <div id="sidebar">
+        <h2>نظام خرائط المراكز</h2>
+        <div class="sidebar-tools">
+            <input type="text" id="listSearch" placeholder="🔍 بحث باسم المركز أو الولاية..." onkeyup="applyFilters()">
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="setCropFilter('all', this)">الكل</button>
+                <button class="filter-btn" onclick="setCropFilter('إستهلاكي', this)">استهلاكي</button>
+                <button class="filter-btn" onclick="setCropFilter('بذور', this)">بذور</button>
+                <button class="filter-btn" onclick="setرائع جداً! بناءً على الصورة التي أرسلتها، أنت الآن قمت برفع الملفين **`index.html`** و **`data.json`** بشكل صحيح في مستودعك على GitHub[cite: 4].
+
+لكن سبب ظهور خطأ التحميل السابق (`data.json`) يعود لأن كود الـ JavaScript في الكود الأول كان يحاول قراءة الملف، ودعماً لهذا الهيكل المنظم (فصل البيانات في ملف مستقل)، إليك الكود المحدث والمصحح تماماً لملف **`index.html`** والذي يتصل بملف `data.json` الخارجي بكل سلاسة ودون أي مشاكل:
+
+### انسخ هذا الكود وضعه داخل ملف `index.html` على GitHub:
+
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام خرائط المراكز - قاعدة بيانات JSON</title>
+    
     <link rel="stylesheet" href="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.css](https://unpkg.com/leaflet@1.9.4/dist/leaflet.css)" />
     <script src="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.js](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js)"></script>
     
@@ -83,18 +150,17 @@
     <script>
         let locations = [];
         let geoDataStore = {};
-        let map, currentGeoLayer = null, nearestLineLayer = null, currentCropFilter = 'all';
+        let map, currentGeoLayer = null, currentCropFilter = 'all';
 
-        // جلب البيانات من ملف JSON الخارجي على GitHub
         async function loadDatabase() {
             try {
                 let response = await fetch('data.json');
                 let data = await response.json();
                 locations = data.locations;
-                geoDataStore = data.geoDataStore;
+                geoDataStore = data.geoDataStore || {};
                 initMap();
             } catch (err) {
-                alert("❌ تعذر تحميل قاعدة البيانات (data.json). تأكد من وجود الملف في المستودع.");
+                alert("❌ تعذر تحميل قاعدة البيانات (data.json). تأكد من صحة تنسيق ملف الـ JSON.");
             }
         }
 
@@ -106,7 +172,6 @@
             map = L.map('map', { zoomControl: false }).setView([27.60, -0.24], 7.5);
             L.tileLayer('https://{s}[.google.com/vt/lyrs=y&x=](https://.google.com/vt/lyrs=y&x=){x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0','mt1','mt2','mt3'] }).addTo(map);
 
-            // عرض الحدود الجغرافية
             Object.keys(geoDataStore).forEach(key => {
                 L.geoJSON(geoDataStore[key], { style: { color: "#ff9800", weight: 2, fillOpacity: 0.15 } }).addTo(map);
             });
@@ -156,7 +221,7 @@
                     if (dist < minDist) { minDist = dist; nearest = loc; }
                 });
                 if (nearest) showDetails(nearest);
-            }, () => alert("تأكد من تفعيل الـ GPS."));
+            }, () => alert("تأكد من تفعيل الـ GPS وصلاحيات الموقع."));
         }
 
         function setCropFilter(cropType, btn) {
@@ -176,7 +241,18 @@
             });
         }
 
-        // تشغيل النظام عند فتح الصفحة
+        function exportExcel() {
+            let csvContent = "\uFEFFالاسم;الولاية;النشاط;السعة\n";
+            locations.forEach(loc => {
+                csvContent += `"${loc.name}";"${loc.province}";"${loc.area}";"${loc.cap}"\n`;
+            });
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "ccls_export.csv";
+            link.click();
+        }
+
         loadDatabase();
     </script>
 </body>
