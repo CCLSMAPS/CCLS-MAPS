@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام خرائط المراكز والأنشطة - السحابي</title>
+    <title>نظام خرائط المراكز والأنشطة - السحابي المباشر</title>
     
-    <!-- مكتبة Supabase السحابية -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
     <!-- مكتبة Leaflet الأساسية -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -140,7 +137,7 @@
 <body>
 
     <div id="loading-overlay">
-        <div id="loading-text">⏳ جاري الاتصال بقاعدة البيانات السحابية...</div>
+        <div id="loading-text">⏳ جاري الاتصال المباشر بقاعدة البيانات...</div>
     </div>
 
     <button id="toggle-sidebar-btn" onclick="toggleSidebar()" title="إخفاء / إظهار القائمة">
@@ -260,10 +257,9 @@
     </div>
 
     <script>
-        // إعدادات الربط السحابي بـ Supabase
+        // إعدادات الاتصال المباشر برابط ومفتاح Supabase
         const SUPABASE_URL = 'https://wvhouwbkjtbxstywqtj.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2aG91d2JranRieHN0eXdxanRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5MTM2NzUsImV4cCI6MjExMDQ4OTY3NX0.fWbEatL0wsNsIsX3XumE2bf2xCWRWwZmIics8A6m2bs';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let locations = [];
         let markersLayer = L.layerGroup();
@@ -355,25 +351,32 @@
             });
         }
 
+        // دالة لجلب البيانات مباشرة عبر Rest API دون الحاجة لمكتبة خارجية
         async function fetchCloudLocations() {
             const overlayText = document.getElementById('loading-text');
-            overlayText.innerHTML = "⏳ جاري الاتصال بقاعدة البيانات السحابية...";
+            overlayText.innerHTML = "⏳ جاري جلب البيانات من السحاب...";
             document.getElementById('loading-overlay').style.display = 'flex';
 
             try {
-                const { data, error } = await supabaseClient.from('locations').select('*').order('name', { ascending: true });
+                let response = await fetch(`${SUPABASE_URL}/rest/v1/locations?select=*`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
 
-                if (error) {
-                    throw error;
+                if (!response.ok) {
+                    throw new Error(`خطأ في الخادم: ${response.status} ${response.statusText}`);
                 }
 
-                locations = data || [];
+                locations = await response.json();
                 document.getElementById('loading-overlay').style.display = 'none';
                 renderMapAndList();
 
             } catch (err) {
                 console.error(err);
-                overlayText.innerHTML = `❌ فشل الاتصال بقاعدة البيانات!<br><br><span style="font-size:14px; color:#ff8a80;">السبب: ${err.message || 'تأكد من صحة الرابط ومفتاح Supabase'}</span><br><br><button onclick="location.reload()" style="padding:8px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🔄 إعادة المحاولة</button>`;
+                overlayText.innerHTML = `❌ تعذر جلب البيانات!<br><br><span style="font-size:13px; color:#ff8a80;">السبب: ${err.message}</span><br><br><button onclick="location.reload()" style="padding:8px 20px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🔄 إعادة المحاولة</button>`;
             }
         }
 
@@ -473,6 +476,7 @@
             document.getElementById('center-modal').style.display = 'none';
         }
 
+        // حفظ وتعديل البيانات مباشرة عبر Fetch API
         async function saveCenterToCloud() {
             let id = document.getElementById('edit-id').value;
             let name = document.getElementById('edit-name').value.trim();
@@ -506,36 +510,57 @@
                 geojson: rawGeo ? JSON.parse(rawGeo) : null
             };
 
-            const { error } = await supabaseClient.from('locations').upsert([recordData]);
+            try {
+                let response = await fetch(`${SUPABASE_URL}/rest/v1/locations`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates'
+                    },
+                    body: JSON.stringify(recordData)
+                });
 
-            saveBtn.innerText = "☁️ حفظ في السحاب";
-            saveBtn.disabled = false;
+                if (!response.ok) throw new Error("فشل الحفظ في السحاب");
 
-            if (error) {
-                alert("❌ حدث خطأ أثناء الحفظ: " + error.message);
-                return;
+                closeModal();
+                drawnItems.clearLayers();
+                document.getElementById('info-panel').style.display = 'none';
+                alert("✅ تم الحفظ بنجاح في السحاب وسيراه الجميع فوراً!");
+                fetchCloudLocations();
+
+            } catch (err) {
+                alert("❌ خطأ أثناء الحفظ: " + err.message);
+            } finally {
+                saveBtn.innerText = "☁️ حفظ في السحاب";
+                saveBtn.disabled = false;
             }
-
-            closeModal();
-            drawnItems.clearLayers();
-            document.getElementById('info-panel').style.display = 'none';
-            alert("✅ تم الحفظ بنجاح في السحاب!");
-            fetchCloudLocations();
         }
 
+        // حذف مباشر عبر Fetch API
         async function deleteCenterFromCloud(id) {
             if (!confirm("هل أنت متأكد من حذف هذا المركز نهائياً من السحاب؟")) return;
 
-            const { error } = await supabaseClient.from('locations').delete().eq('id', id);
-            if (error) {
-                alert("❌ خطأ أثناء الحذف: " + error.message);
-                return;
-            }
+            try {
+                let response = await fetch(`${SUPABASE_URL}/rest/v1/locations?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
 
-            document.getElementById('info-panel').style.display = 'none';
-            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
-            alert("🗑️ تم الحذف من السحاب بنجاح.");
-            fetchCloudLocations();
+                if (!response.ok) throw new Error("فشل الحذف");
+
+                document.getElementById('info-panel').style.display = 'none';
+                if (currentGeoLayer) map.removeLayer(currentGeoLayer);
+                alert("🗑️ تم الحذف من السحاب بنجاح.");
+                fetchCloudLocations();
+
+            } catch (err) {
+                alert("❌ خطأ أثناء الحذف: " + err.message);
+            }
         }
 
         function openExcelModal() { document.getElementById('excel-modal').style.display = 'block'; }
