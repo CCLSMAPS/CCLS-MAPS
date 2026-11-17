@@ -258,9 +258,9 @@
     </div>
 
     <script>
-        // إعدادات الربط بقاعدة البيانات السحابية Supabase (تم استخدام Publishable Key الجديد)
+        // إعدادات الربط السحابي بـ Supabase
         const SUPABASE_URL = 'https://wvhouwbkjtbxstywqtj.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2aG91d2JranRieHN0eXdxanRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5MTM2NzUsImV4cCI6MjExMDQ4OTY3NX0.fWbEatL0wsNsIsX3XumE2bf2xCWRWwZmIics8A6m2bs';
+        const SUPABASE_KEY = 'ضع_مفتاح_ANON_التقليدي_هنا';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let locations = [];
@@ -359,7 +359,7 @@
             document.getElementById('loading-overlay').style.display = 'none';
 
             if (error) {
-                alert("❌ تعذر الاتصال بـ Supabase. تأكد من صحة Publishable Key.");
+                alert("❌ تعذر الاتصال بـ Supabase: " + error.message);
                 console.error(error);
                 return;
             }
@@ -503,14 +503,14 @@
             saveBtn.disabled = false;
 
             if (error) {
-                alert("❌ حدث خطأ أثناء الحفظ في السحاب: " + error.message);
+                alert("❌ حدث خطأ أثناء الحفظ: " + error.message);
                 return;
             }
 
             closeModal();
             drawnItems.clearLayers();
             document.getElementById('info-panel').style.display = 'none';
-            alert("✅ تم الحفظ بنجاح في السحاب! سيظهر التحديث الآن لجميع المستخدمين.");
+            alert("✅ تم الحفظ بنجاح في السحاب!");
             fetchCloudLocations();
         }
 
@@ -518,100 +518,4 @@
             if (!confirm("هل أنت متأكد من حذف هذا المركز نهائياً من السحاب؟")) return;
 
             const { error } = await supabaseClient.from('locations').delete().eq('id', id);
-            if (error) {
-                alert("❌ خطأ أثناء الحذف: " + error.message);
-                return;
-            }
-
-            document.getElementById('info-panel').style.display = 'none';
-            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
-            alert("🗑️ تم الحذف من السحاب بنجاح.");
-            fetchCloudLocations();
-        }
-
-        function openExcelModal() { document.getElementById('excel-modal').style.display = 'block'; }
-
-        function confirmExportExcel() {
-            let type = document.getElementById('excel-type-select').value;
-            document.getElementById('excel-modal').style.display = 'none';
-
-            let filtered = locations.filter(loc => {
-                if (type === 'consumption') return loc.area.includes('إستهلاكي');
-                if (type === 'seeds') return loc.area.includes('بذور');
-                if (type === 'bougholiat') return loc.area.includes('بقوليات');
-                if (type === 'chaar') return loc.area.includes('الشعير');
-                if (type === 'asmida') return loc.area.includes('الأسمدة');
-                return true;
-            });
-
-            if (filtered.length === 0) {
-                alert("لا توجد بيانات مطابقة للتصدير.");
-                return;
-            }
-
-            let csvContent = "\uFEFFالاسم/المحل;الولاية;الحالة;نوع النشاط;السعة/الكمية;الإحداثيات\n";
-            filtered.forEach(loc => {
-                let stLabel = (loc.status === 'inactive') ? 'خارج الخدمة' : 'نشط';
-                let prov = loc.province || 'أدرار';
-                csvContent += `"${loc.name}";"${prov}";"${stLabel}";"${loc.area}";"${loc.cap}";"${loc.lat}, ${loc.lng}"\n`;
-            });
-
-            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `مراكز_وأنشطة_${type}.csv`;
-            link.click();
-        }
-
-        function findNearestCenter() {
-            if (!navigator.geolocation) {
-                alert("متصفحك لا يدعم تحديد الموقع.");
-                return;
-            }
-            navigator.geolocation.getCurrentPosition(pos => {
-                let userLat = pos.coords.latitude, userLng = pos.coords.longitude;
-                let nearest = null, minDist = Infinity;
-                locations.forEach(loc => {
-                    let dist = map.distance([userLat, userLng], [parseFloat(loc.lat), parseFloat(loc.lng)]) / 1000;
-                    if (dist < minDist) { minDist = dist; nearest = loc; }
-                });
-                if (nearest) {
-                    if (nearestLineLayer) map.removeLayer(nearestLineLayer);
-                    nearestLineLayer = L.polyline([[userLat, userLng], [parseFloat(nearest.lat), parseFloat(nearest.lng)]], {
-                        color: '#00E5FF', weight: 4, dashArray: '8, 8'
-                    }).addTo(map);
-                    showDetails(nearest, `📍 أقرب نقطة إليك تبعد حوالي <b>${minDist.toFixed(1)} كم</b>`);
-                    if (window.innerWidth < 768) toggleSidebar();
-                }
-            }, () => alert("تأكد من تفعيل إذن الـ GPS في المتصفح."));
-        }
-
-        function goHome() { 
-            map.flyTo([homeLat, homeLng], homeZoom); 
-            document.getElementById('ui-home').style.display = 'none'; 
-            document.getElementById('info-panel').style.display = 'none'; 
-            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
-            if (nearestLineLayer) map.removeLayer(nearestLineLayer);
-        }
-
-        function setCropFilter(cropType, btnElement) {
-            currentCropFilter = cropType;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
-            applyFilters();
-        }
-
-        function applyFilters() {
-            let searchText = document.getElementById('listSearch').value.toLowerCase();
-            let items = document.getElementsByClassName('list-item');
-            for (let i = 0; i < items.length; i++) {
-                let itemText = items[i].innerText.toLowerCase();
-                let itemCrop = items[i].getAttribute('data-crop');
-                let matchesSearch = itemText.includes(searchText);
-                let matchesCrop = (currentCropFilter === 'all') || itemCrop.includes(currentCropFilter);
-                items[i].style.display = (matchesSearch && matchesCrop) ? "flex" : "none";
-            }
-        }
-    </script>
-</body>
-</html>
+            if (
