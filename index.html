@@ -3,50 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام خرائط المراكز - قاعدة البيانات المدمجة</title>
+    <title>نظام خرائط المراكز والأنشطة - السحابي</title>
     
+    <!-- مكتبة Supabase السحابية -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- مكتبة Leaflet الأساسية -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
+    <!-- مكتبة قياس المسافات والمساحات -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.css" />
     <script src="https://unpkg.com/leaflet-measure@3.1.0/dist/leaflet-measure.js"></script>
 
+    <!-- مكتبة الرسم واستخراج GeoJSON -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
 
     <style>
         body { margin: 0; padding: 0; background: #111; font-family: 'Segoe UI', Tahoma, sans-serif; overflow: hidden; }
-        #sidebar { position: fixed; top: 0; right: 0; width: 350px; height: 100vh; background: rgba(26, 26, 26, 0.97); color: white; display: flex; flex-direction: column; border-left: 2px solid #2E7D32; z-index: 2500; transition: transform 0.35s; }
+        
+        #sidebar { 
+            position: fixed; top: 0; right: 0; width: 350px; height: 100vh; 
+            background: rgba(26, 26, 26, 0.97); color: white; display: flex; 
+            flex-direction: column; border-left: 2px solid #2E7D32; z-index: 2500; 
+            box-shadow: -5px 0 20px rgba(0,0,0,0.7);
+            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transform: translateX(0);
+        }
         #sidebar.collapsed { transform: translateX(100%); }
-        #toggle-sidebar-btn { position: fixed; top: 10px; right: 12px; z-index: 2600; background: #2E7D32; color: white; border: none; width: 40px; height: 38px; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px; }
+
+        #toggle-sidebar-btn {
+            position: fixed; top: 10px; right: 12px; z-index: 2600;
+            background: rgba(27, 94, 32, 0.95); color: white; border: 1px solid rgba(255,255,255,0.4);
+            width: 40px; height: 38px; border-radius: 6px; cursor: pointer;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+            padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.4); transition: background 0.2s;
+        }
+        #toggle-sidebar-btn:hover { background: #1B5E20; }
         #toggle-sidebar-btn .bar { width: 22px; height: 3px; background-color: white; border-radius: 2px; }
-        #sidebar h2 { text-align: center; padding: 14px; background: #2E7D32; margin: 0; font-size: 17px; }
-        .sidebar-tools { padding: 10px; background: #222; display: flex; flex-direction: column; gap: 8px; }
-        #listSearch { width: 93%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #333; color: white; outline: none; margin: 0 auto; }
+
+        #sidebar h2 { text-align: center; padding: 14px 45px 14px 15px; background: #2E7D32; margin: 0; font-size: 17px; }
+        
+        .sidebar-tools { padding: 10px; background: #222; border-bottom: 1px solid #333; display: flex; flex-direction: column; gap: 8px; }
+        #listSearch { width: 93%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #333; color: white; outline: none; margin: 0 auto; font-size: 13px; }
+        #listSearch:focus { border-color: #4CAF50; }
+        
         .filter-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
-        .filter-btn { flex: 1 1 30%; padding: 5px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; font-size: 11px; text-align: center; }
-        .filter-btn.active { background: #2E7D32; }
+        .filter-btn { flex: 1 1 30%; padding: 5px; cursor: pointer; background: #333; color: white; border: 1px solid #555; border-radius: 4px; font-size: 11px; font-weight: bold; transition: 0.2s; text-align: center; }
+        .filter-btn.active, .filter-btn:hover { background: #2E7D32; border-color: #4CAF50; }
+
         .action-buttons { display: flex; gap: 4px; }
-        .action-btn { flex: 1; padding: 7px 3px; cursor: pointer; border: none; border-radius: 5px; font-size: 10px; font-weight: bold; color: white; text-align: center; }
+        .action-btn { flex: 1; padding: 7px 3px; cursor: pointer; border: none; border-radius: 5px; font-size: 11px; font-weight: bold; color: white; transition: 0.2s; text-align: center; }
         .btn-nearest { background: #1565C0; }
+        .btn-nearest:hover { background: #1976D2; }
         .btn-excel { background: #2E7D32; }
-        #stats-bar { padding: 8px; background: #262626; font-size: 12px; text-align: center; color: #81C784; display: flex; justify-content: space-around; }
+        .btn-excel:hover { background: #388E3C; }
+        .btn-refresh { background: #00838F; }
+        .btn-refresh:hover { background: #0097A7; }
+
+        #stats-bar { padding: 8px; background: #262626; border-bottom: 1px solid #333; font-size: 12px; text-align: center; color: #81C784; display: flex; justify-content: space-around; }
+        
         #locations-list { flex-grow: 1; overflow-y: auto; }
-        .list-item { padding: 11px 15px; border-bottom: 1px solid #2d2d2d; cursor: pointer; display: flex; justify-content: space-between; font-size: 13px; }
+        .list-item { padding: 11px 15px; border-bottom: 1px solid #2d2d2d; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: 0.2s; font-size: 13px; }
         .list-item:hover { background: #2E7D32; }
-        .province-tag { color: #FFD54F; font-size: 11px; }
-        #map { width: 100vw; height: 100vh; background: #222; }
-        .map-title { position: fixed; top: 10px; right: 365px; z-index: 1000; background: rgba(46, 125, 50, 0.92); color: white; padding: 8px 20px; border-radius: 8px; font-size: 16px; font-weight: 900; }
-        #info-panel { position: fixed; bottom: 20px; left: 20px; width: 340px; background: rgba(26, 26, 26, 0.96); border: 2px solid #2E7D32; border-radius: 12px; z-index: 3000; color: white; padding: 15px; display: none; }
+        .badge-out { background: #d32f2f; color: white; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+        .province-tag { color: #FFD54F; font-size: 11px; margin-right: 5px; }
+        
+        #map { width: 100vw; height: 100vh; position: relative; background: #222; }
+        
+        .map-title { 
+            position: fixed; top: 10px; right: 365px; z-index: 1000; 
+            background: rgba(46, 125, 50, 0.92); color: white; padding: 8px 20px; 
+            border-radius: 8px; font-size: 16px; font-weight: 900; border-right: 5px solid #fff; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: none; 
+            transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .map-title.expanded { right: 62px; }
+        
+        .ui-controls { position: fixed; top: 15px; left: 60px; z-index: 1000; display: none; }
+        .btn-home { background: #2E7D32; color: white; border: 2px solid #fff; padding: 8px 18px; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.6); font-size: 13px; }
+        .btn-home:hover { background: #1B5E20; }
+        
+        #info-panel { position: fixed; bottom: 20px; left: 20px; width: 340px; background: rgba(26, 26, 26, 0.96); border: 2px solid #2E7D32; border-radius: 12px; z-index: 3000; color: white; padding: 15px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
+        #info-panel h5 { margin: 0 0 12px 0; color: #4CAF50; font-size: 17px; border-bottom: 1px solid #444; padding-bottom: 8px; padding-left: 20px; }
         .info-detail { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; border-bottom: 1px dashed #333; padding-bottom: 4px; }
+
         .panel-actions { display: flex; gap: 6px; margin-top: 12px; }
-        .panel-btn { flex: 1; text-align: center; padding: 8px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; border: none; color: white; text-decoration: none; }
+        .panel-btn { flex: 1; text-align: center; padding: 8px 5px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 11px; cursor: pointer; border: none; color: white; }
         .gps-btn { background: #2E7D32; }
+        .gps-btn:hover { background: #4CAF50; }
+        .edit-btn { background: #F57C00; }
+        .edit-btn:hover { background: #FB8C00; }
+        .delete-btn { background: #d32f2f; }
+        .delete-btn:hover { background: #c62828; }
+
+        .custom-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: #1e1e1e; border: 2px solid #4CAF50; border-radius: 10px; z-index: 5000; padding: 20px; color: white; box-shadow: 0 15px 40px rgba(0,0,0,0.9); }
+        .custom-modal h4 { margin: 0 0 15px 0; color: #4CAF50; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; color: #ccc; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 95%; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #2b2b2b; color: white; font-size: 13px; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        
+        .legend { 
+            position: fixed; bottom: 20px; right: 365px; z-index: 1000; 
+            background: rgba(26, 26, 26, 0.95); padding: 10px; border-radius: 8px; 
+            border: 2px solid #2E7D32; color: white; width: 195px; 
+            transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .legend.expanded { right: 20px; }
+        .legend-title { font-weight: bold; border-bottom: 1px solid #444; margin-bottom: 8px; padding-bottom: 4px; color: #4CAF50; text-align: center; font-size: 12px; }
+        .legend-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 11px; }
+        .legend-box-icon { width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-left: 8px; border: 2px solid white; }
+        .legend-box-selected { width: 20px; height: 12px; border: 2px solid #ff0000; background: rgba(255,0,0,0.25); margin-left: 10px; }
+        .legend-box-all { width: 20px; height: 12px; border: 2px solid #ff9800; background: rgba(255,152,0,0.15); margin-left: 10px; }
+        
+        .label-style { background: rgba(0,0,0,0.85); color: #fff; border: 1px solid #4CAF50; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .leaflet-control-measure, .leaflet-control-layers { background: #1a1a1a !important; color: white !important; border: 2px solid #2E7D32 !important; }
+
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.8); color: #4CAF50; z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 18px; font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar { width: 100%; max-width: 300px; }
+            .map-title { font-size: 13px; padding: 6px 12px; right: 55px; top: 12px; }
+            .map-title.expanded { right: 55px; }
+            .legend { display: none; }
+            #info-panel { width: 88%; left: 6%; bottom: 10px; padding: 12px; }
+        }
     </style>
 </head>
 <body>
 
-    <button id="toggle-sidebar-btn" onclick="toggleSidebar()">
+    <div id="loading-overlay">⏳ جاري الاتصال بقاعدة البيانات السحابية...</div>
+
+    <button id="toggle-sidebar-btn" onclick="toggleSidebar()" title="إخفاء / إظهار القائمة">
         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
     </button>
 
@@ -54,17 +149,23 @@
         <h2>نظام خرائط المراكز</h2>
         <div class="sidebar-tools">
             <input type="text" id="listSearch" placeholder="🔍 بحث باسم المركز أو الولاية..." onkeyup="applyFilters()">
+            
             <div class="filter-buttons">
                 <button class="filter-btn active" onclick="setCropFilter('all', this)">الكل</button>
                 <button class="filter-btn" onclick="setCropFilter('إستهلاكي', this)">استهلاكي</button>
                 <button class="filter-btn" onclick="setCropFilter('بذور', this)">بذور</button>
                 <button class="filter-btn" onclick="setCropFilter('بقوليات', this)">بقوليات</button>
+                <button class="filter-btn" onclick="setCropFilter('شعير', this)">شعير</button>
+                <button class="filter-btn" onclick="setCropFilter('أسمدة', this)">أسمدة</button>
             </div>
+
             <div class="action-buttons">
                 <button class="action-btn btn-nearest" onclick="findNearestCenter()">📍 الأقرب</button>
-                <button class="action-btn btn-excel" onclick="exportExcel()">📊 Excel</button>
+                <button class="action-btn btn-excel" onclick="openExcelModal()">📊 تصدير Excel</button>
+                <button class="action-btn btn-refresh" onclick="fetchCloudLocations()">🔄 تحديث</button>
             </div>
         </div>
+
         <div id="stats-bar">
             <span>المراكز: <b id="sidebar-count">0</b></span>
             <span>السعة الإجمالية: <b id="total-cap">0</b> ق</span>
@@ -73,129 +174,444 @@
     </div>
 
     <div id="map">
-        <div class="map-title">خريطة مراكز التخزين والأنشطة</div>
+        <div id="map-title" class="map-title">مراكز جمع وتخزين المحصول والأنشطة الفلاحية</div>
+
+        <div id="ui-home" class="ui-controls">
+            <button class="btn-home" onclick="goHome()">🏠 العودة للرؤية الشاملة (<span id="count-display">0</span> مركز)</button>
+        </div>
+        
         <div id="info-panel">
-            <span style="float: left; cursor: pointer; color: #ff4d4d; font-size: 22px;" onclick="this.parentElement.style.display='none'">×</span>
+            <span style="float: left; cursor: pointer; color: #ff4d4d; font-size: 22px; font-weight: bold; line-height: 1;" onclick="this.parentElement.style.display='none'">×</span>
             <div id="info-content"></div>
+        </div>
+
+        <div id="map-legend" class="legend">
+            <div class="legend-title">مفتاح الخريطة</div>
+            <div class="legend-item"><span class="legend-box-icon" style="background:#2E7D32;"></span> <span><b>مركز نشط</b></span></div>
+            <div class="legend-item"><span class="legend-box-icon" style="background:#d32f2f;"></span> <span><b>خارج الخدمة</b></span></div>
+            <div class="legend-item"><div class="legend-box-selected"></div> <span><b>حدود المركز المحدد</b></span></div>
+            <div class="legend-item"><div class="legend-box-all"></div> <span><b>حدود باقي المراكز</b></span></div>
+        </div>
+    </div>
+
+    <div id="excel-modal" class="custom-modal">
+        <h4>📊 خيارات تصدير ملف Excel</h4>
+        <div class="form-group">
+            <label>اختر المخازن المراد تصديرها:</label>
+            <select id="excel-type-select">
+                <option value="all">جميع المخازن والأنشطة</option>
+                <option value="consumption">مخازن القمح الاستهلاكي فقط</option>
+                <option value="seeds">مخازن البذور فقط</option>
+                <option value="bougholiat">محلات بيع البقوليات فقط</option>
+                <option value="chaar">الشعير فقط</option>
+                <option value="asmida">الأسمدة فقط</option>
+            </select>
+        </div>
+        <div class="modal-btns">
+            <button onclick="confirmExportExcel()" style="flex:1; padding:9px; background:#2E7D32; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">📥 تحميل ملف Excel</button>
+            <button onclick="document.getElementById('excel-modal').style.display='none'" style="padding:9px 15px; background:#555; color:white; border:none; border-radius:5px; cursor:pointer;">إلغاء</button>
+        </div>
+    </div>
+
+    <div id="center-modal" class="custom-modal">
+        <h4 id="modal-title">✏️ تعديل بيانات المركز</h4>
+        <input type="hidden" id="edit-id">
+        <input type="hidden" id="edit-lat">
+        <input type="hidden" id="edit-lng">
+        <input type="hidden" id="edit-geojson">
+        <input type="hidden" id="is-new-record" value="false">
+        
+        <div class="form-group">
+            <label>اسم المركز / المحل:</label>
+            <input type="text" id="edit-name" placeholder="مثال: مخزن تيميمون">
+        </div>
+        <div class="form-group">
+            <label>الولاية التابعة لها:</label>
+            <input type="text" id="edit-province" placeholder="مثال: أدرار، تيميمون، تمنراست...">
+        </div>
+        <div class="form-group">
+            <label>نوع النشاط / المحصول:</label>
+            <select id="edit-area">
+                <option value="قمح إستهلاكي">قمح إستهلاكي</option>
+                <option value="بذور عادية">بذور عادية</option>
+                <option value="قمح إستهلاكي + بذور نظامية">قمح إستهلاكي + بذور نظامية</option>
+                <option value="محلات بيع البقوليات">محلات بيع البقوليات</option>
+                <option value="الشعير">الشعير</option>
+                <option value="الأسمدة">الأسمدة</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>السعة التخزينية (بالقنطار أو الكمية):</label>
+            <input type="text" id="edit-cap" placeholder="مثال: 50,000 ق">
+        </div>
+        <div class="form-group">
+            <label>حالة المركز:</label>
+            <select id="edit-status">
+                <option value="active">نشط (يعمل)</option>
+                <option value="inactive">خارج الخدمة</option>
+            </select>
+        </div>
+        <div class="modal-btns">
+            <button id="save-btn" onclick="saveCenterToCloud()" style="flex:1; padding:9px; background:#2E7D32; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">☁️ حفظ في السحاب</button>
+            <button onclick="closeModal()" style="padding:9px 15px; background:#555; color:white; border:none; border-radius:5px; cursor:pointer;">إلغاء</button>
         </div>
     </div>
 
     <script>
-        // قاعدة البيانات المدمجة بالكامل (أدرار، تيميمون، تمنراست، عين صالح، برج باجي مختار)
-        const database = {
-            "locations": [
-                {id: "TSABIT", name: "تسابيت (مخزن + ميزان)", province: "أدرار", lat: 28.255594, lng: -0.171417, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
-                {id: "SBAA", name: "سبع 1 و 2 (مخزنين + ميزان)", province: "أدرار", lat: 28.251440, lng: -0.145642, type: "both", area: "قمح إستهلاكي", cap: "100,000 ق", status: "active"},
-                {id: "ADRAR1", name: "أدرار (مخزن + ميزان)", province: "أدرار", lat: 27.928113, lng: -0.122285, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
-                {id: "MAG11AIRLIBRE", name: "مخزن رقم 11 SIDAR (هواء الطلق + ميزان)", province: "أدرار", lat: 27.893730, lng: -0.293000, type: "scale", area: "بذور عادية", cap: "20,000 ق", status: "active"},
-                {id: "MAG3", name: "مخزن رقم 3 (مخزنين 2)", province: "أدرار", lat: 27.910692, lng: -0.299973, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"},
-                {id: "ADRAR", name: "مخزن رقم 1 (مخزن + ميزان)", province: "أدرار", lat: 27.897852, lng: -0.291008, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "60,000 ق", status: "active"},
-                {id: "TAMANTIT", name: "تمنطيط (مخزن + ميزان)", province: "أدرار", lat: 27.730184, lng: -0.016283, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
-                {id: "FENOUGHIL", name: "فنوغيل (مخزن + ميزان)", province: "أدرار", lat: 27.555870, lng: -0.286989, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
-                {id: "TAMEST", name: "تامست (مخزن + ميزان)", province: "أدرار", lat: 27.412380, lng: -0.169950, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
-                {id: "Z_KUNTA", name: "زاوية كنتة (مخزن + ميزان)", province: "أدرار", lat: 27.233619, lng: -0.177985, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
-                {id: "Z_KUNTA_AIR", name: "زاوية كنتة هواء الطلق", province: "أدرار", lat: 27.234360, lng: -0.194057, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
-                {id: "INZGMIR", name: "انزجمير (مخزن + ميزان)", province: "أدرار", lat: 27.116716, lng: -0.111778, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
-                {id: "TIMOKTEN", name: "تيمقطن (مخزن + ميزان)", province: "أدرار", lat: 27.041326, lng: 1.014281, type: "both", area: "قمح إستهلاكي", cap: "50,000 ق", status: "active"},
-                {id: "AOUELEF", name: "أولف (مخزن + ميزان)", province: "أدرار", lat: 26.954354, lng: 1.110375, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "50,000 ق", status: "active"},
-                {id: "AOULEF AIR LIBRE", name: "أولف هواء الطلق (مخزن + ميزان)", province: "أدرار", lat: 26.975765, lng: 1.094991, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
-                {id: "SPA AMAIS 01", name: "SPA AMAIS 01", province: "أدرار", lat: 29.6889874, lng: 1.8471575, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
-                {id: "SPA AMAIS 02", name: "SPA AMAIS 02", province: "أدرار", lat: 29.6837429, lng: 1.8481430, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
-                {id: "MG 13 EPMS", name: "مخزن رقم 13 EPMS", province: "أدرار", lat: 27.9044880, lng: -0.2937545, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
-                {id: "KAF MED 14", name: "مخزن 14 KAF MED", province: "أدرار", lat: 28.0429468, lng: -0.2487313, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
-                {id: "ENADITEX", name: "مخزن رقم 2 ENADITEX", province: "أدرار", lat: 27.891472, lng: -0.290214, type: "both", area: "قمح إستهلاكي", cap: "70,000 ق", status: "active"},
-                {id: "TIMIMOUN", name: "مخزن تيميمون", province: "تيميمون", lat: 29.2639000, lng: 0.2310000, type: "both", area: "قمح إستهلاكي + بذور نظامية", cap: "100,000 ق", status: "active"},
-                {id: "TAMANRASSET", name: "مخزن تمنراست", province: "تمنراست", lat: 22.7920873, lng: 5.5229175, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"},
-                {id: "AIN_SALAH", name: "مخزن عين صالح", province: "عين صالح", lat: 27.1999384, lng: 2.4825483, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"},
-                {id: "BORDJ_BADJI", name: "مخزن برج باجي مختار", province: "برج باجي مختار", lat: 21.3302465, lng: 0.9604341, type: "scale", area: "قمح إستهلاكي + بذور نظامية", cap: "200,000 ق", status: "active"}
-            ]
-        };
+        // إعدادات الربط بقاعدة البيانات السحابية Supabase (تم استخدام Publishable Key الجديد)
+        const SUPABASE_URL = 'https://wvhouwbkjtbxstywqtj.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable__T-WUZW0uqG2UuR1zNNJNw_S6yuqbAg';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let map, currentCropFilter = 'all';
+        let locations = [];
+        let markersLayer = L.layerGroup();
+        let allPolygonsLayer = L.layerGroup();
+        let currentGeoLayer = null;
+        let nearestLineLayer = null;
+        let currentCropFilter = 'all';
+
+        const homeLat = 27.601659; 
+        const homeLng = -0.249579; 
+        const homeZoom = 7.5;
+
+        var googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20, subdomains: ['mt0','mt1','mt2','mt3']
+        });
+        var osmRoads = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19, attribution: '© OpenStreetMap'
+        });
+
+        var map = L.map('map', { zoomControl: false, layers: [googleHybrid] }).setView([homeLat, homeLng], homeZoom);
+        markersLayer.addTo(map);
+        allPolygonsLayer.addTo(map);
+
+        L.control.layers({
+            "🛰️ الأقمار الصناعية": googleHybrid,
+            "🗺️ الطرق": osmRoads
+        }, null, { position: 'topleft' }).addTo(map);
+
+        L.control.measure({
+            position: 'topleft',
+            primaryLengthUnit: 'kilometers',
+            secondaryLengthUnit: 'meters',
+            primaryAreaUnit: 'hectares',
+            activeColor: '#4CAF50',
+            completedColor: '#2E7D32'
+        }).addTo(map);
+
+        var drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+        var drawControl = new L.Control.Draw({
+            position: 'topleft',
+            draw: {
+                polygon: { shapeOptions: { color: '#00E676' } },
+                polyline: false, rectangle: true, circle: false, marker: false, circlemarker: false
+            },
+            edit: { featureGroup: drawnItems }
+        });
+        map.addControl(drawControl);
+
+        map.on(L.Draw.Event.CREATED, function (e) {
+            var layer = e.layer;
+            drawnItems.addLayer(layer);
+            var centerBounds = layer.getBounds().getCenter();
+            var geojson = { type: "FeatureCollection", features: [layer.toGeoJSON()] };
+
+            document.getElementById('modal-title').innerText = "➕ إضافة مركز جديد للسحاب";
+            document.getElementById('is-new-record').value = "true";
+            document.getElementById('edit-id').value = "LOC_" + Date.now();
+            document.getElementById('edit-lat').value = centerBounds.lat;
+            document.getElementById('edit-lng').value = centerBounds.lng;
+            document.getElementById('edit-geojson').value = JSON.stringify(geojson);
+            
+            document.getElementById('edit-name').value = "";
+            document.getElementById('edit-province').value = "تيميمون";
+            document.getElementById('edit-cap').value = "50,000 ق";
+            document.getElementById('edit-status').value = "active";
+            
+            document.getElementById('center-modal').style.display = 'block';
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.innerWidth < 768) toggleSidebar();
+            fetchCloudLocations();
+        });
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
+            document.getElementById('map-title').classList.toggle('expanded');
+            document.getElementById('map-legend').classList.toggle('expanded');
         }
 
-        function initMap() {
-            map = L.map('map', { zoomControl: false }).setView([27.60, -0.24], 7.5);
-            L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0','mt1','mt2','mt3'] }).addTo(map);
+        function createCustomMarker(status) {
+            let color = (status === 'inactive') ? '#d32f2f' : '#2E7D32';
+            return L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.8);"></div>`,
+                iconSize: [16, 16],
+                iconAnchor: [8, 8]
+            });
+        }
 
-            let locations = database.locations;
+        async function fetchCloudLocations() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+            const { data, error } = await supabaseClient.from('locations').select('*').order('name', { ascending: true });
+            document.getElementById('loading-overlay').style.display = 'none';
+
+            if (error) {
+                alert("❌ تعذر الاتصال بـ Supabase. تأكد من صحة Publishable Key.");
+                console.error(error);
+                return;
+            }
+
+            locations = data || [];
+            renderMapAndList();
+        }
+
+        function renderMapAndList() {
+            markersLayer.clearLayers();
+            allPolygonsLayer.clearLayers();
+            const listContainer = document.getElementById('locations-list');
+            listContainer.innerHTML = '';
+
+            document.getElementById('count-display').innerText = locations.length;
             document.getElementById('sidebar-count').innerText = locations.length;
-            let totalCap = locations.reduce((sum, item) => sum + (parseInt(item.cap.replace(/[^0-9]/g, '')) || 0), 0);
+            let totalCap = locations.reduce((sum, item) => sum + (parseInt(String(item.cap).replace(/[^0-9]/g, '')) || 0), 0);
             document.getElementById('total-cap').innerText = totalCap.toLocaleString();
 
             locations.forEach(loc => {
-                let marker = L.marker([loc.lat, loc.lng]).addTo(map);
-                marker.bindTooltip(`${loc.name} (${loc.province})`, {direction: 'top'});
+                let lat = parseFloat(loc.lat);
+                let lng = parseFloat(loc.lng);
+                if (isNaN(lat) || isNaN(lng)) return;
+
+                if (loc.geojson) {
+                    L.geoJSON(loc.geojson, {
+                        style: { color: "#ff9800", weight: 2, fillOpacity: 0.15 }
+                    }).addTo(allPolygonsLayer);
+                }
+
+                let prov = loc.province || 'أدرار';
+                let marker = L.marker([lat, lng], { icon: createCustomMarker(loc.status) }).addTo(markersLayer);
+                let badgeText = (loc.status === 'inactive') ? " ⚠️ (خارج الخدمة)" : "";
+                marker.bindTooltip(`${loc.name} (${prov})${badgeText}`, {permanent: false, direction: 'top', className: 'label-style', offset: [0, -10]});
                 marker.on('click', () => showDetails(loc));
 
                 const item = document.createElement('div');
                 item.className = 'list-item';
                 item.setAttribute('data-crop', loc.area);
-                item.innerHTML = `<span>🏠 <b>${loc.name}</b> <span class="province-tag">(${loc.province})</span></span>`;
-                item.onclick = () => showDetails(loc);
-                document.getElementById('locations-list').appendChild(item);
+                let statusBadge = (loc.status === 'inactive') ? `<span class="badge-out">خارج الخدمة</span>` : '';
+                item.innerHTML = `<span>🏠⚖️ <b>${loc.name}</b> <span class="province-tag">(${prov})</span></span> ${statusBadge}`;
+                item.onclick = () => {
+                    showDetails(loc);
+                    if (window.innerWidth < 768) toggleSidebar();
+                };
+                listContainer.appendChild(item);
             });
         }
 
-        function showDetails(loc) {
-            map.flyTo([loc.lat, loc.lng], 15);
-            document.getElementById('info-panel').style.display = 'block';
+        function showDetails(loc, extraNote = "") {
+            let lat = parseFloat(loc.lat);
+            let lng = parseFloat(loc.lng);
+            map.flyTo([lat, lng], 16);
+            document.getElementById('ui-home').style.display = 'block';
+            
+            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
+            if (loc.geojson) {
+                currentGeoLayer = L.geoJSON(loc.geojson, {
+                    style: { color: (loc.status === 'inactive' ? "#777" : "#ff0000"), weight: 3, fillOpacity: 0.28, fillColor: (loc.status === 'inactive' ? "#777" : "#ff0000") }
+                }).addTo(map);
+            }
+
+            let statusText = (loc.status === 'inactive') ? '<span style="color:#ff4d4d">خارج الخدمة ⚠️</span>' : '<span style="color:#4CAF50">نشط (يعمل) ✅</span>';
+            let prov = loc.province || 'أدرار';
+
+            const panel = document.getElementById('info-panel');
+            panel.style.display = 'block';
             document.getElementById('info-content').innerHTML = `
                 <h5>${loc.name}</h5>
-                <div class="info-detail"><span>🏛️ الولاية:</span> <b>${loc.province}</b></div>
-                <div class="info-detail"><span>🌾 النشاط:</span> <b>${loc.area}</b></div>
-                <div class="info-detail"><span>📦 السعة:</span> <b>${loc.cap}</b></div>
+                ${extraNote ? `<div style="background:#1565C0; padding:6px; border-radius:5px; margin-bottom:10px; font-size:12px; text-align:center;">${extraNote}</div>` : ''}
+                <div class="info-detail"><span>🏛️ الولاية:</span> <b>${prov}</b></div>
+                <div class="info-detail"><span>📌 الحالة:</span> <b>${statusText}</b></div>
+                <div class="info-detail"><span>🌾 نوع النشاط:</span> <b>${loc.area}</b></div>
+                <div class="info-detail"><span>📦 السعة / الكمية:</span> <b>${loc.cap}</b></div>
+                <div class="info-detail"><span>📍 الإحداثيات:</span> <b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b></div>
                 <div class="panel-actions">
-                    <a href="https://www.google.com/maps/dir/?api=1&destination=${loc.lat},${loc.lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
+                    <button onclick='openEditModal(${JSON.stringify(loc).replace(/'/g, "&#39;")})' class="panel-btn edit-btn">✏️ تعديل</button>
+                    <button onclick='deleteCenterFromCloud("${loc.id}")' class="panel-btn delete-btn">🗑️ حذف</button>
                 </div>
             `;
         }
 
+        function openEditModal(loc) {
+            document.getElementById('modal-title').innerText = "✏️ تعديل بيانات المركز في السحاب";
+            document.getElementById('is-new-record').value = "false";
+            document.getElementById('edit-id').value = loc.id;
+            document.getElementById('edit-lat').value = loc.lat;
+            document.getElementById('edit-lng').value = loc.lng;
+            document.getElementById('edit-geojson').value = loc.geojson ? JSON.stringify(loc.geojson) : "";
+            
+            document.getElementById('edit-name').value = loc.name;
+            document.getElementById('edit-province').value = loc.province || 'أدرار';
+            document.getElementById('edit-area').value = loc.area;
+            document.getElementById('edit-cap').value = loc.cap;
+            document.getElementById('edit-status').value = loc.status || 'active';
+            
+            document.getElementById('center-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('center-modal').style.display = 'none';
+        }
+
+        async function saveCenterToCloud() {
+            let id = document.getElementById('edit-id').value;
+            let name = document.getElementById('edit-name').value.trim();
+            let province = document.getElementById('edit-province').value.trim() || 'أدرار';
+            let area = document.getElementById('edit-area').value;
+            let cap = document.getElementById('edit-cap').value.trim();
+            let status = document.getElementById('edit-status').value;
+            let lat = parseFloat(document.getElementById('edit-lat').value);
+            let lng = parseFloat(document.getElementById('edit-lng').value);
+            let rawGeo = document.getElementById('edit-geojson').value;
+
+            if (!name) {
+                alert("يرجى إدخال اسم المركز.");
+                return;
+            }
+
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.innerText = "⏳ جاري الحفظ...";
+            saveBtn.disabled = true;
+
+            const recordData = {
+                id: id,
+                name: name,
+                province: province,
+                lat: lat,
+                lng: lng,
+                type: "both",
+                area: area,
+                cap: cap,
+                status: status,
+                geojson: rawGeo ? JSON.parse(rawGeo) : null
+            };
+
+            const { error } = await supabaseClient.from('locations').upsert([recordData]);
+
+            saveBtn.innerText = "☁️ حفظ في السحاب";
+            saveBtn.disabled = false;
+
+            if (error) {
+                alert("❌ حدث خطأ أثناء الحفظ في السحاب: " + error.message);
+                return;
+            }
+
+            closeModal();
+            drawnItems.clearLayers();
+            document.getElementById('info-panel').style.display = 'none';
+            alert("✅ تم الحفظ بنجاح في السحاب! سيظهر التحديث الآن لجميع المستخدمين.");
+            fetchCloudLocations();
+        }
+
+        async function deleteCenterFromCloud(id) {
+            if (!confirm("هل أنت متأكد من حذف هذا المركز نهائياً من السحاب؟")) return;
+
+            const { error } = await supabaseClient.from('locations').delete().eq('id', id);
+            if (error) {
+                alert("❌ خطأ أثناء الحذف: " + error.message);
+                return;
+            }
+
+            document.getElementById('info-panel').style.display = 'none';
+            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
+            alert("🗑️ تم الحذف من السحاب بنجاح.");
+            fetchCloudLocations();
+        }
+
+        function openExcelModal() { document.getElementById('excel-modal').style.display = 'block'; }
+
+        function confirmExportExcel() {
+            let type = document.getElementById('excel-type-select').value;
+            document.getElementById('excel-modal').style.display = 'none';
+
+            let filtered = locations.filter(loc => {
+                if (type === 'consumption') return loc.area.includes('إستهلاكي');
+                if (type === 'seeds') return loc.area.includes('بذور');
+                if (type === 'bougholiat') return loc.area.includes('بقوليات');
+                if (type === 'chaar') return loc.area.includes('الشعير');
+                if (type === 'asmida') return loc.area.includes('الأسمدة');
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                alert("لا توجد بيانات مطابقة للتصدير.");
+                return;
+            }
+
+            let csvContent = "\uFEFFالاسم/المحل;الولاية;الحالة;نوع النشاط;السعة/الكمية;الإحداثيات\n";
+            filtered.forEach(loc => {
+                let stLabel = (loc.status === 'inactive') ? 'خارج الخدمة' : 'نشط';
+                let prov = loc.province || 'أدرار';
+                csvContent += `"${loc.name}";"${prov}";"${stLabel}";"${loc.area}";"${loc.cap}";"${loc.lat}, ${loc.lng}"\n`;
+            });
+
+            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `مراكز_وأنشطة_${type}.csv`;
+            link.click();
+        }
+
         function findNearestCenter() {
+            if (!navigator.geolocation) {
+                alert("متصفحك لا يدعم تحديد الموقع.");
+                return;
+            }
             navigator.geolocation.getCurrentPosition(pos => {
                 let userLat = pos.coords.latitude, userLng = pos.coords.longitude;
                 let nearest = null, minDist = Infinity;
-                database.locations.forEach(loc => {
-                    let dist = map.distance([userLat, userLng], [loc.lat, loc.lng]) / 1000;
+                locations.forEach(loc => {
+                    let dist = map.distance([userLat, userLng], [parseFloat(loc.lat), parseFloat(loc.lng)]) / 1000;
                     if (dist < minDist) { minDist = dist; nearest = loc; }
                 });
-                if (nearest) showDetails(nearest);
-            }, () => alert("تأكد من تفعيل الـ GPS وصلاحيات الموقع."));
+                if (nearest) {
+                    if (nearestLineLayer) map.removeLayer(nearestLineLayer);
+                    nearestLineLayer = L.polyline([[userLat, userLng], [parseFloat(nearest.lat), parseFloat(nearest.lng)]], {
+                        color: '#00E5FF', weight: 4, dashArray: '8, 8'
+                    }).addTo(map);
+                    showDetails(nearest, `📍 أقرب نقطة إليك تبعد حوالي <b>${minDist.toFixed(1)} كم</b>`);
+                    if (window.innerWidth < 768) toggleSidebar();
+                }
+            }, () => alert("تأكد من تفعيل إذن الـ GPS في المتصفح."));
         }
 
-        function setCropFilter(cropType, btn) {
+        function goHome() { 
+            map.flyTo([homeLat, homeLng], homeZoom); 
+            document.getElementById('ui-home').style.display = 'none'; 
+            document.getElementById('info-panel').style.display = 'none'; 
+            if (currentGeoLayer) map.removeLayer(currentGeoLayer);
+            if (nearestLineLayer) map.removeLayer(nearestLineLayer);
+        }
+
+        function setCropFilter(cropType, btnElement) {
             currentCropFilter = cropType;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
             applyFilters();
         }
 
         function applyFilters() {
-            let search = document.getElementById('listSearch').value.toLowerCase();
-            document.querySelectorAll('.list-item').forEach(item => {
-                let text = item.innerText.toLowerCase();
-                let crop = item.getAttribute('data-crop');
-                let match = text.includes(search) && (currentCropFilter === 'all' || crop.includes(currentCropFilter));
-                item.style.display = match ? "flex" : "none";
-            });
+            let searchText = document.getElementById('listSearch').value.toLowerCase();
+            let items = document.getElementsByClassName('list-item');
+            for (let i = 0; i < items.length; i++) {
+                let itemText = items[i].innerText.toLowerCase();
+                let itemCrop = items[i].getAttribute('data-crop');
+                let matchesSearch = itemText.includes(searchText);
+                let matchesCrop = (currentCropFilter === 'all') || itemCrop.includes(currentCropFilter);
+                items[i].style.display = (matchesSearch && matchesCrop) ? "flex" : "none";
+            }
         }
-
-        function exportExcel() {
-            let csvContent = "\uFEFFالاسم;الولاية;النشاط;السعة\n";
-            database.locations.forEach(loc => {
-                csvContent += `"${loc.name}";"${loc.province}";"${loc.area}";"${loc.cap}"\n`;
-            });
-            let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = "ccls_export.csv";
-            link.click();
-        }
-
-        initMap();
     </script>
 </body>
 </html>
