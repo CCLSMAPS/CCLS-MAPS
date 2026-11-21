@@ -152,6 +152,10 @@
         @media (max-width: 768px) { #coord-hud { display: none; } }
                 .panel-actions { flex-wrap: wrap; } .panel-btn { min-width: 30%; }
         .btn-i { background: #AD1457; } .btn-c { background: #2E7D32; } .btn-r { background: #C62828; }
+            body:not(.admin) .edit-btn, body:not(.admin) .delete-btn, body:not(.admin) .leaflet-draw, body:not(.admin) .admin-only { display: none !important; }
+        body:not(.manager):not(.admin) .mgr-only { display: none !important; }
+        .pct { font-size: 10px; padding: 2px 6px; border-radius: 4px; color: #fff; margin-right: 4px; }
+        .fbar { height: 10px; background: #333; border-radius: 5px; overflow: hidden; margin-top: 3px; } .fbar > i { display: block; height: 100%; }
     </style>
 </head>
 <body>
@@ -186,6 +190,11 @@
         </div>
 
         <div class="sidebar-tools" style="border-top:0">
+            <div class="action-buttons">
+                <button class="action-btn btn-p" id="login-btn" onclick="openLogin()">🔐 دخول</button>
+                <button class="action-btn btn-c mgr-only" onclick="openStock()">📦 إدخال يومي</button>
+                <button class="action-btn btn-d admin-only" onclick="openUsers()">👥 المستخدمون</button>
+            </div>
             <input type="text" id="geoSearch" placeholder="🌍 ابحث عن مكان أو إحداثيات (27.6, -0.25)" onkeydown="geoSearch(event)">
             <div class="action-buttons">
                 <button class="action-btn btn-p" onclick="toggleProbe(this)" title="انقر على الخريطة لتحليل النقطة">🎯 فحص نقطة</button>
@@ -232,6 +241,25 @@
         </div>
     </div>
 
+    <div id="login-modal" class="custom-modal"><h4>🔐 تسجيل الدخول</h4>
+        <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="lg-email" dir="ltr"></div>
+        <div class="form-group"><label>كلمة المرور</label><input type="password" id="lg-pass" dir="ltr" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="modal-btns"><button onclick="doLogin()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">دخول</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
+    <div id="stock-modal" class="custom-modal"><h4>📦 إدخال الكمية اليومية</h4>
+        <div class="form-group"><label>المخزن</label><select id="st-loc" onchange="stockHint()"></select></div>
+        <div class="form-group"><label>التاريخ</label><input type="date" id="st-date"></div>
+        <div class="form-group"><label>الكمية الحالية في المخزن (قنطار)</label><input type="number" id="st-qty" min="0" oninput="stockHint()"></div>
+        <div class="form-group"><label>ملاحظة (اختياري)</label><input type="text" id="st-note"></div>
+        <div id="st-info" style="font-size:13px;margin-top:6px"></div>
+        <div class="modal-btns"><button onclick="saveStock()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 حفظ</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
+    <div id="users-modal" class="custom-modal" style="max-width:460px;max-height:88vh;overflow:auto"><h4>👥 إدارة المستخدمين</h4>
+        <div id="u-list" style="margin-bottom:10px"></div>
+        <div class="form-group"><input type="text" id="u-name" placeholder="الاسم الكامل"></div>
+        <div class="form-group"><input type="email" id="u-email" placeholder="البريد الإلكتروني" dir="ltr"></div>
+        <div class="form-group"><input type="text" id="u-pass" placeholder="كلمة المرور (6 أحرف على الأقل)" dir="ltr"></div>
+        <div class="form-group"><select id="u-role"><option value="manager">مسؤول مخزن</option><option value="admin">مدير (كل الصلاحيات)</option></select></div>
+        <div class="form-group"><label>المخزن المسؤول عنه</label><select id="u-loc"></select></div>
+        <div class="modal-btns"><button onclick="addUser()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">➕ إضافة مستخدم</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
     <div id="coord-hud">—</div>
     <div id="toast"></div>
     <div id="dash-modal" class="custom-modal" style="max-height:85vh;overflow:auto">
@@ -417,7 +445,7 @@
                     method: 'GET',
                     headers: {
                         'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                        'Authorization': `Bearer ${(SESSION && SESSION.access_token) || SUPABASE_KEY}`
                     }
                 });
 
@@ -476,7 +504,7 @@
                 item.className = 'list-item';
                 item.setAttribute('data-crop', loc.area);
                 let statusBadge = (loc.status === 'inactive') ? `<span class="badge-out">خارج الخدمة</span>` : '';
-                item.innerHTML = `<span>🏠⚖️ <b>${esc(loc.name)}</b> <span class="province-tag">(${esc(prov)})</span></span> ${statusBadge}`;
+                item.innerHTML = `<span>🏠⚖️ <b>${esc(loc.name)}</b> <span class="province-tag">(${esc(prov)})</span></span> ${statusBadge}${pctBadge(loc)}`;
                 item.onclick = () => {
                     showDetails(loc);
                     if (window.innerWidth < 768) toggleSidebar();
@@ -515,6 +543,7 @@
                 <div class="info-detail"><span>🌾 نوع النشاط:</span> <b>${esc(loc.area)}</b></div>
                 <div class="info-detail"><span>📦 السعة / الكمية:</span> <b>${esc(loc.cap)}</b></div>
                 <div class="info-detail"><span>📍 الإحداثيات:</span> <b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b></div>
+                ${stockRow(loc)}
                 <div class="info-detail"><span>🌡️ الطقس الآن:</span> <b id="wx">…</b></div>
                 <div class="panel-actions">
                     <button data-lat="${lat}" data-lng="${lng}" onclick="routeTo(+this.dataset.lat,+this.dataset.lng)" class="panel-btn" style="background:#1565C0">🧭 مسار</button>
@@ -586,7 +615,7 @@
                     method: 'POST',
                     headers: {
                         'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Authorization': `Bearer ${(SESSION && SESSION.access_token) || SUPABASE_KEY}`,
                         'Content-Type': 'application/json',
                         'Prefer': 'resolution=merge-duplicates'
                     },
@@ -618,7 +647,7 @@
                     method: 'DELETE',
                     headers: {
                         'apikey': SUPABASE_KEY,
-                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                        'Authorization': `Bearer ${(SESSION && SESSION.access_token) || SUPABASE_KEY}`
                     }
                 });
 
@@ -813,7 +842,7 @@
             const grp = fn => { const m = {}; locations.forEach(l => { const k = fn(l); (m[k] = m[k] || { n: 0, c: 0 }).n++; m[k].c += capNum(l); }); return Object.entries(m).sort((a, b) => b[1].c - a[1].c); };
             const sec = (t, rows) => { const mx = Math.max(1, ...rows.map(r => r[1].c)); return `<div style="margin:12px 0 4px;color:#81C784;font-weight:bold;font-size:13px">${t}</div>` + rows.map(([k, v]) => `<div style="font-size:12px;margin:6px 0"><div style="display:flex;justify-content:space-between"><span>${esc(k)} (${v.n})</span><b>${v.c.toLocaleString()} ق</b></div><div class="dash-bar" style="width:${Math.max(2, v.c / mx * 100)}%"></div></div>`).join(''); };
             const act = locations.filter(l => l.status !== 'inactive').length;
-            $('dash-body').innerHTML = `<div class="info-detail"><span>✅ مراكز نشطة</span><b>${act}</b></div><div class="info-detail"><span>⚠️ خارج الخدمة</span><b>${locations.length - act}</b></div>` + sec('السعة حسب النشاط', grp(l => l.area || '—')) + sec('السعة حسب الولاية', grp(l => l.province || 'أدرار'));
+            $('dash-body').innerHTML = `<div class="info-detail"><span>✅ مراكز نشطة</span><b>${act}</b></div><div class="info-detail"><span>⚠️ خارج الخدمة</span><b>${locations.length - act}</b></div>` + sec('السعة حسب النشاط', grp(l => l.area || '—')) + sec('السعة حسب الولاية', grp(l => l.province || 'أدرار')) + fillSection();
             $('dash-modal').style.display = 'block';
         }
 
@@ -887,6 +916,100 @@
         }
         function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
         map.on(L.Draw.Event.CREATED, e => { try { toast('📐 المساحة: ' + (L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]) / 10000).toFixed(2) + ' هكتار'); } catch (_) {} });
+    
+        // ===== المستخدمون والمخزون اليومي (Supabase Auth + RLS) =====
+        let SESSION = null, PROFILE = null, STOCK = {};
+        const AUTH = SUPABASE_URL + '/auth/v1', REST = SUPABASE_URL + '/rest/v1';
+        const hdr = (x = {}) => ({ apikey: SUPABASE_KEY, Authorization: 'Bearer ' + ((SESSION && SESSION.access_token) || SUPABASE_KEY), 'Content-Type': 'application/json', ...x });
+        const fillPct = l => { const s = STOCK[l.id], c = capNum(l); return s && c ? Math.round(s.quantity / c * 100) : null; };
+        const fillColor = p => p >= 90 ? '#d32f2f' : p >= 70 ? '#F57C00' : '#2E7D32';
+        const pctBadge = l => { const p = fillPct(l); return p == null ? '' : `<span class="pct" style="background:${fillColor(p)}">${p}%</span>`; };
+        function stockRow(l) {
+            const p = fillPct(l), s = STOCK[l.id];
+            if (p == null) return PROFILE ? '<div class="info-detail"><span>📊 الامتلاء:</span><b>لا يوجد إدخال بعد</b></div>' : '';
+            return `<div class="info-detail" style="display:block"><div style="display:flex;justify-content:space-between"><span>📊 الامتلاء (${esc(s.entry_date)}):</span><b>${p}% — ${(+s.quantity).toLocaleString()} ق</b></div><div class="fbar"><i style="width:${Math.min(100, p)}%;background:${fillColor(p)}"></i></div></div>`;
+        }
+        async function authCall(path, body) {
+            const r = await fetch(AUTH + path, { method: 'POST', headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+            const j = await r.json(); if (!r.ok) throw new Error(j.error_description || j.msg || j.message || 'خطأ');
+            return j;
+        }
+        function setSession(j) { SESSION = j; try { localStorage.setItem('ccls_sess', JSON.stringify({ rt: j.refresh_token })); } catch (_) {} }
+        function openLogin() { $('login-modal').style.display = 'block'; }
+        async function doLogin() {
+            try { setSession(await authCall('/token?grant_type=password', { email: $('lg-email').value.trim(), password: $('lg-pass').value })); $('login-modal').style.display = 'none'; $('lg-pass').value = ''; await loadProfile(); }
+            catch (e) { toast('❌ ' + e.message); }
+        }
+        async function restoreSession() {
+            try { const o = JSON.parse(localStorage.getItem('ccls_sess') || 'null'); if (!o) return; setSession(await authCall('/token?grant_type=refresh_token', { refresh_token: o.rt })); await loadProfile(); }
+            catch (_) { try { localStorage.removeItem('ccls_sess'); } catch (e) {} }
+        }
+        function logout() { SESSION = PROFILE = null; STOCK = {}; try { localStorage.removeItem('ccls_sess'); } catch (_) {} applyRole(); renderMapAndList(); toast('تم تسجيل الخروج'); }
+        async function loadProfile() {
+            const r = await fetch(`${REST}/profiles?id=eq.${SESSION.user.id}&select=*`, { headers: hdr() });
+            PROFILE = r.ok ? ((await r.json())[0] || null) : null;
+            if (!PROFILE) toast('⚠️ حسابك غير مفعّل، راجع المدير');
+            applyRole(); await loadStock(); renderMapAndList();
+        }
+        function applyRole() {
+            document.body.classList.toggle('admin', !!PROFILE && PROFILE.role === 'admin');
+            document.body.classList.toggle('manager', !!PROFILE && PROFILE.role === 'manager');
+            const b = $('login-btn'); b.textContent = PROFILE ? '🚪 خروج (' + (PROFILE.full_name || '') + ')' : '🔐 دخول'; b.onclick = PROFILE ? logout : openLogin;
+        }
+        async function loadStock() {
+            STOCK = {}; if (!PROFILE) return;
+            const r = await fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity&order=entry_date.desc&limit=3000`, { headers: hdr() });
+            if (r.ok) (await r.json()).forEach(e => { if (!STOCK[e.location_id]) STOCK[e.location_id] = e; });
+        }
+        function openStock() {
+            const mine = PROFILE.role === 'admin' ? locations : locations.filter(l => String(l.id) === String(PROFILE.location_id));
+            if (!mine.length) return toast('لم يُسند إليك أي مخزن');
+            $('st-loc').innerHTML = mine.map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');
+            $('st-date').value = new Date().toISOString().slice(0, 10); $('st-qty').value = ''; $('st-note').value = '';
+            stockHint(); $('stock-modal').style.display = 'block';
+        }
+        function stockHint() {
+            const l = locations.find(x => String(x.id) === $('st-loc').value); if (!l) return;
+            const c = capNum(l), q = parseFloat($('st-qty').value), p = q >= 0 && c ? Math.round(q / c * 100) : null;
+            $('st-info').innerHTML = `السعة: <b>${c.toLocaleString()}</b> ق` + (p != null ? ` — الامتلاء: <b style="color:${fillColor(p)}">${p}%</b>` : '');
+        }
+        async function saveStock() {
+            const q = parseFloat($('st-qty').value); if (isNaN(q) || q < 0) return toast('أدخل كمية صحيحة');
+            const r = await fetch(`${REST}/stock_entries?on_conflict=location_id,entry_date`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ location_id: $('st-loc').value, entry_date: $('st-date').value, quantity: q, note: $('st-note').value.trim() }) });
+            if (!r.ok) return toast('❌ فشل الحفظ (تحقق من الصلاحيات)');
+            $('stock-modal').style.display = 'none'; toast('✅ تم تسجيل الكمية'); await loadStock(); renderMapAndList();
+        }
+        function fillSection() {
+            if (!PROFILE) return '';
+            const rows = locations.map(l => ({ l, p: fillPct(l), s: STOCK[l.id] })).filter(r => PROFILE.role === 'admin' || r.s).sort((a, b) => (b.p ?? -1) - (a.p ?? -1));
+            return '<div style="margin:12px 0 4px;color:#81C784;font-weight:bold;font-size:13px">🏭 امتلاء المخازن (آخر إدخال)</div>' + rows.map(({ l, p, s }) => {
+                const stale = !s || (Date.now() - new Date(s.entry_date)) > 2 * 864e5;
+                return `<div style="font-size:12px;margin:6px 0"><div style="display:flex;justify-content:space-between"><span>${esc(l.name)}${stale ? ' ⏰' : ''}</span><b>${p == null ? '—' : p + '%'}</b></div><div class="fbar"><i style="width:${Math.min(100, p || 0)}%;background:${fillColor(p || 0)}"></i></div></div>`;
+            }).join('') + '<div style="font-size:11px;color:#aaa">⏰ لا يوجد إدخال منذ أكثر من يومين</div>';
+        }
+        function openUsers() { $('u-loc').innerHTML = locations.map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join(''); $('users-modal').style.display = 'block'; listUsers(); }
+        async function listUsers() {
+            const r = await fetch(`${REST}/profiles?select=*&order=created_at`, { headers: hdr() }); const a = r.ok ? await r.json() : [];
+            $('u-list').innerHTML = a.map(u => { const l = locations.find(x => String(x.id) === String(u.location_id));
+                return `<div class="info-detail"><span>${esc(u.full_name)} <small style="color:#aaa">${esc(u.email || '')}</small><br><small>${u.role === 'admin' ? '👑 مدير' : '🏭 ' + esc(l ? l.name : '—')}</small></span>${u.id === PROFILE.id ? '' : `<button class="panel-btn delete-btn" style="flex:none;min-width:0" data-id="${esc(u.id)}" onclick="delUser(this.dataset.id)">🗑️</button>`}</div>`; }).join('') || 'لا يوجد مستخدمون';
+        }
+        async function addUser() {
+            const email = $('u-email').value.trim(), pw = $('u-pass').value, name = $('u-name').value.trim(), role = $('u-role').value;
+            if (!email || pw.length < 6 || !name) return toast('أكمل الاسم والبريد وكلمة مرور (6 أحرف على الأقل)');
+            try {
+                const j = await authCall('/signup', { email, password: pw }); const id = (j.user && j.user.id) || j.id;
+                if (!id) throw new Error('تعذر إنشاء الحساب، راجع إعدادات Auth في Supabase');
+                const r = await fetch(`${REST}/profiles`, { method: 'POST', headers: hdr({ Prefer: 'return=minimal' }), body: JSON.stringify({ id, email, full_name: name, role, location_id: role === 'manager' ? $('u-loc').value : null }) });
+                if (!r.ok) throw new Error('فشل ربط الحساب بالصلاحيات');
+                toast('✅ تمت إضافة المستخدم'); ['u-email', 'u-pass', 'u-name'].forEach(i => $(i).value = ''); listUsers();
+            } catch (e) { toast('❌ ' + e.message); }
+        }
+        async function delUser(id) {
+            if (!confirm('سحب صلاحيات هذا المستخدم؟')) return;
+            const r = await fetch(`${REST}/profiles?id=eq.${id}`, { method: 'DELETE', headers: hdr() }); toast(r.ok ? '🗑️ تم سحب الصلاحيات' : '❌ فشل'); listUsers();
+        }
+        setInterval(() => { if (SESSION) authCall('/token?grant_type=refresh_token', { refresh_token: SESSION.refresh_token }).then(setSession).catch(() => {}); }, 50 * 60000);
+        restoreSession();
     </script>
 </body>
 </html>
