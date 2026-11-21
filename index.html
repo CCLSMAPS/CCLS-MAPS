@@ -150,7 +150,9 @@
         .probe .ltr { direction: ltr; font-family: monospace; display: block; color: #81C784; }
         .dash-bar { height: 8px; background: #4CAF50; border-radius: 4px; }
         @media (max-width: 768px) { #coord-hud { display: none; } }
-        </style>
+                .panel-actions { flex-wrap: wrap; } .panel-btn { min-width: 30%; }
+        .btn-i { background: #AD1457; } .btn-c { background: #2E7D32; } .btn-r { background: #C62828; }
+    </style>
 </head>
 <body>
 
@@ -193,6 +195,13 @@
             <div class="action-buttons">
                 <button class="action-btn btn-d" onclick="openDash()">📈 المؤشرات</button>
                 <button class="action-btn btn-g" onclick="exportGeoJSON()">🗺️ GeoJSON</button>
+                <button class="action-btn btn-i" onclick="$('imp').click()" title="عرض ملف GeoJSON على الخريطة">📂 استيراد</button>
+                <input type="file" id="imp" accept=".geojson,.json" hidden onchange="importGeo(this)">
+            </div>
+            <div class="action-buttons">
+                <button class="action-btn btn-c" onclick="toggleCoverage(this)" title="دوائر خدمة بنصف القطر المحدد">⭕ نطاق الخدمة</button>
+                <button class="action-btn btn-r" onclick="findGap()" title="أبعد منطقة عن أي مركز">🕳️ فجوة التغطية</button>
+                <button class="action-btn btn-g" onclick="toggleFS()">⛶ ملء الشاشة</button>
             </div>
         </div>
         <div id="stats-bar">
@@ -482,6 +491,7 @@
             let lat = parseFloat(loc.lat);
             let lng = parseFloat(loc.lng);
             map.flyTo([lat, lng], 16);
+            setTimeout(() => loadWx(lat, lng), 0);
             history.replaceState(null, "", "#c=" + encodeURIComponent(loc.id));
             document.getElementById('ui-home').style.display = 'block';
             
@@ -505,7 +515,9 @@
                 <div class="info-detail"><span>🌾 نوع النشاط:</span> <b>${esc(loc.area)}</b></div>
                 <div class="info-detail"><span>📦 السعة / الكمية:</span> <b>${esc(loc.cap)}</b></div>
                 <div class="info-detail"><span>📍 الإحداثيات:</span> <b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b></div>
+                <div class="info-detail"><span>🌡️ الطقس الآن:</span> <b id="wx">…</b></div>
                 <div class="panel-actions">
+                    <button data-lat="${lat}" data-lng="${lng}" onclick="routeTo(+this.dataset.lat,+this.dataset.lng)" class="panel-btn" style="background:#1565C0">🧭 مسار</button>
                     <button onclick="copyText(location.href)" class="panel-btn" style="background:#6A1B9A">🔗 رابط</button>
                     <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
                     <button data-id="${esc(loc.id)}" onclick="openEditById(this.dataset.id)" class="panel-btn edit-btn">✏️ تعديل</button>
@@ -817,6 +829,64 @@
             a.href = URL.createObjectURL(new Blob([JSON.stringify({ type: 'FeatureCollection', features: f })], { type: 'application/geo+json' }));
             a.download = 'centers.geojson'; a.click();
         }
+    
+        // ===== ميزات إضافية =====
+        function loadWx(lat, lng) {
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,wind_speed_10m`).then(r => r.json()).then(j => {
+                const e = $('wx'); if (e) e.textContent = `${Math.round(j.current.temperature_2m)}°م — رياح ${Math.round(j.current.wind_speed_10m)} كم/س`;
+            }).catch(() => { const e = $('wx'); if (e) e.textContent = '—'; });
+        }
+        function routeTo(lat, lng) {
+            if (!navigator.geolocation) return toast('المتصفح لا يدعم تحديد الموقع');
+            toast('⏳ جاري حساب المسار...');
+            navigator.geolocation.getCurrentPosition(async p => {
+                try {
+                    const r = await (await fetch(`https://router.project-osrm.org/route/v1/driving/${p.coords.longitude},${p.coords.latitude};${lng},${lat}?overview=full&geometries=geojson`)).json();
+                    const rt = r.routes && r.routes[0]; if (!rt) return toast('لا يوجد مسار بري');
+                    if (nearestLineLayer) map.removeLayer(nearestLineLayer);
+                    nearestLineLayer = L.geoJSON(rt.geometry, { style: { color: '#00E5FF', weight: 5 } }).addTo(map);
+                    map.fitBounds(nearestLineLayer.getBounds(), { padding: [60, 60] });
+                    toast(`🧭 ${(rt.distance / 1000).toFixed(1)} كم — حوالي ${Math.round(rt.duration / 60)} دقيقة بالسيارة`);
+                } catch (e) { toast('تعذر حساب المسار، تحقق من الاتصال'); }
+            }, () => toast('فعّل إذن الـ GPS في المتصفح'));
+        }
+        let impLayer = null, covLayer = null, gapMarker = null;
+        function importGeo(inp) {
+            const f = inp.files[0]; if (!f) return; const r = new FileReader();
+            r.onload = () => {
+                try {
+                    if (impLayer) map.removeLayer(impLayer);
+                    impLayer = L.geoJSON(JSON.parse(r.result), {
+                        pointToLayer: (ft, ll) => L.circleMarker(ll, { radius: 6, color: '#fff', fillColor: '#E040FB', fillOpacity: 1 }),
+                        onEachFeature: (ft, l) => { const q = ft.properties || {}; l.bindPopup(esc(q.name || q.Name || 'عنصر مستورد')); }
+                    }).addTo(map);
+                    map.fitBounds(impLayer.getBounds()); toast('📂 تم العرض (للعرض فقط، لا يُحفظ في السحاب)');
+                } catch (e) { toast('ملف GeoJSON غير صالح'); }
+            };
+            r.readAsText(f); inp.value = '';
+        }
+        function toggleCoverage(b) {
+            if (covLayer) { map.removeLayer(covLayer); covLayer = null; b.classList.remove('on'); return; }
+            const R = Math.max(1, parseFloat($('rad-km').value) || 50) * 1000;
+            covLayer = L.layerGroup(locations.filter(l => l.status !== 'inactive' && !isNaN(+l.lat) && !isNaN(+l.lng)).map(l => L.circle([+l.lat, +l.lng], { radius: R, color: '#00E676', weight: 1, fillOpacity: .08, interactive: false }))).addTo(map);
+            b.classList.add('on');
+        }
+        function findGap() {
+            const pts = locations.filter(l => !isNaN(+l.lat) && !isNaN(+l.lng)).map(l => L.latLng(+l.lat, +l.lng));
+            if (pts.length < 2) return toast('بيانات غير كافية');
+            const b = L.latLngBounds(pts), N = 50; let best = null, bd = -1;
+            for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
+                const ll = L.latLng(b.getSouth() + (b.getNorth() - b.getSouth()) * i / N, b.getWest() + (b.getEast() - b.getWest()) * j / N);
+                let m = Infinity; for (const q of pts) { const d = ll.distanceTo(q); if (d < m) m = d; }
+                if (m > bd) { bd = m; best = ll; }
+            }
+            if (gapMarker) map.removeLayer(gapMarker);
+            gapMarker = L.circle(best, { radius: bd, color: '#FF5252', weight: 2, fillOpacity: .1, dashArray: '6 6' }).addTo(map)
+                .bindPopup(`🕳️ أكبر فجوة تغطية<br>أقرب مركز يبعد ${(bd / 1000).toFixed(0)} كم<br><span style="direction:ltr;display:block">${best.lat.toFixed(4)}, ${best.lng.toFixed(4)}</span>`).openPopup();
+            map.fitBounds(gapMarker.getBounds());
+        }
+        function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
+        map.on(L.Draw.Event.CREATED, e => { try { toast('📐 المساحة: ' + (L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]) / 10000).toFixed(2) + ' هكتار'); } catch (_) {} });
     </script>
 </body>
 </html>
