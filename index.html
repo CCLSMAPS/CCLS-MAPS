@@ -1533,16 +1533,16 @@ async function runDetect0() {
   catch (e) { st.textContent = '❌ تعذر تحميل الصور، تحقق من الاتصال'; return; }
   let data; try { data = cx.getImageData(0, 0, cv.width, cv.height).data; } catch (e) { st.textContent = '❌ المتصفح منع قراءة الصور (CORS)'; return; }
   st.textContent = '⏳ تحليل الصورة...'; await new Promise(r => setTimeout(r, 30));
-  const W = cv.width >> 1, H = cv.height >> 1, N = W * H, L = new Float32Array(N), RG = new Float32Array(N);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let l = 0, d = 0; for (let k = 0; k < 4; k++) { const p = ((2 * y + (k >> 1)) * cv.width + 2 * x + (k & 1)) * 4; l += .299 * data[p] + .587 * data[p + 1] + .114 * data[p + 2]; d += data[p] - data[p + 1]; } L[y * W + x] = l / 4; RG[y * W + x] = d / 4; }
-  const Bg = Float32Array.from(L).sort()[Math.floor(N * .8)];
-  let m = new Uint8Array(N), cov = 0; for (let i = 0; i < N; i++) { m[i] = L[i] < Bg * (1 - sens) ? 1 : 0; cov += m[i]; }
+  const W = cv.width >> 1, H = cv.height >> 1, N = W * H, Lum = new Float32Array(N), RG = new Float32Array(N);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let l = 0, d = 0; for (let k = 0; k < 4; k++) { const p = ((2 * y + (k >> 1)) * cv.width + 2 * x + (k & 1)) * 4; l += .299 * data[p] + .587 * data[p + 1] + .114 * data[p + 2]; d += data[p] - data[p + 1]; } Lum[y * W + x] = l / 4; RG[y * W + x] = d / 4; }
+  const Bg = Float32Array.from(Lum).sort()[Math.floor(N * .8)];
+  let m = new Uint8Array(N), cov = 0; for (let i = 0; i < N; i++) { m[i] = Lum[i] < Bg * (1 - sens) ? 1 : 0; cov += m[i]; }
   m = morph(morph(morph(morph(m, W, H, true), W, H, true), W, H, false), W, H, false);
   const lab = new Uint8Array(N), stack = new Int32Array(N); let tot = 0; const rej = { edge: 0, shape: 0, size: 0, dark: 0 };
   for (let s0 = 0; s0 < N; s0++) {
     if (!m[s0] || lab[s0]) continue; let sp = 0, area = 0, sl = 0, xa = W, xb = 0, ya = H, yb = 0, edge = false; stack[sp++] = s0; lab[s0] = 1;
     while (sp) {
-      const q = stack[--sp], qx = q % W, qy = (q / W) | 0; area++; sl += L[q]; if (qx < xa) xa = qx; if (qx > xb) xb = qx; if (qy < ya) ya = qy; if (qy > yb) yb = qy; if (qx === 0 || qy === 0 || qx === W - 1 || qy === H - 1) edge = true;
+      const q = stack[--sp], qx = q % W, qy = (q / W) | 0; area++; sl += Lum[q]; if (qx < xa) xa = qx; if (qx > xb) xb = qx; if (qy < ya) ya = qy; if (qy > yb) yb = qy; if (qx === 0 || qy === 0 || qx === W - 1 || qy === H - 1) edge = true;
       for (const n of [qx > 0 ? q - 1 : -1, qx < W - 1 ? q + 1 : -1, q - W, q + W]) if (n >= 0 && n < N && m[n] && !lab[n]) { lab[n] = 1; stack[sp++] = n; }
     }
     tot++; if (edge) { rej.edge++; continue; }
