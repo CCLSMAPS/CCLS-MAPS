@@ -211,6 +211,30 @@
 #sheet .cin.bk{display:flex;flex-direction:column;justify-content:center;text-align:center;padding:4mm;font-size:7pt;line-height:1.6}
 #sheet .bk .lb{height:13mm;margin:0 auto 2mm}
 @media print{#sheet{display:block!important}}
+
+/* ===== صفحة المؤشرات ===== */
+#dash-page{display:none;position:fixed;inset:0;z-index:8200;overflow:auto;direction:rtl;font-family:Tahoma,Arial,sans-serif;background:#0d1710;color:#e8efe8}
+#dash-page *{box-sizing:border-box}
+#dash-page header{position:sticky;top:0;z-index:5;background:linear-gradient(90deg,#1b4d2a,#0f2e19);border-bottom:3px solid #c9a227;padding:12px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+@media(min-width:600px){#dash-page header{padding-left:230px}}
+#dash-page header h2{margin:0;font-size:19px;flex:1}#dash-page header small{color:#bcd5c0}
+#dash-page header button{background:#2b3f30;color:#fff;border:1px solid #416048;border-radius:8px;padding:7px 12px;cursor:pointer;font:12px Tahoma}
+#dp-body{max-width:1250px;margin:auto;padding:14px}
+.dp-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:12px}
+.dp-kpi{background:#16241a;border:1px solid #27402d;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:3px}
+.dp-kpi span{font-size:12px;color:#a9c4ae}.dp-kpi b{font-size:24px}.dp-kpi small{font-size:11px;color:#8fae95}
+.dp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-bottom:12px}
+.dp-card{background:#16241a;border:1px solid #27402d;border-radius:12px;padding:14px}
+.dp-card h4{margin:0 0 10px;font-size:14px;color:#c9a227}.dp-wide{grid-column:1/-1}
+@media(min-width:900px){.dp-span2{grid-column:span 2}}
+.dp-bar{margin:7px 0;font-size:12px}.dp-bar>div:first-child{display:flex;justify-content:space-between;gap:8px}
+.dp-trk{height:8px;background:#263629;border-radius:5px;overflow:hidden;margin-top:3px}.dp-trk i{display:block;height:100%;border-radius:5px}
+.dp-donut{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.dp-donut svg{width:130px;height:130px;transform:rotate(0)}
+.dp-lg{display:flex;align-items:center;gap:6px;font-size:12px;margin:3px 0}.dp-lg i{width:10px;height:10px;border-radius:3px}.dp-lg b{margin-right:auto}
+.dp-line{width:100%;height:130px;background:#101c14;border-radius:8px}.dp-axis{display:flex;justify-content:space-between;font-size:11px;color:#9bb7a0;margin-top:5px}
+.dp-tbl{width:100%;border-collapse:collapse;font-size:12px}.dp-tbl th{background:#1d3324;color:#c9a227;position:sticky;top:0}
+.dp-tbl td,.dp-tbl th{padding:7px 8px;border-bottom:1px solid #243a2a;text-align:right;white-space:nowrap}.dp-tbl tbody tr{cursor:pointer}.dp-tbl tbody tr:hover{background:#1b2f21}
+.dp-pill{padding:2px 8px;border-radius:10px;color:#fff;font-size:11px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -1120,6 +1144,9 @@
     
   </div>
 </main></div>
+<div id="dash-page"><header><h2>📊 لوحة المؤشرات</h2><small id="dp-date"></small>
+<button onclick="openDash()">🔄 تحديث</button><button onclick="exportDashXlsx()">📥 Excel</button><button onclick="closeDash()">✕ إغلاق</button></header>
+<div id="dp-body"></div></div>
 <style id="pgstyle"></style>
 <div id="sheet"></div>
 <div id="gate"><div class="gb">
@@ -1398,6 +1425,62 @@ function updateAlertBadge() {
   if (n && !window._alToast) { window._alToast = 1; toast('🚨 ' + n + ' تنبيه في المخزون — افتح لوحة المؤشرات'); }
 }
 setInterval(() => { if (PROFILE) loadStock().then(updateAlertBadge); }, 15 * 60000);
+
+// ===== صفحة المؤشرات الاحترافية =====
+const sumBy = (a, f) => a.reduce((s, x) => s + f(x), 0), nf = n => Math.round(n).toLocaleString('en-US');
+const PAL = ['#2E7D32', '#C9A227', '#B23A22', '#1E88E5', '#8E24AA', '#00ACC1', '#EF6C00', '#6D4C41'];
+const dashScope = () => PROFILE && PROFILE.role === 'manager' ? locations.filter(l => String(l.id) === String(PROFILE.location_id)) : locations;
+const grp = (a, fn) => { const m = {}; a.forEach(l => { const k = fn(l) || '—'; m[k] = (m[k] || 0) + capNum(l); }); return Object.entries(m).map(([l, v]) => ({ l, v })).sort((x, y) => y.v - x.v); };
+const KP = (ic, lb, v, sub, col) => `<div class="dp-kpi" style="border-top:3px solid ${col}"><span>${ic} ${lb}</span><b>${v}</b><small>${sub}</small></div>`;
+function bars(rows, fmt, mx) { mx = mx || Math.max(1, ...rows.map(r => r.v)); return rows.map(r => `<div class="dp-bar"><div><span>${esc(r.l)}</span><b>${fmt(r)}</b></div><div class="dp-trk"><i style="width:${Math.min(100, Math.max(2, r.v / mx * 100))}%;background:${r.c || '#4CAF50'}"></i></div></div>`).join('') || '<small>لا توجد بيانات</small>'; }
+function donut(parts) {
+  const tot = sumBy(parts, p => p.v) || 1; let off = 0;
+  const seg = parts.map((p, i) => { const v = p.v / tot * 100, c = `<circle r="15.9155" cx="21" cy="21" fill="none" stroke="${PAL[i % 8]}" stroke-width="6" stroke-dasharray="${v} ${100 - v}" stroke-dashoffset="${25 - off}"/>`; off += v; return c; }).join('');
+  return `<div class="dp-donut"><svg viewBox="0 0 42 42"><circle r="15.9155" cx="21" cy="21" fill="none" stroke="#263629" stroke-width="6"/>${seg}</svg><div>${parts.map((p, i) => `<div class="dp-lg"><i style="background:${PAL[i % 8]}"></i><span>${esc(p.l)}</span><b>${(p.v / tot * 100).toFixed(0)}%</b></div>`).join('')}</div></div>`;
+}
+function trend(hist, sc) {
+  const ids = new Set(sc.map(l => String(l.id))), days = [], by = {};
+  for (let i = 29; i >= 0; i--) days.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10));
+  hist.filter(h => ids.has(String(h.location_id))).forEach(h => { (by[h.location_id] = by[h.location_id] || {})[h.entry_date] = +h.quantity; });
+  if (!Object.keys(by).length) return '<small>لا توجد إدخالات في آخر 30 يومًا</small>';
+  const tot = days.map(() => 0);
+  Object.values(by).forEach(m => { let prev = m[Object.keys(m).sort()[0]]; days.forEach((d, i) => { if (m[d] != null) prev = m[d]; tot[i] += prev; }); });
+  const W = 300, H = 100, mx = Math.max(...tot) * 1.1 || 1, line = tot.map((v, i) => (i / 29 * W).toFixed(1) + ',' + (H - v / mx * H).toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" class="dp-line" preserveAspectRatio="none"><polygon points="0,${H} ${line} ${W},${H}" fill="rgba(76,175,80,.2)"/><polyline points="${line}" fill="none" stroke="#66BB6A" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><div class="dp-axis"><span>${days[29].slice(5)}</span><b>الآن ${nf(tot[29])} ق • الذروة ${nf(Math.max(...tot))} ق</b><span>${days[0].slice(5)}</span></div>`;
+}
+function buildDash(hist) {
+  const sc = dashScope(), act = sc.filter(l => l.status !== 'inactive'), al = computeAlerts();
+  const cap = sumBy(act, capNum), qty = sumBy(act, l => STOCK[l.id] ? +STOCK[l.id].quantity : 0), pct = cap ? Math.round(qty / cap * 100) : 0;
+  const last = Object.values(STOCK).map(x => x.entry_date).sort().pop() || '—';
+  const rows = sc.map(l => ({ l, s: STOCK[l.id], p: fillPct(l) })).sort((a, b) => (b.p ?? -1) - (a.p ?? -1));
+  const kp = [KP('🏭', 'المراكز', sc.length, `${act.length} نشطة • ${sc.length - act.length} خارج الخدمة`, '#4CAF50'), KP('📦', 'السعة الإجمالية', nf(cap) + ' ق', 'المراكز النشطة', '#C9A227'),
+    KP('🌾', 'الكمية المخزنة', nf(qty) + ' ق', 'حسب آخر الإدخالات', '#1E88E5'), KP('📊', 'نسبة الامتلاء', pct + '%', pct >= 90 ? 'مرتفعة جدًا' : pct >= 70 ? 'مرتفعة' : 'طبيعية', fillColor(pct)),
+    KP('🚨', 'التنبيهات', al.length, `${al.filter(a => a.full).length} ممتلئة • ${al.filter(a => a.stale).length} متأخرة`, al.length ? '#d32f2f' : '#2E7D32'), KP('⏱', 'آخر إدخال', last, 'تاريخ آخر تحديث', '#8E24AA')];
+  if (PROFILE.role === 'admin' && workers.length) kp.push(KP('🪪', 'العمال', workers.length, 'مسجّلون في البطاقات', '#00ACC1'));
+  const tbl = rows.map(({ l, s, p }) => { const d = s ? Math.floor((Date.now() - new Date(s.entry_date + 'T00:00:00')) / 864e5) : null;
+    return `<tr data-id="${esc(l.id)}" onclick="goAlert(this.dataset.id)"><td><b>${esc(l.name)}</b></td><td>${esc(l.area || '—')}</td><td>${esc(l.province || 'أدرار')}</td><td>${nf(capNum(l))}</td><td>${s ? nf(s.quantity) : '—'}</td><td>${p == null ? '—' : `<span class="dp-pill" style="background:${fillColor(p)}">${p}%</span>`}</td><td>${s ? esc(s.entry_date) : '—'}${d != null && d > ALERT_DAYS ? ' ⏰' : ''}</td><td>${l.status === 'inactive' ? '🔴 خارج الخدمة' : '🟢 نشط'}</td></tr>`; }).join('');
+  return `<div class="dp-kpis">${kp.join('')}</div>${al.length || STOCK_READY ? alertsSection() : ''}
+  <div class="dp-grid"><div class="dp-card dp-span2"><h4>📈 تطور الكمية المخزنة (آخر 30 يومًا)</h4>${trend(hist, act)}</div>
+  <div class="dp-card"><h4>🥧 توزيع السعة حسب النشاط</h4>${donut(grp(act, l => l.area))}</div></div>
+  <div class="dp-grid"><div class="dp-card"><h4>🏭 امتلاء المخازن</h4>${bars(rows.filter(r => r.p != null).map(r => ({ l: r.l.name, v: r.p, c: fillColor(r.p) })), r => r.v + '%', 100)}</div>
+  <div class="dp-card"><h4>🗺️ السعة حسب الولاية</h4>${bars(grp(act, l => l.province || 'أدرار'), r => nf(r.v) + ' ق')}</div></div>
+  <div class="dp-card dp-wide"><h4>📋 جدول المراكز التفصيلي</h4><div style="overflow:auto;max-height:420px"><table class="dp-tbl"><thead><tr><th>المركز</th><th>النشاط</th><th>الولاية</th><th>السعة</th><th>الكمية</th><th>الامتلاء</th><th>آخر تحديث</th><th>الحالة</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
+}
+async function openDash() {
+  if (!PROFILE) return;
+  $('dash-page').style.display = 'block'; $('dp-body').innerHTML = '<div style="padding:40px;text-align:center">⏳ جاري تحميل المؤشرات...</div>';
+  await loadStock(); updateAlertBadge();
+  const d = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  const r = await fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity&entry_date=gte.${d}&order=entry_date.asc&limit=5000`, { headers: hdr() });
+  $('dp-body').innerHTML = buildDash(r.ok ? await r.json() : []); $('dp-date').textContent = new Date().toLocaleString('ar-DZ');
+}
+function closeDash() { $('dash-page').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDash(); });
+function goAlert(id) { const l = locations.find(x => String(x.id) === String(id)); if (!l) return; closeDash(); $('dash-modal').style.display = 'none'; showView('map'); showDetails(l); }
+function exportDashXlsx() {
+  const rows = [['المركز', 'النشاط', 'الولاية', 'السعة', 'الكمية', 'الامتلاء %', 'آخر تحديث', 'الحالة']].concat(dashScope().map(l => { const s = STOCK[l.id], p = fillPct(l); return [l.name, l.area || '', l.province || 'أدرار', capNum(l), s ? +s.quantity : '', p == null ? '' : p, s ? s.entry_date : '', l.status === 'inactive' ? 'خارج الخدمة' : 'نشط']; }));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'المؤشرات'); XLSX.writeFile(wb, 'indicators_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
 
 enter();
 </script>
