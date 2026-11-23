@@ -569,6 +569,7 @@
                 listContainer.appendChild(item);
             });
             updateHeat();
+            updateAlertBadge();
             if (!window._dl) { window._dl = 1; openFromHash(); }
         }
 
@@ -899,7 +900,7 @@
             const grp = fn => { const m = {}; locations.forEach(l => { const k = fn(l); (m[k] = m[k] || { n: 0, c: 0 }).n++; m[k].c += capNum(l); }); return Object.entries(m).sort((a, b) => b[1].c - a[1].c); };
             const sec = (t, rows) => { const mx = Math.max(1, ...rows.map(r => r[1].c)); return `<div style="margin:12px 0 4px;color:#81C784;font-weight:bold;font-size:13px">${t}</div>` + rows.map(([k, v]) => `<div style="font-size:12px;margin:6px 0"><div style="display:flex;justify-content:space-between"><span>${esc(k)} (${v.n})</span><b>${v.c.toLocaleString()} ق</b></div><div class="dash-bar" style="width:${Math.max(2, v.c / mx * 100)}%"></div></div>`).join(''); };
             const act = locations.filter(l => l.status !== 'inactive').length;
-            $('dash-body').innerHTML = `<div class="info-detail"><span>✅ مراكز نشطة</span><b>${act}</b></div><div class="info-detail"><span>⚠️ خارج الخدمة</span><b>${locations.length - act}</b></div>` + sec('السعة حسب النشاط', grp(l => l.area || '—')) + sec('السعة حسب الولاية', grp(l => l.province || 'أدرار')) + fillSection();
+            $('dash-body').innerHTML = alertsSection() + `<div class="info-detail"><span>✅ مراكز نشطة</span><b>${act}</b></div><div class="info-detail"><span>⚠️ خارج الخدمة</span><b>${locations.length - act}</b></div>` + sec('السعة حسب النشاط', grp(l => l.area || '—')) + sec('السعة حسب الولاية', grp(l => l.province || 'أدرار')) + fillSection();
             $('dash-modal').style.display = 'block';
         }
 
@@ -1017,6 +1018,7 @@
             STOCK = {}; if (!PROFILE) return;
             const r = await fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity&order=entry_date.desc&limit=3000`, { headers: hdr() });
             if (r.ok) (await r.json()).forEach(e => { if (!STOCK[e.location_id]) STOCK[e.location_id] = e; });
+            STOCK_READY = r.ok;
         }
         function openStock() {
             const mine = PROFILE.role === 'admin' ? locations : locations.filter(l => String(l.id) === String(PROFILE.location_id));
@@ -1366,6 +1368,36 @@ async function printSelected() {
   await Promise.all([...$('sheet').querySelectorAll('img')].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })));
   print();
 }
+
+// ===== تنبيهات المخزون التلقائية: امتلاء > 90% أو لا تحديث منذ أكثر من 7 أيام =====
+const ALERT_PCT = 90, ALERT_DAYS = 7; let STOCK_READY = false;
+function computeAlerts() {
+  if (!PROFILE || !STOCK_READY) return [];
+  const scope = PROFILE.role === 'admin' ? locations : locations.filter(l => String(l.id) === String(PROFILE.location_id));
+  const out = [];
+  scope.filter(l => l.status !== 'inactive').forEach(l => {
+    const s = STOCK[l.id], p = fillPct(l);
+    const days = s ? Math.floor((Date.now() - new Date(s.entry_date + 'T00:00:00')) / 864e5) : null;
+    const full = p != null && p > ALERT_PCT, stale = days == null || days > ALERT_DAYS;
+    if (full || stale) out.push({ l, p, days, full, stale });
+  });
+  return out.sort((a, b) => (b.full - a.full) || ((b.p ?? 0) - (a.p ?? 0)) || ((b.days ?? 9e9) - (a.days ?? 9e9)));
+}
+function alertsSection() {
+  if (!PROFILE || !STOCK_READY) return '';
+  const a = computeAlerts();
+  const head = `<div style="margin:0 0 6px;color:${a.length ? '#ff8a80' : '#81C784'};font-weight:bold;font-size:13px">🚨 تنبيهات المخزون (${a.length})</div>`;
+  if (!a.length) return `<div style="border:1px solid #2E7D32;border-radius:8px;padding:8px;margin-bottom:10px">${head}<div style="font-size:12px">✅ لا توجد تنبيهات: لا مخزن تجاوز ${ALERT_PCT}% ولا مخزن تأخر تحديثه أكثر من ${ALERT_DAYS} أيام.</div></div>`;
+  return `<div style="border:1px solid #d32f2f;border-radius:8px;padding:8px;margin-bottom:10px;background:rgba(211,47,47,.08)">${head}` + a.map(x =>
+    `<div data-id="${esc(x.l.id)}" onclick="goAlert(this.dataset.id)" style="cursor:pointer;font-size:12px;padding:6px 0;border-top:1px solid #333"><b>${esc(x.l.name)}</b><br>${x.full ? `<span style="color:#ff8a80">🔴 الامتلاء ${x.p}%</span> ` : ''}${x.stale ? `<span style="color:#ffb74d">⏰ ${x.days == null ? 'لا يوجد أي إدخال' : 'آخر تحديث منذ ' + x.days + ' يوم'}</span>` : ''}</div>`).join('') + '</div>';
+}
+function goAlert(id) { const l = locations.find(x => String(x.id) === String(id)); if (!l) return; $('dash-modal').style.display = 'none'; showDetails(l); }
+function updateAlertBadge() {
+  const n = computeAlerts().length, b = document.querySelector('button[onclick="openDash()"]');
+  if (b) b.textContent = '📈 المؤشرات' + (n ? ' 🔴' + n : '');
+  if (n && !window._alToast) { window._alToast = 1; toast('🚨 ' + n + ' تنبيه في المخزون — افتح لوحة المؤشرات'); }
+}
+setInterval(() => { if (PROFILE) loadStock().then(updateAlertBadge); }, 15 * 60000);
 
 enter();
 </script>
