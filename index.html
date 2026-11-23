@@ -282,7 +282,7 @@ body.admin .ui-controls{left:290px}
             <div class="action-buttons">
                 <button class="action-btn btn-c admin-only" onclick="togglePivotMode(this)" title="اضغط مركز المحور ثم حافته">🌀 إضافة محور</button>
                 <button class="action-btn btn-g" onclick="togglePivots()">👁 المحاور الدوارة</button>
-                <button class="action-btn btn-r admin-only" onclick="openAndRunDetect()">🔍 كشف المحاور الآن</button>
+                <button class="action-btn btn-r admin-only" onclick="$('det-modal').style.display='block'">🔍 كشف تلقائي</button>
             </div>
             <input type="text" id="geoSearch" placeholder="🌍 ابحث عن مكان أو إحداثيات (27.6, -0.25)" onkeydown="geoSearch(event)">
             <div class="action-buttons">
@@ -354,13 +354,13 @@ body.admin .ui-controls{left:290px}
         <div class="info-detail"><span>📍 الإحداثيات</span><b id="pv-ll" style="direction:ltr"></b></div>
         <div class="modal-btns"><button onclick="pvSave()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 حفظ</button><button onclick="pvClose()" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إلغاء</button></div></div>
     <div id="det-modal" class="custom-modal" style="top:auto;bottom:15px;left:15px;transform:none;max-width:340px"><h4>🔍 كشف المحاور الدوارة تلقائيًا</h4>
-        <div style="font-size:12px;color:#aaa;margin-bottom:6px">يفحص صورة القمر الصناعي لكامل المنطقة الظاهرة ويحدد الدوائر تلقائيًا. للحصول على نتائج أفضل، اجعل الدوائر واضحة وكاملة داخل الشاشة.</div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:6px">يحلّل صورة القمر الصناعي للمنطقة الظاهرة على الشاشة. قرّب حتى تظهر المحاور كاملة (كل محور داخل الشاشة).</div>
         <div class="grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
-          
+          <div class="form-group"><label>الحساسية %</label><input type="number" id="det-sens" value="14" min="4" max="40"></div>
           <div class="form-group"><label>أصغر نصف قطر (م)</label><input type="number" id="det-rmin" value="100"></div>
           <div class="form-group"><label>أكبر نصف قطر (م)</label><input type="number" id="det-rmax" value="800"></div></div>
         <div id="det-st" style="font-size:13px;margin:6px 0;min-height:18px"></div>
-        <div class="modal-btns"><button onclick="runDetect()" style="flex:1;padding:8px;background:#2E7D32;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">🔄 إعادة الكشف</button><button onclick="detSaveAll()" style="flex:1;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">💾 حفظ الكل</button><button onclick="detClear()" style="flex:1;padding:8px;background:#6D4C41;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">🧹 مسح</button><button onclick="$('det-modal').style.display='none'" style="flex:1;padding:8px;background:#555;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">إغلاق</button></div></div>
+        <div class="modal-btns"><button onclick="runDetect()" style="flex:1;padding:8px;background:#2E7D32;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">▶ تشغيل</button><button onclick="detSaveAll()" style="flex:1;padding:8px;background:#1565C0;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">💾 حفظ الكل</button><button onclick="detClear()" style="flex:1;padding:8px;background:#6D4C41;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">🧹 مسح</button><button onclick="$('det-modal').style.display='none'" style="flex:1;padding:8px;background:#555;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">إغلاق</button></div></div>
     <div id="coord-hud">—</div>
     <div id="toast"></div>
     <div id="dash-modal" class="custom-modal" style="max-height:85vh;overflow:auto">
@@ -1529,248 +1529,177 @@ function metersPerPixel(lat, zoom) {
 }
 
 // تحميل صور القمر الصناعي للمنطقة الظاهرة وتجميعها في Canvas
-// تحميل OpenCV.js مرة واحدة لاستخدام كاشف الدوائر Hough على كامل مساحة الخريطة
-let detCvPromise = null;
-function ensureOpenCV() {
-  if (window.cv && window.cv.Mat) return Promise.resolve(window.cv);
-  if (detCvPromise) return detCvPromise;
-  detCvPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script');
-    script.src = 'https://docs.opencv.org/4.x/opencv.js';
-    script.async = true;
-    const timer = setTimeout(() => reject(new Error('انتهت مهلة تحميل محرك تحليل الدوائر')), 35000);
-    const poll = setInterval(() => {
-      if (window.cv && window.cv.Mat && window.cv.HoughCircles) {
-        clearInterval(poll); clearTimeout(timer); resolve(window.cv);
-      }
-    }, 150);
-    script.onerror = () => { clearInterval(poll); clearTimeout(timer); reject(new Error('تعذر تحميل محرك الكشف؛ تحقق من الإنترنت')); };
-    document.head.appendChild(script);
-  }).catch(err => { detCvPromise = null; throw err; });
-  return detCvPromise;
-}
-
-// التقاط نفس حدود الشاشة بدقة صحيحة حتى لو كان مستوى التكبير كسريًا
 async function captureMapCanvas() {
-  const zoom = Math.round(map.getZoom());
   const size = map.getSize();
-  const nw = map.containerPointToLatLng([0, 0]);
-  const topLeft = map.project(nw, zoom);
+  const zoom = Math.round(map.getZoom());
+  const topLeft = map.getPixelBounds().min;
   const tileSize = 256;
-  const minTileX = Math.floor(topLeft.x / tileSize);
-  const minTileY = Math.floor(topLeft.y / tileSize);
-  const maxTileX = Math.floor((topLeft.x + size.x * Math.pow(2, zoom - map.getZoom())) / tileSize);
-  const maxTileY = Math.floor((topLeft.y + size.y * Math.pow(2, zoom - map.getZoom())) / tileSize);
-  const scale = Math.pow(2, zoom - map.getZoom());
-  const width = Math.ceil(size.x * scale), height = Math.ceil(size.y * scale);
   const canvas = document.createElement('canvas');
-  canvas.width = width; canvas.height = height;
+  canvas.width = size.x;
+  canvas.height = size.y;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) throw new Error('تعذر إنشاء مساحة تحليل الصورة');
+
+  const minTileX = Math.floor(topLeft.x / tileSize);
+  const maxTileX = Math.floor((topLeft.x + size.x) / tileSize);
+  const minTileY = Math.floor(topLeft.y / tileSize);
+  const maxTileY = Math.floor((topLeft.y + size.y) / tileSize);
   const count = (maxTileX - minTileX + 1) * (maxTileY - minTileY + 1);
-  if (count > 80) throw new Error('عدد البلاطات كبير؛ قرّب الخريطة قليلاً ثم أعد الكشف');
-  const jobs = [];
-  for (let tx = minTileX; tx <= maxTileX; tx++) for (let ty = minTileY; ty <= maxTileY; ty++) {
-    jobs.push(new Promise(resolve => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      const tileTimer = setTimeout(() => resolve(false), 12000);
-      img.onload = () => {
-        try {
-          ctx.drawImage(img, tx * tileSize - topLeft.x, ty * tileSize - topLeft.y, tileSize, tileSize);
-          clearTimeout(tileTimer);
-          resolve(true);
-        } catch (_) { clearTimeout(tileTimer); resolve(false); }
-      };
-      img.onerror = () => { clearTimeout(tileTimer); resolve(false); };
-      // Esri World Imagery يسمح بقراءة البلاطات عبر Canvas ويعطي صورة فضائية واضحة
-      img.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${ty}/${tx}`;
-    }));
-  }
-  const loaded = await Promise.all(jobs);
-  if (!loaded.some(Boolean)) throw new Error('تعذر تحميل صور الأقمار الصناعية للمنطقة الظاهرة');
-  return { canvas, zoom, topLeft, scale };
+  if (count > 60) throw new Error('المنطقة كبيرة؛ قرّب الخريطة حتى تظهر المنطقة المطلوبة');
+
+  const subs = ['mt0', 'mt1', 'mt2', 'mt3'];
+  const results = await Promise.all((() => {
+    const tasks = [];
+    for (let tx = minTileX; tx <= maxTileX; tx++) {
+      for (let ty = minTileY; ty <= maxTileY; ty++) {
+        const sub = subs[Math.abs(tx + ty) % 4];
+        const url = `https://${sub}.google.com/vt/lyrs=s&x=${tx}&y=${ty}&z=${zoom}`;
+        tasks.push(new Promise(resolve => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              ctx.drawImage(img, tx * tileSize - topLeft.x, ty * tileSize - topLeft.y, tileSize, tileSize);
+              resolve(true);
+            } catch (_) { resolve(false); }
+          };
+          img.onerror = () => resolve(false);
+          img.src = url;
+        }));
+      }
+    }
+    return tasks;
+  })());
+  if (!results.some(Boolean)) throw new Error('تعذر تحميل بلاطات القمر الصناعي؛ تحقق من الاتصال بالإنترنت');
+  return { canvas, zoom };
 }
 
-function mergeHoughCircles(items) {
-  items.sort((a, b) => b.score - a.score);
-  const out = [];
-  for (const c of items) {
-    const duplicate = out.some(k =>
-      Math.hypot(c.x-k.x, c.y-k.y) < Math.max(c.r,k.r)*0.58 &&
-      Math.abs(c.r-k.r) < Math.max(c.r,k.r)*0.42
-    );
-    if (!duplicate) out.push(c);
+// بناء مؤشر يجمع الخضرة والتربة الداكنة ويقلل تأثير الرمال الصحراوية
+function buildFeatureMap(imgData, w, h) {
+  const d = imgData.data;
+  const score = new Float32Array(w * h);
+  let sum = 0;
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+    const sat = maxC === 0 ? 0 : (maxC - minC) / maxC;
+    const exG = Math.max(0, 2 * g - r - b);
+    const nonSand = Math.max(0, (g + b) * 0.55 - r * 0.65 + 0.25);
+    const darkness = Math.max(0, 0.72 - (0.299 * r + 0.587 * g + 0.114 * b));
+    const v = exG * 1.8 + nonSand * 1.1 + darkness * 0.9 - sat * 0.15;
+    score[p] = v;
+    sum += v;
+  }
+  const mean = sum / (w * h);
+  let sqSum = 0;
+  for (let p = 0; p < score.length; p++) { const diff = score[p] - mean; sqSum += diff * diff; }
+  const std = Math.sqrt(sqSum / (w * h)) || 0.05;
+  for (let p = 0; p < score.length; p++) score[p] = (score[p] - mean) / std;
+  return score;
+}
+
+function smoothMap(src, w, h) {
+  const out = new Float32Array(w * h);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x;
+    out[i] = (src[i-w-1] + src[i-w] + src[i-w+1] + src[i-1] + src[i] + src[i+1] + src[i+w-1] + src[i+w] + src[i+w+1]) / 9;
   }
   return out;
 }
 
-// حل نظام خطي 3x3 بطريقة الحذف الغاوسي؛ يُستخدم لملاءمة دائرة لأقواس الحافة
-function solve3x3(A, b) {
-  const m = A.map((row, i) => [...row, b[i]]);
-  for (let col = 0; col < 3; col++) {
-    let pivot = col;
-    for (let r = col + 1; r < 3; r++)
-      if (Math.abs(m[r][col]) > Math.abs(m[pivot][col])) pivot = r;
-    if (Math.abs(m[pivot][col]) < 1e-9) return null;
-    [m[col], m[pivot]] = [m[pivot], m[col]];
-    const div = m[col][col];
-    for (let j = col; j < 4; j++) m[col][j] /= div;
-    for (let r = 0; r < 3; r++) if (r !== col) {
-      const f = m[r][col];
-      for (let j = col; j < 4; j++) m[r][j] -= f * m[col][j];
+function extractCirclesFromMask(mask, scoreMap, w, h, rMinPx, rMaxPx) {
+  const visited = new Uint8Array(w * h), candidates = [], stack = new Int32Array(w * h);
+  for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 2; x++) {
+    const start = y * w + x;
+    if (!mask[start] || visited[start]) continue;
+    let sp = 0; stack[sp++] = start; visited[start] = 1;
+    let area = 0, sumX = 0, sumY = 0, minX = x, maxX = x, minY = y, maxY = y, touchesEdge = false;
+    while (sp > 0) {
+      const curr = stack[--sp], cx = curr % w, cy = (curr - cx) / w;
+      area++; sumX += cx; sumY += cy;
+      if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+      if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
+      if (cx <= 2 || cx >= w - 3 || cy <= 2 || cy >= h - 3) touchesEdge = true;
+      const ns = [curr - 1, curr + 1, curr - w, curr + w];
+      for (const n of ns) if (mask[n] && !visited[n]) { visited[n] = 1; stack[sp++] = n; }
     }
+    if (touchesEdge) continue;
+    const bw = maxX - minX + 1, bh = maxY - minY + 1;
+    const aspect = Math.min(bw, bh) / Math.max(bw, bh), radius = (bw + bh) / 4;
+    if (radius < rMinPx || radius > rMaxPx || aspect < 0.72) continue;
+    const fillRatio = area / (Math.PI * radius * radius);
+    if (fillRatio < 0.68 || fillRatio > 1.22) continue;
+    const cx = sumX / area, cy = sumY / area;
+    let inSum = 0, inCnt = 0, outSum = 0, outCnt = 0;
+    const rOuter = radius * 1.28;
+    const x0 = Math.max(0, Math.floor(cx - rOuter)), x1 = Math.min(w - 1, Math.ceil(cx + rOuter));
+    const y0 = Math.max(0, Math.floor(cy - rOuter)), y1 = Math.min(h - 1, Math.ceil(cy + rOuter));
+    for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
+      const dist = Math.hypot(px - cx, py - cy), val = scoreMap[py * w + px];
+      if (dist <= radius * 0.88) { inSum += val; inCnt++; }
+      else if (dist >= radius * 1.06 && dist <= rOuter) { outSum += val; outCnt++; }
+    }
+    const contrast = (inCnt ? inSum / inCnt : 0) - (outCnt ? outSum / outCnt : 0);
+    if (contrast < 0.55) continue;
+    candidates.push({ cx, cy, r: radius, quality: fillRatio * aspect * contrast, contrast });
   }
-  return [m[0][3], m[1][3], m[2][3]];
+  return candidates;
 }
 
-// تحسين مركز ونصف قطر الدائرة بأقل المربعات، ثم قياس قوة الحافة الشعاعية
-function refineAndScoreCircle(gray, w, h, candidate) {
-  const {x, y, r} = candidate;
-  const points = [];
-  const samples = 48;
-  const data = gray.data;
-  const gradAt = (px, py) => {
-    if (px < 1 || py < 1 || px >= w-1 || py >= h-1) return 0;
-    const i = py*w+px;
-    const gx = -data[i-w-1] + data[i-w+1] - 2*data[i-1] + 2*data[i+1] - data[i+w-1] + data[i+w+1];
-    const gy = -data[i-w-1] - 2*data[i-w] - data[i-w+1] + data[i+w-1] + 2*data[i+w] + data[i+w+1];
-    return Math.hypot(gx, gy);
-  };
-  let supported = 0, gradientSum = 0;
-  for (let k = 0; k < samples; k++) {
-    const a = 2*Math.PI*k/samples, ux = Math.cos(a), uy = Math.sin(a);
-    let best = null, bestG = 0;
-    for (let dr = -2; dr <= 2; dr++) {
-      const px = Math.round(x + (r+dr)*ux), py = Math.round(y + (r+dr)*uy);
-      const g = gradAt(px, py);
-      if (g > bestG) { bestG = g; best = [px, py]; }
-    }
-    if (best && bestG > 70) { points.push(best); supported++; gradientSum += bestG; }
+function nonMaxSuppression(circles) {
+  circles.sort((a, b) => b.quality - a.quality);
+  const kept = [];
+  for (const c of circles) {
+    if (!kept.some(k => Math.hypot(c.cx - k.cx, c.cy - k.cy) < Math.max(c.r, k.r) * 0.65)) kept.push(c);
   }
-  if (points.length < 8) return null;
-
-  // x²+y² + A*x + B*y + C = 0
-  let sx=0, sy=0, sxx=0, syy=0, sxy=0, sz=0, sxz=0, syz=0;
-  for (const [px,py] of points) {
-    const z = -(px*px + py*py);
-    sx += px; sy += py; sxx += px*px; syy += py*py; sxy += px*py;
-    sz += z; sxz += px*z; syz += py*z;
-  }
-  const n = points.length;
-  const abc = solve3x3([[sxx,sxy,sx],[sxy,syy,sy],[sx,sy,n]],[sxz,syz,sz]);
-  if (!abc) return null;
-  const cx = -abc[0]/2, cy = -abc[1]/2;
-  const radiusSq = cx*cx + cy*cy - abc[2];
-  if (!(radiusSq > 0)) return null;
-  const rr = Math.sqrt(radiusSq);
-  const residual = points.reduce((sum,p) => sum + Math.abs(Math.hypot(p[0]-cx,p[1]-cy)-rr), 0)/n;
-  const support = supported/samples;
-  if (Math.abs(rr-r) > Math.max(5, r*0.22) || residual > Math.max(3, rr*0.075) || support < 0.14) return null;
-  return {x:cx, y:cy, r:rr, score: support*100 + gradientSum/n*0.015 - residual*2, support, residual};
-}
-
-function detectCirclesOpenCV(cv, canvas, rMinPx, rMaxPx) {
-  // خفض دقة الصورة قبل التحليل لتفادي تجميد المتصفح على الشاشات الكبيرة
-  const maxSide = 900;
-  const factor = Math.min(1, maxSide / Math.max(canvas.width, canvas.height));
-  const workCanvas = document.createElement('canvas');
-  workCanvas.width = Math.max(1, Math.round(canvas.width * factor));
-  workCanvas.height = Math.max(1, Math.round(canvas.height * factor));
-  const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
-  workCtx.drawImage(canvas, 0, 0, workCanvas.width, workCanvas.height);
-
-  const src = cv.imread(workCanvas);
-  const gray = new cv.Mat(), enhanced = new cv.Mat(), blurred = new cv.Mat();
-  const found = [];
-  try {
-    cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
-    cv.equalizeHist(gray, enhanced);
-    cv.medianBlur(enhanced, blurred, 5);
-
-    const minR = Math.max(4, Math.floor(rMinPx * factor));
-    const maxR = Math.max(minR + 2, Math.ceil(rMaxPx * factor));
-    // تمريرتان فقط بدل أربع؛ تقليل كلفة Hough بشكل كبير
-    for (const vote of [22, 30]) {
-      const out = new cv.Mat();
-      try {
-        cv.HoughCircles(blurred, out, cv.HOUGH_GRADIENT, 1.35,
-          Math.max(14, minR * 0.9), 110, vote, minR, maxR);
-        const values = out.data32F;
-        const count = Math.min(45, Math.floor(values.length / 3));
-        for (let i = 0; i < count; i++) {
-          const x = values[i*3], y = values[i*3+1], r = values[i*3+2];
-          if (!Number.isFinite(x+y+r) || r < minR || r > maxR) continue;
-          const refined = refineAndScoreCircle(blurred, blurred.cols, blurred.rows, {x,y,r});
-          if (refined) found.push({
-            ...refined,
-            x: refined.x / factor,
-            y: refined.y / factor,
-            r: refined.r / factor
-          });
-        }
-      } finally {
-        out.delete();
-      }
-    }
-  } finally {
-    src.delete(); gray.delete(); enhanced.delete(); blurred.delete();
-  }
-  return mergeHoughCircles(found).slice(0, 80);
-}
-
-let DET_RUNNING = false;
-async function openAndRunDetect() {
-  const modal = $('det-modal');
-  if (modal) modal.style.display = 'block';
-  // تأخير إطار واحد حتى تظهر نافذة التحليل قبل بدء تحميل الصور
-  await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 40)));
-  if (!DET_RUNNING) runDetect();
+  return kept;
 }
 
 async function runDetect() {
-  if (DET_RUNNING) return;
-  DET_RUNNING = true;
   const st = $('det-st');
-  const rMinM = Math.max(20, parseFloat($('det-rmin').value) || 80);
-  const rMaxM = parseFloat($('det-rmax').value) || 900;
+  const sens = parseFloat($('det-sens').value) || 14;
+  const rMinM = parseFloat($('det-rmin').value) || 100;
+  const rMaxM = parseFloat($('det-rmax').value) || 800;
+  if (!(rMinM > 0 && rMaxM > rMinM)) { st.textContent = '⚠️ تحقق من الحد الأدنى والأقصى لنصف القطر'; return; }
   detClear();
-  if (!(rMaxM > rMinM)) {
-    st.textContent = '⚠️ نصف القطر الأقصى يجب أن يكون أكبر من الأدنى';
-    DET_RUNNING = false;
-    return;
-  }
-  st.textContent = '⏳ بدأ الكشف تلقائيًا: تحميل صور القمر الصناعي...';
+  st.textContent = '⏳ جاري تحميل صورة القمر الصناعي...';
   try {
-    const [{canvas, zoom, topLeft}, cv] = await Promise.all([captureMapCanvas(), ensureOpenCV()]);
-    st.textContent = '⏳ تحليل الحواف الدائرية وملاءمة الدوائر رياضيًا...';
-    await new Promise(resolve => setTimeout(resolve, 20));
-    const centerLat = map.getCenter().lat;
-    const mpp = metersPerPixel(centerLat, zoom);
-    const rMinPx = rMinM/mpp;
-    const rMaxPx = Math.min(Math.min(canvas.width,canvas.height)*0.38, rMaxM/mpp);
-    if (rMinPx < 3 || rMinPx > Math.min(canvas.width,canvas.height)*0.25) {
-      throw new Error('مستوى التكبير غير مناسب؛ قرّب الخريطة حتى يظهر المحور الدوار بحجم واضح');
+    const { canvas, zoom } = await captureMapCanvas();
+    const scale = 0.5, w = Math.max(1, Math.floor(canvas.width * scale)), h = Math.max(1, Math.floor(canvas.height * scale));
+    const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+    const tctx = tmp.getContext('2d', { willReadFrequently: true });
+    tctx.drawImage(canvas, 0, 0, w, h);
+    let imgData;
+    try { imgData = tctx.getImageData(0, 0, w, h); }
+    catch (_) { throw new Error('المتصفح منع قراءة الصور بسبب قيود CORS لمصدر البلاطات'); }
+    st.textContent = '⏳ تحليل الصورة واستخراج الأشكال الدائرية...';
+    await new Promise(resolve => setTimeout(resolve, 25));
+    const scoreMap = smoothMap(buildFeatureMap(imgData, w, h), w, h);
+    const mpp = metersPerPixel(map.getCenter().lat, zoom) / scale;
+    const rMinPx = Math.max(6, rMinM / mpp), rMaxPx = Math.min(Math.min(w, h) * 0.45, rMaxM / mpp);
+    const baseZ = Math.max(0.25, 1.35 - (sens / 30));
+    const thresholds = [baseZ - 0.25, baseZ, baseZ + 0.30, baseZ + 0.65];
+    const mask = new Uint8Array(w * h);
+    let allCandidates = [];
+    for (const th of thresholds) {
+      for (let i = 0; i < scoreMap.length; i++) mask[i] = scoreMap[i] > th ? 1 : 0;
+      allCandidates = allCandidates.concat(extractCirclesFromMask(mask, scoreMap, w, h, rMinPx, rMaxPx));
     }
-    const circles = detectCirclesOpenCV(cv, canvas, rMinPx, rMaxPx);
-    if (!circles.length) {
-      st.textContent = '⚠️ لم تُعثر على دوائر مؤكدة. قرّب الخريطة أو وسّع مجال نصف القطر ثم اضغط «إعادة الكشف».';
-      return;
-    }
-    circles.forEach((c,idx) => {
-      const ll = map.unproject(L.point(topLeft.x+c.x, topLeft.y+c.y), zoom);
-      const radiusM = Math.round(c.r*mpp);
-      const layer = L.circle(ll,{radius:radiusM,color:'#FF1744',weight:3,fillColor:'#00E676',fillOpacity:0.12}).addTo(detLayer);
-      layer.bindTooltip(`محور محتمل #${idx+1} — نصف القطر ${radiusM} م — دعم الحافة ${(c.support*100).toFixed(0)}%`,{direction:'top'});
-      layer.on('click',()=>detAdd(idx));
-      DET.push({lat:ll.lat,lng:ll.lng,r:radiusM,confidence:c.support});
+    const finalCircles = nonMaxSuppression(allCandidates);
+    finalCircles.forEach((c, idx) => {
+      const ll = map.containerPointToLatLng(L.point(c.cx / scale, c.cy / scale));
+      const radiusM = Math.round(c.r * mpp);
+      const layer = L.circle(ll, { radius: radiusM, color: '#FF1744', weight: 2.5, fillColor: '#00E676', fillOpacity: 0.18 }).addTo(detLayer);
+      layer.bindTooltip(`محور #${idx + 1} — نصف القطر: ${radiusM} م`, { direction: 'top' });
+      layer.on('click', () => detAdd(idx));
+      DET.push({ lat: ll.lat, lng: ll.lng, r: radiusM });
     });
-    st.textContent = `✅ انتهى الكشف التلقائي: تم تحديد ${DET.length} دائرة مرشحة. اضغط على دائرة لإدخال بياناتها أو «حفظ الكل».`;
-  } catch(err) {
+    st.textContent = finalCircles.length
+      ? `✅ تم العثور على ${finalCircles.length} محور — اضغط على الدائرة لإدخال بيانات الفلاح، أو «حفظ الكل»`
+      : '⚠️ لم يتم العثور على محاور مطابقة. جرّب تعديل الحساسية أو تقريب الخريطة.';
+  } catch (err) {
     console.error(err);
-    st.textContent = '❌ ' + (err && err.message ? err.message : 'تعذر تحليل صورة الخريطة');
-  } finally {
-    DET_RUNNING = false;
+    st.textContent = '❌ ' + (err && err.message ? err.message : 'تعذر تحليل صورة القمر الصناعي');
   }
 }
 
