@@ -1513,58 +1513,220 @@ async function pvDel(id) {
 }
 
 // ===== كشف المحاور تلقائيًا: معالجة صور القمر الصناعي داخل المتصفح (منطق OpenCV مبسّط بـ JavaScript) =====
-const detLayer = L.layerGroup().addTo(map); let DET = [];
-const loadImg = u => new Promise((ok, no) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => ok(i); i.onerror = () => no(new Error('tile')); i.src = u; });
-function morph(m, W, H, erode) {
-  const o = new Uint8Array(W * H);
-  for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) { let c = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) c += m[(y + dy) * W + x + dx]; o[y * W + x] = erode ? (c === 9 ? 1 : 0) : (c > 0 ? 1 : 0); }
-  return o;
+const detLayer = L.layerGroup().addTo(map);
+let DET = [];
+
+// ===== Pivot Auto-Detection v2 — مدمج مع نظام المحاور الحالي =====
+function detClear() {
+  detLayer.clearLayers();
+  DET = [];
+  const st = $('det-st');
+  if (st) st.textContent = '';
 }
-function detClear() { detLayer.clearLayers(); DET = []; $('det-st').textContent = ''; }
-async function runDetect() { try { await runDetect0(); } catch (e) { $('det-st').textContent = '❌ خطأ: ' + e.message; console.error(e); } }
-async function runDetect0() {
-  const st = $('det-st'), Z = 15, sens = +$('det-sens').value / 100, rmin = +$('det-rmin').value, rmax = +$('det-rmax').value;
-  detClear(); const b = map.getBounds(), tx = g => (g + 180) / 360 * 2 ** Z, ty = a => (1 - Math.log(Math.tan(a * Math.PI / 180) + 1 / Math.cos(a * Math.PI / 180)) / Math.PI) / 2 * 2 ** Z;
-  const x0 = Math.floor(tx(b.getWest())), y0 = Math.floor(ty(b.getNorth())), nx = Math.floor(tx(b.getEast())) - x0 + 1, ny = Math.floor(ty(b.getSouth())) - y0 + 1;
-  if (nx * ny > 60) { st.textContent = '⚠️ المنطقة كبيرة، قرّب الخريطة'; return; }
-  st.textContent = '⏳ تحميل صور القمر الصناعي...';
-  const cv = document.createElement('canvas'); cv.width = nx * 256; cv.height = ny * 256; const cx = cv.getContext('2d', { willReadFrequently: true });
-  try { await Promise.all([...Array(nx * ny).keys()].map(async k => { const i = k % nx, j = Math.floor(k / nx); cx.drawImage(await loadImg(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${Z}/${y0 + j}/${x0 + i}`), i * 256, j * 256); })); }
-  catch (e) { st.textContent = '❌ تعذر تحميل الصور، تحقق من الاتصال'; return; }
-  let data; try { data = cx.getImageData(0, 0, cv.width, cv.height).data; } catch (e) { st.textContent = '❌ المتصفح منع قراءة الصور (CORS)'; return; }
-  st.textContent = '⏳ تحليل الصورة...'; await new Promise(r => setTimeout(r, 30));
-  const W = cv.width >> 1, H = cv.height >> 1, N = W * H, Lum = new Float32Array(N), RG = new Float32Array(N);
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let l = 0, d = 0; for (let k = 0; k < 4; k++) { const p = ((2 * y + (k >> 1)) * cv.width + 2 * x + (k & 1)) * 4; l += .299 * data[p] + .587 * data[p + 1] + .114 * data[p + 2]; d += data[p] - data[p + 1]; } Lum[y * W + x] = l / 4; RG[y * W + x] = d / 4; }
-  const Bg = Float32Array.from(Lum).sort()[Math.floor(N * .8)];
-  let m = new Uint8Array(N), cov = 0; for (let i = 0; i < N; i++) { m[i] = Lum[i] < Bg * (1 - sens) ? 1 : 0; cov += m[i]; }
-  m = morph(morph(morph(morph(m, W, H, true), W, H, true), W, H, false), W, H, false);
-  const lab = new Uint8Array(N), stack = new Int32Array(N); let tot = 0; const rej = { edge: 0, shape: 0, size: 0, dark: 0 };
-  for (let s0 = 0; s0 < N; s0++) {
-    if (!m[s0] || lab[s0]) continue; let sp = 0, area = 0, sl = 0, xa = W, xb = 0, ya = H, yb = 0, edge = false; stack[sp++] = s0; lab[s0] = 1;
-    while (sp) {
-      const q = stack[--sp], qx = q % W, qy = (q / W) | 0; area++; sl += Lum[q]; if (qx < xa) xa = qx; if (qx > xb) xb = qx; if (qy < ya) ya = qy; if (qy > yb) yb = qy; if (qx === 0 || qy === 0 || qx === W - 1 || qy === H - 1) edge = true;
-      for (const n of [qx > 0 ? q - 1 : -1, qx < W - 1 ? q + 1 : -1, q - W, q + W]) if (n >= 0 && n < N && m[n] && !lab[n]) { lab[n] = 1; stack[sp++] = n; }
+
+function metersPerPixel(lat, zoom) {
+  return 156543.03392 * Math.cos(lat * Math.PI / 180) / Math.pow(2, zoom);
+}
+
+// تحميل صور القمر الصناعي للمنطقة الظاهرة وتجميعها في Canvas
+async function captureMapCanvas() {
+  const size = map.getSize();
+  const zoom = Math.round(map.getZoom());
+  const topLeft = map.getPixelBounds().min;
+  const tileSize = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size.x;
+  canvas.height = size.y;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) throw new Error('تعذر إنشاء مساحة تحليل الصورة');
+
+  const minTileX = Math.floor(topLeft.x / tileSize);
+  const maxTileX = Math.floor((topLeft.x + size.x) / tileSize);
+  const minTileY = Math.floor(topLeft.y / tileSize);
+  const maxTileY = Math.floor((topLeft.y + size.y) / tileSize);
+  const count = (maxTileX - minTileX + 1) * (maxTileY - minTileY + 1);
+  if (count > 60) throw new Error('المنطقة كبيرة؛ قرّب الخريطة حتى تظهر المنطقة المطلوبة');
+
+  const subs = ['mt0', 'mt1', 'mt2', 'mt3'];
+  const results = await Promise.all((() => {
+    const tasks = [];
+    for (let tx = minTileX; tx <= maxTileX; tx++) {
+      for (let ty = minTileY; ty <= maxTileY; ty++) {
+        const sub = subs[Math.abs(tx + ty) % 4];
+        const url = `https://${sub}.google.com/vt/lyrs=s&x=${tx}&y=${ty}&z=${zoom}`;
+        tasks.push(new Promise(resolve => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            try {
+              ctx.drawImage(img, tx * tileSize - topLeft.x, ty * tileSize - topLeft.y, tileSize, tileSize);
+              resolve(true);
+            } catch (_) { resolve(false); }
+          };
+          img.onerror = () => resolve(false);
+          img.src = url;
+        }));
+      }
     }
-    tot++; if (edge) { rej.edge++; continue; }
-    const w = xb - xa + 1, h = yb - ya + 1, asp = Math.min(w, h) / Math.max(w, h), fill = area / (w * h);
-    const X = x0 * 256 + (xa + xb + 1), Y = y0 * 256 + (ya + yb + 1), sz = 256 * 2 ** Z;
-    const lng = X / sz * 360 - 180, lat = Math.atan(Math.sinh(Math.PI - 2 * Math.PI * Y / sz)) * 180 / Math.PI;
-    const r = (w + h) / 2 * 156543.03392 * Math.cos(lat * Math.PI / 180) / 2 ** Z;
-    if (!(asp > .8 && fill > .6 && fill < .93)) rej.shape++; else if (!(r >= rmin && r <= rmax)) rej.size++; else if (sl / area < Bg * .25) rej.dark++; else DET.push({ lat, lng, r });
-  }
-  DET.forEach((d, i) => L.circle([d.lat, d.lng], { radius: d.r, color: '#FF1744', weight: 3, fillColor: '#00E5FF', fillOpacity: 0.25 }).addTo(detLayer)
-    .bindPopup(`<div class="probe"><b>🌀 محور مُكتشف #${i + 1}</b><br>نصف القطر ≈ ${Math.round(d.r)} م<br><button class="panel-btn gps-btn" style="width:100%" data-i="${i}" onclick="detAdd(+this.dataset.i)">➕ إضافة واسم الفلاح</button></div>`));
-  const diag = `(بقع: ${tot} • عند الحافة: ${rej.edge} • شكل غير دائري: ${rej.shape} • حجم خارج المدى: ${rej.size} • مظلمة: ${rej.dark} • تغطية القناع: ${(cov / N * 100).toFixed(0)}%)`;
-  st.textContent = DET.length ? `✅ تم العثور على ${DET.length} محور — اضغط أي دائرة، أو «حفظ الكل»` : `لم يُعثر على محاور ${diag}`;
-  if (DET.length) map.fitBounds(L.latLngBounds(DET.map(d => [d.lat, d.lng])).pad(.3));
+    return tasks;
+  })());
+  if (!results.some(Boolean)) throw new Error('تعذر تحميل بلاطات القمر الصناعي؛ تحقق من الاتصال بالإنترنت');
+  return { canvas, zoom };
 }
-function detAdd(i) { const d = DET[i]; pvOpen(null, { lat: d.lat, lng: d.lng, radius_m: Math.round(d.r) }); }
+
+// بناء مؤشر يجمع الخضرة والتربة الداكنة ويقلل تأثير الرمال الصحراوية
+function buildFeatureMap(imgData, w, h) {
+  const d = imgData.data;
+  const score = new Float32Array(w * h);
+  let sum = 0;
+  for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+    const r = d[i] / 255, g = d[i + 1] / 255, b = d[i + 2] / 255;
+    const maxC = Math.max(r, g, b), minC = Math.min(r, g, b);
+    const sat = maxC === 0 ? 0 : (maxC - minC) / maxC;
+    const exG = Math.max(0, 2 * g - r - b);
+    const nonSand = Math.max(0, (g + b) * 0.55 - r * 0.65 + 0.25);
+    const darkness = Math.max(0, 0.72 - (0.299 * r + 0.587 * g + 0.114 * b));
+    const v = exG * 1.8 + nonSand * 1.1 + darkness * 0.9 - sat * 0.15;
+    score[p] = v;
+    sum += v;
+  }
+  const mean = sum / (w * h);
+  let sqSum = 0;
+  for (let p = 0; p < score.length; p++) { const diff = score[p] - mean; sqSum += diff * diff; }
+  const std = Math.sqrt(sqSum / (w * h)) || 0.05;
+  for (let p = 0; p < score.length; p++) score[p] = (score[p] - mean) / std;
+  return score;
+}
+
+function smoothMap(src, w, h) {
+  const out = new Float32Array(w * h);
+  for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+    const i = y * w + x;
+    out[i] = (src[i-w-1] + src[i-w] + src[i-w+1] + src[i-1] + src[i] + src[i+1] + src[i+w-1] + src[i+w] + src[i+w+1]) / 9;
+  }
+  return out;
+}
+
+function extractCirclesFromMask(mask, scoreMap, w, h, rMinPx, rMaxPx) {
+  const visited = new Uint8Array(w * h), candidates = [], stack = new Int32Array(w * h);
+  for (let y = 2; y < h - 2; y++) for (let x = 2; x < w - 2; x++) {
+    const start = y * w + x;
+    if (!mask[start] || visited[start]) continue;
+    let sp = 0; stack[sp++] = start; visited[start] = 1;
+    let area = 0, sumX = 0, sumY = 0, minX = x, maxX = x, minY = y, maxY = y, touchesEdge = false;
+    while (sp > 0) {
+      const curr = stack[--sp], cx = curr % w, cy = (curr - cx) / w;
+      area++; sumX += cx; sumY += cy;
+      if (cx < minX) minX = cx; if (cx > maxX) maxX = cx;
+      if (cy < minY) minY = cy; if (cy > maxY) maxY = cy;
+      if (cx <= 2 || cx >= w - 3 || cy <= 2 || cy >= h - 3) touchesEdge = true;
+      const ns = [curr - 1, curr + 1, curr - w, curr + w];
+      for (const n of ns) if (mask[n] && !visited[n]) { visited[n] = 1; stack[sp++] = n; }
+    }
+    if (touchesEdge) continue;
+    const bw = maxX - minX + 1, bh = maxY - minY + 1;
+    const aspect = Math.min(bw, bh) / Math.max(bw, bh), radius = (bw + bh) / 4;
+    if (radius < rMinPx || radius > rMaxPx || aspect < 0.72) continue;
+    const fillRatio = area / (Math.PI * radius * radius);
+    if (fillRatio < 0.68 || fillRatio > 1.22) continue;
+    const cx = sumX / area, cy = sumY / area;
+    let inSum = 0, inCnt = 0, outSum = 0, outCnt = 0;
+    const rOuter = radius * 1.28;
+    const x0 = Math.max(0, Math.floor(cx - rOuter)), x1 = Math.min(w - 1, Math.ceil(cx + rOuter));
+    const y0 = Math.max(0, Math.floor(cy - rOuter)), y1 = Math.min(h - 1, Math.ceil(cy + rOuter));
+    for (let py = y0; py <= y1; py++) for (let px = x0; px <= x1; px++) {
+      const dist = Math.hypot(px - cx, py - cy), val = scoreMap[py * w + px];
+      if (dist <= radius * 0.88) { inSum += val; inCnt++; }
+      else if (dist >= radius * 1.06 && dist <= rOuter) { outSum += val; outCnt++; }
+    }
+    const contrast = (inCnt ? inSum / inCnt : 0) - (outCnt ? outSum / outCnt : 0);
+    if (contrast < 0.55) continue;
+    candidates.push({ cx, cy, r: radius, quality: fillRatio * aspect * contrast, contrast });
+  }
+  return candidates;
+}
+
+function nonMaxSuppression(circles) {
+  circles.sort((a, b) => b.quality - a.quality);
+  const kept = [];
+  for (const c of circles) {
+    if (!kept.some(k => Math.hypot(c.cx - k.cx, c.cy - k.cy) < Math.max(c.r, k.r) * 0.65)) kept.push(c);
+  }
+  return kept;
+}
+
+async function runDetect() {
+  const st = $('det-st');
+  const sens = parseFloat($('det-sens').value) || 14;
+  const rMinM = parseFloat($('det-rmin').value) || 100;
+  const rMaxM = parseFloat($('det-rmax').value) || 800;
+  if (!(rMinM > 0 && rMaxM > rMinM)) { st.textContent = '⚠️ تحقق من الحد الأدنى والأقصى لنصف القطر'; return; }
+  detClear();
+  st.textContent = '⏳ جاري تحميل صورة القمر الصناعي...';
+  try {
+    const { canvas, zoom } = await captureMapCanvas();
+    const scale = 0.5, w = Math.max(1, Math.floor(canvas.width * scale)), h = Math.max(1, Math.floor(canvas.height * scale));
+    const tmp = document.createElement('canvas'); tmp.width = w; tmp.height = h;
+    const tctx = tmp.getContext('2d', { willReadFrequently: true });
+    tctx.drawImage(canvas, 0, 0, w, h);
+    let imgData;
+    try { imgData = tctx.getImageData(0, 0, w, h); }
+    catch (_) { throw new Error('المتصفح منع قراءة الصور بسبب قيود CORS لمصدر البلاطات'); }
+    st.textContent = '⏳ تحليل الصورة واستخراج الأشكال الدائرية...';
+    await new Promise(resolve => setTimeout(resolve, 25));
+    const scoreMap = smoothMap(buildFeatureMap(imgData, w, h), w, h);
+    const mpp = metersPerPixel(map.getCenter().lat, zoom) / scale;
+    const rMinPx = Math.max(6, rMinM / mpp), rMaxPx = Math.min(Math.min(w, h) * 0.45, rMaxM / mpp);
+    const baseZ = Math.max(0.25, 1.35 - (sens / 30));
+    const thresholds = [baseZ - 0.25, baseZ, baseZ + 0.30, baseZ + 0.65];
+    const mask = new Uint8Array(w * h);
+    let allCandidates = [];
+    for (const th of thresholds) {
+      for (let i = 0; i < scoreMap.length; i++) mask[i] = scoreMap[i] > th ? 1 : 0;
+      allCandidates = allCandidates.concat(extractCirclesFromMask(mask, scoreMap, w, h, rMinPx, rMaxPx));
+    }
+    const finalCircles = nonMaxSuppression(allCandidates);
+    finalCircles.forEach((c, idx) => {
+      const ll = map.containerPointToLatLng(L.point(c.cx / scale, c.cy / scale));
+      const radiusM = Math.round(c.r * mpp);
+      const layer = L.circle(ll, { radius: radiusM, color: '#FF1744', weight: 2.5, fillColor: '#00E676', fillOpacity: 0.18 }).addTo(detLayer);
+      layer.bindTooltip(`محور #${idx + 1} — نصف القطر: ${radiusM} م`, { direction: 'top' });
+      layer.on('click', () => detAdd(idx));
+      DET.push({ lat: ll.lat, lng: ll.lng, r: radiusM });
+    });
+    st.textContent = finalCircles.length
+      ? `✅ تم العثور على ${finalCircles.length} محور — اضغط على الدائرة لإدخال بيانات الفلاح، أو «حفظ الكل»`
+      : '⚠️ لم يتم العثور على محاور مطابقة. جرّب تعديل الحساسية أو تقريب الخريطة.';
+  } catch (err) {
+    console.error(err);
+    st.textContent = '❌ ' + (err && err.message ? err.message : 'تعذر تحليل صورة القمر الصناعي');
+  }
+}
+
+function detAdd(i) {
+  const d = DET[i];
+  if (!d) return;
+  pvOpen(null, { lat: d.lat, lng: d.lng, radius_m: Math.round(d.r), farmer_name: '', crop: 'قمح / شعير', notes: 'تم الكشف تلقائيًا' });
+}
+
+// الحفظ متوافق مع بنية جدول pivots الحالية (REST / hdr / radius_m / farmer_name)
 async function detSaveAll() {
-  const ex = PIVOTS.map(p => L.latLng(p.lat, p.lng)), rows = DET.filter(d => !ex.some(e => e.distanceTo([d.lat, d.lng]) < d.r * .6)).map(d => ({ lat: d.lat, lng: d.lng, radius_m: Math.round(d.r), farmer_name: 'غير محدد' }));
-  if (!rows.length) return toast('لا توجد محاور جديدة للحفظ');
-  const r = await fetch(`${REST}/pivots`, { method: 'POST', headers: hdr({ Prefer: 'return=minimal' }), body: JSON.stringify(rows) });
-  if (!r.ok) return toast('❌ فشل الحفظ، هل شغّلت supabase_pivots.sql؟');
-  detClear(); toast(`✅ حُفظ ${rows.length} محور باسم «غير محدد» — اضغط كل محور وأدخل اسم الفلاح`); loadPivots();
+  if (!DET.length) return toast('لا توجد محاور مكتشفة لحفظها');
+  const existing = (PIVOTS || []).map(p => L.latLng(+p.lat, +p.lng));
+  const rows = DET.filter(d => !existing.some(e => e.distanceTo([d.lat, d.lng]) < d.r * 0.6))
+    .map(d => ({ lat: d.lat, lng: d.lng, radius_m: Math.round(d.r), farmer_name: 'غير محدد', crop: 'قمح / شعير', notes: 'تم الكشف تلقائيًا' }));
+  if (!rows.length) return toast('لا توجد محاور جديدة للحفظ؛ المحاور المكتشفة موجودة مسبقًا');
+  if (!confirm(`هل تريد حفظ ${rows.length} محور مكتشف في قاعدة البيانات باسم «غير محدد»؟ يمكنك تعديل اسم الفلاح لاحقًا.`)) return;
+  try {
+    const response = await fetch(`${REST}/pivots`, { method: 'POST', headers: hdr({ Prefer: 'return=minimal' }), body: JSON.stringify(rows) });
+    if (!response.ok) throw new Error(`فشل الحفظ (${response.status}). تحقق من جدول pivots والصلاحيات.`);
+    detClear();
+    toast(`✅ تم حفظ ${rows.length} محور بنجاح`);
+    await loadPivots();
+  } catch (err) {
+    console.error(err);
+    toast('❌ ' + (err.message || 'حدث خطأ أثناء حفظ المحاور'));
+  }
 }
 
 enter();
