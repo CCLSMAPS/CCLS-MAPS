@@ -142,7 +142,6 @@
         #geoSearch { width: 93%; padding: 8px; border-radius: 6px; border: 1px solid #444; background: #333; color: white; outline: none; margin: 0 auto; font-size: 13px; }
         .btn-p { background: #6A1B9A; } .btn-t { background: #00695C; } .btn-d { background: #5D4037; } .btn-g { background: #455A64; }
         .action-btn.on { background: #F57C00 !important; }
-        #rad-km { width: 50px; padding: 5px; border-radius: 5px; border: 1px solid #444; background: #333; color: #fff; font-size: 12px; text-align: center; }
         #coord-hud { position: fixed; bottom: 6px; left: 50%; transform: translateX(-50%); z-index: 1000; background: rgba(0,0,0,.8); color: #cfe8cf; font: 11px monospace; padding: 3px 10px; border-radius: 5px; direction: ltr; pointer-events: none; white-space: nowrap; }
         #toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1565C0; color: #fff; padding: 9px 18px; border-radius: 8px; z-index: 9000; font-size: 13px; display: none; box-shadow: 0 6px 20px rgba(0,0,0,.6); }
         .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #1e1e1e; color: #fff; }
@@ -278,8 +277,6 @@
             </div>
             <input type="text" id="geoSearch" placeholder="🌍 ابحث عن مكان أو إحداثيات (27.6, -0.25)" onkeydown="geoSearch(event)">
             <div class="action-buttons">
-                <button class="action-btn btn-p" onclick="toggleProbe(this)" title="انقر على الخريطة لتحليل النقطة">🎯 فحص نقطة</button>
-                <input type="number" id="rad-km" value="50" min="1" title="نصف قطر التحليل (كم)"><span style="font-size:11px;color:#aaa;align-self:center">كم</span>
                 <button class="action-btn btn-t" onclick="toggleTrack(this)" title="تتبع GPS مع تنبيه الاقتراب من المراكز">📡 تتبع مباشر</button>
             </div>
             <div class="action-buttons">
@@ -289,8 +286,6 @@
                 <input type="file" id="imp" accept=".geojson,.json" hidden onchange="importGeo(this)">
             </div>
             <div class="action-buttons">
-                <button class="action-btn btn-c" onclick="toggleCoverage(this)" title="دوائر خدمة بنصف القطر المحدد">⭕ نطاق الخدمة</button>
-                <button class="action-btn btn-r" onclick="findGap()" title="أبعد منطقة عن أي مركز">🕳️ فجوة التغطية</button>
                 <button class="action-btn btn-g" onclick="toggleFS()">⛶ ملء الشاشة</button>
             </div>
         </div>
@@ -834,7 +829,7 @@
         const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         const capNum = l => parseInt(String(l.cap).replace(/[^0-9]/g, '')) || 0;
         const GEOFENCE_M = 500;
-        let probeOn = false, drawing = false, probeCircle = null, geoMarker = null;
+        let geoMarker = null;
         let watchId = null, meMarker = null, meCircle = null; const inside = new Set();
 
         function toast(m) { const t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3500); }
@@ -855,35 +850,8 @@
             if (lat < 0) y += 1e7;
             return { zone, band: lat >= 0 ? 'N' : 'S', e: Math.round(x), n: Math.round(y) };
         }
-        const dms = (v, p, n) => { const h = v >= 0 ? p : n; v = Math.abs(v); const d = Math.floor(v), m = Math.floor((v - d) * 60), s = ((v - d) * 60 - m) * 60; return d + '°' + m + "'" + s.toFixed(1) + '"' + h; };
 
         map.on('mousemove', e => { const u = toUTM(e.latlng.lat, e.latlng.lng); $('coord-hud').textContent = `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)} | UTM ${u.zone}${u.band} ${u.e} ${u.n} | z${map.getZoom()}`; });
-        map.on('draw:drawstart', () => drawing = true);
-        map.on('draw:drawstop', () => drawing = false);
-
-        // فحص نقطة: إحداثيات + UTM + ارتفاع (DEM) + عنوان + تحليل نطاق (Buffer)
-        function toggleProbe(b) { probeOn = !probeOn; b.classList.toggle('on', probeOn); map.getContainer().style.cursor = probeOn ? 'crosshair' : ''; if (!probeOn && probeCircle) { map.removeLayer(probeCircle); probeCircle = null; } }
-        map.on('click', e => {
-            if (!probeOn || drawing) return;
-            const { lat, lng } = e.latlng, R = Math.max(1, parseFloat($('rad-km').value) || 50), u = toUTM(lat, lng);
-            const all = locations.map(l => ({ l, d: map.distance(e.latlng, [+l.lat, +l.lng]) / 1000 })).filter(x => !isNaN(x.d)).sort((a, b) => a.d - b.d);
-            const inR = all.filter(x => x.d <= R), cap = inR.reduce((s, x) => s + capNum(x.l), 0), nn = all[0];
-            if (probeCircle) map.removeLayer(probeCircle);
-            probeCircle = L.circle(e.latlng, { radius: R * 1000, color: '#00E5FF', weight: 2, fillOpacity: .07, dashArray: '6 6' }).addTo(map);
-            let el = '…', ad = '…'; const pop = L.popup().setLatLng(e.latlng);
-            const ll = lat.toFixed(6) + ', ' + lng.toFixed(6);
-            const build = () => `<div class="probe"><b>🎯 فحص النقطة</b>
-                <span class="ltr">${ll}</span><span class="ltr">${dms(lat, 'N', 'S')} ${dms(lng, 'E', 'W')}</span>
-                <span class="ltr">UTM ${u.zone}${u.band} E${u.e} N${u.n}</span>
-                ⛰️ الارتفاع: <b>${el}</b><br>📍 ${esc(ad).slice(0, 110)}<br>
-                📡 ضمن ${R} كم: <b>${inR.length}</b> مركز — <b>${cap.toLocaleString()}</b> ق<br>
-                ${nn ? `🥇 الأقرب: <b>${esc(nn.l.name)}</b> (${nn.d.toFixed(1)} كم)<br>` : ''}
-                <button class="panel-btn gps-btn" style="width:100%" onclick="copyText('${ll}')">📋 نسخ الإحداثيات</button></div>`;
-            const upd = () => pop.setContent(build());
-            pop.setContent(build()).openOn(map);
-            fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lng}`).then(r => r.json()).then(j => { el = Math.round(j.elevation[0]) + ' م'; upd(); }).catch(() => { el = '—'; upd(); });
-            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=ar&lat=${lat}&lon=${lng}`).then(r => r.json()).then(j => { ad = j.display_name || '—'; upd(); }).catch(() => { ad = '—'; upd(); });
-        });
 
         // Geocoding: اسم مكان أو إحداثيات
         async function geoSearch(ev) {
@@ -961,7 +929,7 @@
                 } catch (e) { toast('تعذر حساب المسار، تحقق من الاتصال'); }
             }, () => toast('فعّل إذن الـ GPS في المتصفح'));
         }
-        let impLayer = null, covLayer = null, gapMarker = null;
+        let impLayer = null;
         function importGeo(inp) {
             const f = inp.files[0]; if (!f) return; const r = new FileReader();
             r.onload = () => {
@@ -975,26 +943,6 @@
                 } catch (e) { toast('ملف GeoJSON غير صالح'); }
             };
             r.readAsText(f); inp.value = '';
-        }
-        function toggleCoverage(b) {
-            if (covLayer) { map.removeLayer(covLayer); covLayer = null; b.classList.remove('on'); return; }
-            const R = Math.max(1, parseFloat($('rad-km').value) || 50) * 1000;
-            covLayer = L.layerGroup(locations.filter(l => l.status !== 'inactive' && !isNaN(+l.lat) && !isNaN(+l.lng)).map(l => L.circle([+l.lat, +l.lng], { radius: R, color: '#00E676', weight: 1, fillOpacity: .08, interactive: false }))).addTo(map);
-            b.classList.add('on');
-        }
-        function findGap() {
-            const pts = locations.filter(l => !isNaN(+l.lat) && !isNaN(+l.lng)).map(l => L.latLng(+l.lat, +l.lng));
-            if (pts.length < 2) return toast('بيانات غير كافية');
-            const b = L.latLngBounds(pts), N = 50; let best = null, bd = -1;
-            for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) {
-                const ll = L.latLng(b.getSouth() + (b.getNorth() - b.getSouth()) * i / N, b.getWest() + (b.getEast() - b.getWest()) * j / N);
-                let m = Infinity; for (const q of pts) { const d = ll.distanceTo(q); if (d < m) m = d; }
-                if (m > bd) { bd = m; best = ll; }
-            }
-            if (gapMarker) map.removeLayer(gapMarker);
-            gapMarker = L.circle(best, { radius: bd, color: '#FF5252', weight: 2, fillOpacity: .1, dashArray: '6 6' }).addTo(map)
-                .bindPopup(`🕳️ أكبر فجوة تغطية<br>أقرب مركز يبعد ${(bd / 1000).toFixed(0)} كم<br><span style="direction:ltr;display:block">${best.lat.toFixed(4)}, ${best.lng.toFixed(4)}</span>`).openPopup();
-            map.fitBounds(gapMarker.getBounds());
         }
         function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
         map.on(L.Draw.Event.CREATED, e => { try { toast('📐 المساحة: ' + (L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]) / 10000).toFixed(2) + ' هكتار'); } catch (_) {} });
