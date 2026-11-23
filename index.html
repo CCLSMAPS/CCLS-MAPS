@@ -234,6 +234,10 @@
 .dp-tbl{width:100%;border-collapse:collapse;font-size:12px}.dp-tbl th{background:#1d3324;color:#c9a227;position:sticky;top:0}
 .dp-tbl td,.dp-tbl th{padding:7px 8px;border-bottom:1px solid #243a2a;text-align:right;white-space:nowrap}.dp-tbl tbody tr{cursor:pointer}.dp-tbl tbody tr:hover{background:#1b2f21}
 .dp-pill{padding:2px 8px;border-radius:10px;color:#fff;font-size:11px}
+
+/* شريط التنقل لا يغطي زر العودة للرؤية الشاملة */
+body.admin .ui-controls{left:290px}
+@media(max-width:768px){body.admin .ui-controls{left:12px;top:56px}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
