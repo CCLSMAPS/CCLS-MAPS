@@ -1574,13 +1574,15 @@ async function captureMapCanvas() {
     jobs.push(new Promise(resolve => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
+      const tileTimer = setTimeout(() => resolve(false), 12000);
       img.onload = () => {
         try {
           ctx.drawImage(img, tx * tileSize - topLeft.x, ty * tileSize - topLeft.y, tileSize, tileSize);
+          clearTimeout(tileTimer);
           resolve(true);
-        } catch (_) { resolve(false); }
+        } catch (_) { clearTimeout(tileTimer); resolve(false); }
       };
-      img.onerror = () => resolve(false);
+      img.onerror = () => { clearTimeout(tileTimer); resolve(false); };
       // Esri World Imagery يسمح بقراءة البلاطات عبر Canvas ويعطي صورة فضائية واضحة
       img.src = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${ty}/${tx}`;
     }));
@@ -1626,7 +1628,7 @@ function solve3x3(A, b) {
 function refineAndScoreCircle(gray, w, h, candidate) {
   const {x, y, r} = candidate;
   const points = [];
-  const samples = 96;
+  const samples = 48;
   const data = gray.data;
   const gradAt = (px, py) => {
     if (px < 1 || py < 1 || px >= w-1 || py >= h-1) return 0;
@@ -1639,14 +1641,14 @@ function refineAndScoreCircle(gray, w, h, candidate) {
   for (let k = 0; k < samples; k++) {
     const a = 2*Math.PI*k/samples, ux = Math.cos(a), uy = Math.sin(a);
     let best = null, bestG = 0;
-    for (let dr = -3; dr <= 3; dr++) {
+    for (let dr = -2; dr <= 2; dr++) {
       const px = Math.round(x + (r+dr)*ux), py = Math.round(y + (r+dr)*uy);
       const g = gradAt(px, py);
       if (g > bestG) { bestG = g; best = [px, py]; }
     }
-    if (best && bestG > 95) { points.push(best); supported++; gradientSum += bestG; }
+    if (best && bestG > 70) { points.push(best); supported++; gradientSum += bestG; }
   }
-  if (points.length < 12) return null;
+  if (points.length < 8) return null;
 
   // x²+y² + A*x + B*y + C = 0
   let sx=0, sy=0, sxx=0, syy=0, sxy=0, sz=0, sxz=0, syz=0;
@@ -1664,40 +1666,57 @@ function refineAndScoreCircle(gray, w, h, candidate) {
   const rr = Math.sqrt(radiusSq);
   const residual = points.reduce((sum,p) => sum + Math.abs(Math.hypot(p[0]-cx,p[1]-cy)-rr), 0)/n;
   const support = supported/samples;
-  if (Math.abs(rr-r) > Math.max(5, r*0.22) || residual > Math.max(3, rr*0.075) || support < 0.16) return null;
+  if (Math.abs(rr-r) > Math.max(5, r*0.22) || residual > Math.max(3, rr*0.075) || support < 0.14) return null;
   return {x:cx, y:cy, r:rr, score: support*100 + gradientSum/n*0.015 - residual*2, support, residual};
 }
 
 function detectCirclesOpenCV(cv, canvas, rMinPx, rMaxPx) {
-  const src = cv.imread(canvas);
+  // خفض دقة الصورة قبل التحليل لتفادي تجميد المتصفح على الشاشات الكبيرة
+  const maxSide = 900;
+  const factor = Math.min(1, maxSide / Math.max(canvas.width, canvas.height));
+  const workCanvas = document.createElement('canvas');
+  workCanvas.width = Math.max(1, Math.round(canvas.width * factor));
+  workCanvas.height = Math.max(1, Math.round(canvas.height * factor));
+  const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
+  workCtx.drawImage(canvas, 0, 0, workCanvas.width, workCanvas.height);
+
+  const src = cv.imread(workCanvas);
   const gray = new cv.Mat(), enhanced = new cv.Mat(), blurred = new cv.Mat();
   const found = [];
   try {
     cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
-    // تسوية المدرج التكراري ثم إزالة الضجيج الوسيط
     cv.equalizeHist(gray, enhanced);
     cv.medianBlur(enhanced, blurred, 5);
-    const minR = Math.max(5, Math.floor(rMinPx));
-    const maxR = Math.max(minR+2, Math.ceil(rMaxPx));
-    for (const vote of [18, 23, 28, 34]) {
+
+    const minR = Math.max(4, Math.floor(rMinPx * factor));
+    const maxR = Math.max(minR + 2, Math.ceil(rMaxPx * factor));
+    // تمريرتان فقط بدل أربع؛ تقليل كلفة Hough بشكل كبير
+    for (const vote of [22, 30]) {
       const out = new cv.Mat();
-      cv.HoughCircles(blurred, out, cv.HOUGH_GRADIENT, 1.15,
-        Math.max(12, minR*0.78), 105, vote, minR, maxR);
-      const values = out.data32F;
-      const count = Math.floor(values.length/3);
-      for (let i=0; i<count; i++) {
-        const x=values[i*3], y=values[i*3+1], r=values[i*3+2];
-        if (Number.isFinite(x+y+r) && r>=minR && r<=maxR) {
+      try {
+        cv.HoughCircles(blurred, out, cv.HOUGH_GRADIENT, 1.35,
+          Math.max(14, minR * 0.9), 110, vote, minR, maxR);
+        const values = out.data32F;
+        const count = Math.min(45, Math.floor(values.length / 3));
+        for (let i = 0; i < count; i++) {
+          const x = values[i*3], y = values[i*3+1], r = values[i*3+2];
+          if (!Number.isFinite(x+y+r) || r < minR || r > maxR) continue;
           const refined = refineAndScoreCircle(blurred, blurred.cols, blurred.rows, {x,y,r});
-          if (refined) found.push(refined);
+          if (refined) found.push({
+            ...refined,
+            x: refined.x / factor,
+            y: refined.y / factor,
+            r: refined.r / factor
+          });
         }
+      } finally {
+        out.delete();
       }
-      out.delete();
     }
   } finally {
     src.delete(); gray.delete(); enhanced.delete(); blurred.delete();
   }
-  return mergeHoughCircles(found);
+  return mergeHoughCircles(found).slice(0, 80);
 }
 
 let DET_RUNNING = false;
@@ -1729,7 +1748,10 @@ async function runDetect() {
     const centerLat = map.getCenter().lat;
     const mpp = metersPerPixel(centerLat, zoom);
     const rMinPx = rMinM/mpp;
-    const rMaxPx = Math.min(Math.min(canvas.width,canvas.height)*0.48, rMaxM/mpp);
+    const rMaxPx = Math.min(Math.min(canvas.width,canvas.height)*0.38, rMaxM/mpp);
+    if (rMinPx < 3 || rMinPx > Math.min(canvas.width,canvas.height)*0.25) {
+      throw new Error('مستوى التكبير غير مناسب؛ قرّب الخريطة حتى يظهر المحور الدوار بحجم واضح');
+    }
     const circles = detectCirclesOpenCV(cv, canvas, rMinPx, rMaxPx);
     if (!circles.length) {
       st.textContent = '⚠️ لم تُعثر على دوائر مؤكدة. قرّب الخريطة أو وسّع مجال نصف القطر ثم اضغط «إعادة الكشف».';
