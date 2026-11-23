@@ -279,6 +279,10 @@ body.admin .ui-controls{left:290px}
                 <button class="action-btn btn-c mgr-only" onclick="openStock()">📦 إدخال يومي</button>
                 <button class="action-btn btn-d admin-only" onclick="openUsers()">👥 المستخدمون</button>
             </div>
+            <div class="action-buttons">
+                <button class="action-btn btn-c admin-only" onclick="togglePivotMode(this)" title="اضغط مركز المحور ثم حافته">🌀 إضافة محور</button>
+                <button class="action-btn btn-g" onclick="togglePivots()">👁 المحاور الدوارة</button>
+            </div>
             <input type="text" id="geoSearch" placeholder="🌍 ابحث عن مكان أو إحداثيات (27.6, -0.25)" onkeydown="geoSearch(event)">
             <div class="action-buttons">
                 <button class="action-btn btn-t" onclick="toggleTrack(this)" title="تتبع GPS مع تنبيه الاقتراب من المراكز">📡 تتبع مباشر</button>
@@ -340,6 +344,14 @@ body.admin .ui-controls{left:290px}
         <div class="form-group"><select id="u-role" onchange="$('u-loc').parentElement.style.display=this.value==='manager'?'':'none'"><option value="manager">مسؤول مخزن</option><option value="printer">طابع بطاقات (طباعة فقط)</option><option value="admin">مدير (كل الصلاحيات)</option></select></div>
         <div class="form-group"><label>المخزن المسؤول عنه</label><select id="u-loc"></select></div>
         <div class="modal-btns"><button onclick="addUser()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">➕ إضافة مستخدم</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
+    <div id="pv-modal" class="custom-modal"><h4>🌀 محور دوّار</h4>
+        <div class="form-group"><label>لمن يتبع (اسم الفلاح) *</label><input type="text" id="pv-name"></div>
+        <div class="form-group"><label>الهاتف</label><input type="text" id="pv-phone" dir="ltr"></div>
+        <div class="form-group"><label>المحصول</label><input type="text" id="pv-crop"></div>
+        <div class="form-group"><label>نصف القطر (م)</label><input type="number" id="pv-r" oninput="if(pvDraw)pvDraw.setRadius(+this.value||1)"></div>
+        <div class="form-group"><label>ملاحظات</label><input type="text" id="pv-notes"></div>
+        <div class="info-detail"><span>📍 الإحداثيات</span><b id="pv-ll" style="direction:ltr"></b></div>
+        <div class="modal-btns"><button onclick="pvSave()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 حفظ</button><button onclick="pvClose()" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إلغاء</button></div></div>
     <div id="coord-hud">—</div>
     <div id="toast"></div>
     <div id="dash-modal" class="custom-modal" style="max-height:85vh;overflow:auto">
@@ -1130,7 +1142,7 @@ async function enter() {
     await sb.auth.signOut(); SESSION = PROFILE = null;
     $('ul-msg').textContent = 'هذا الحساب غير مفعّل أو محظور، راجع المدير'; $('gate').style.display = 'flex'; return;
   }
-  $('gate').style.display = 'none'; applyRole(); await loadStock(); renderMapAndList();
+  $('gate').style.display = 'none'; applyRole(); await loadStock(); renderMapAndList(); loadPivots();
   showView(PROFILE.role === 'printer' ? 'cards' : 'map');
   if (PROFILE.role !== 'manager') { loadWorkers(); loadSettings(); }
 }
@@ -1437,6 +1449,58 @@ function goAlert(id) { const l = locations.find(x => String(x.id) === String(id)
 function exportDashXlsx() {
   const rows = [['المركز', 'النشاط', 'الولاية', 'السعة', 'الكمية', 'الامتلاء %', 'آخر تحديث', 'الحالة']].concat(dashScope().map(l => { const s = STOCK[l.id], p = fillPct(l); return [l.name, l.area || '', l.province || 'أدرار', capNum(l), s ? +s.quantity : '', p == null ? '' : p, s ? s.entry_date : '', l.status === 'inactive' ? 'خارج الخدمة' : 'نشط']; }));
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'المؤشرات'); XLSX.writeFile(wb, 'indicators_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+
+// ===== المحاور الدوارة: نقرتان (المركز ثم الحافة) + اسم الفلاح + حفظ الإحداثيات =====
+const pivotLayer = L.layerGroup().addTo(map);
+let PIVOTS = [], pvMode = 0, pvC = null, pvTmp = null, pvDraw = null, pvEdit = null, pvLat = 0, pvLng = 0;
+async function loadPivots() {
+  if (!PROFILE || !(PROFILE.role === 'admin' || PROFILE.role === 'manager')) return;
+  const r = await fetch(`${REST}/pivots?select=*&order=id`, { headers: hdr() }); PIVOTS = r.ok ? await r.json() : [];
+  pivotLayer.clearLayers();
+  PIVOTS.forEach(p => {
+    const c = L.circle([p.lat, p.lng], { radius: +p.radius_m, color: '#00E5FF', weight: 2, fillColor: '#00E5FF', fillOpacity: .15 }).addTo(pivotLayer);
+    c.bindTooltip('🌀 ' + esc(p.farmer_name));
+    c.on('click', e => { if (pvMode) return; L.DomEvent.stopPropagation(e); pvPopup(p); });
+  });
+}
+function pvPopup(p) {
+  const ha = (Math.PI * p.radius_m ** 2 / 1e4).toFixed(1), ll = (+p.lat).toFixed(6) + ', ' + (+p.lng).toFixed(6);
+  L.popup().setLatLng([p.lat, p.lng]).setContent(`<div class="probe"><b>🌀 محور دوّار</b><br>👨‍🌾 يتبع للفلاح: <b>${esc(p.farmer_name)}</b><br>${p.phone ? '📞 ' + esc(p.phone) + '<br>' : ''}${p.crop ? '🌾 ' + esc(p.crop) + '<br>' : ''}📐 نصف القطر ${Math.round(p.radius_m)} م — ${ha} هكتار<span class="ltr">${ll}</span>${p.notes ? '📝 ' + esc(p.notes) + '<br>' : ''}
+    <button class="panel-btn gps-btn" style="width:100%" onclick="copyText('${ll}')">📋 نسخ الإحداثيات</button>
+    <div class="admin-only" style="display:flex;gap:4px;margin-top:4px"><button class="panel-btn edit-btn" data-id="${p.id}" onclick="pvOpen(+this.dataset.id)">✏️ تعديل</button><button class="panel-btn delete-btn" data-id="${p.id}" onclick="pvDel(+this.dataset.id)">🗑️ حذف</button></div></div>`).openOn(map);
+}
+function togglePivots() { if (map.hasLayer(pivotLayer)) map.removeLayer(pivotLayer); else { pivotLayer.addTo(map); loadPivots(); } }
+function pvCancel() { [pvTmp, pvDraw].forEach(x => x && map.removeLayer(x)); pvTmp = pvDraw = pvC = null; }
+function togglePivotMode(b) {
+  pvMode = pvMode ? 0 : 1; b.classList.toggle('on', !!pvMode); pvCancel(); map.getContainer().style.cursor = pvMode ? 'crosshair' : '';
+  if (pvMode) { if (!map.hasLayer(pivotLayer)) pivotLayer.addTo(map); toast('🌀 اضغط على مركز المحور ثم على حافته'); }
+}
+map.on('click', e => {
+  if (!pvMode) return;
+  if (!pvC) { pvC = e.latlng; pvTmp = L.circleMarker(pvC, { radius: 5, color: '#FFEB3B' }).addTo(map); toast('الآن اضغط على حافة الدائرة'); return; }
+  pvDraw = L.circle(pvC, { radius: map.distance(pvC, e.latlng), color: '#FFEB3B', weight: 2, fillOpacity: .1, dashArray: '6 6' }).addTo(map);
+  pvOpen(null, { lat: pvC.lat, lng: pvC.lng, radius_m: Math.round(map.distance(pvC, e.latlng)) });
+});
+function pvOpen(id, init) {
+  const p = id ? PIVOTS.find(x => x.id === id) : init; if (!p) return; pvEdit = id || null;
+  $('pv-name').value = p.farmer_name || ''; $('pv-phone').value = p.phone || ''; $('pv-crop').value = p.crop || ''; $('pv-notes').value = p.notes || '';
+  $('pv-r').value = Math.round(p.radius_m); pvLat = +p.lat; pvLng = +p.lng; $('pv-ll').textContent = pvLat.toFixed(6) + ', ' + pvLng.toFixed(6);
+  map.closePopup(); $('pv-modal').style.display = 'block';
+}
+function pvClose() { $('pv-modal').style.display = 'none'; pvCancel(); }
+async function pvSave() {
+  const name = $('pv-name').value.trim(), r = +$('pv-r').value;
+  if (!name) return toast('اكتب اسم الفلاح'); if (!(r >= 20 && r <= 3000)) return toast('نصف القطر غير منطقي (20 – 3000 م)');
+  const body = { farmer_name: name, phone: $('pv-phone').value.trim() || null, crop: $('pv-crop').value.trim() || null, notes: $('pv-notes').value.trim() || null, radius_m: r };
+  const res = pvEdit ? await fetch(`${REST}/pivots?id=eq.${pvEdit}`, { method: 'PATCH', headers: hdr({ Prefer: 'return=minimal' }), body: JSON.stringify(body) })
+                     : await fetch(`${REST}/pivots`, { method: 'POST', headers: hdr({ Prefer: 'return=minimal' }), body: JSON.stringify({ ...body, lat: pvLat, lng: pvLng }) });
+  if (!res.ok) return toast('❌ فشل الحفظ، هل شغّلت ملف supabase_pivots.sql؟');
+  pvClose(); toast('✅ تم حفظ المحور'); loadPivots();
+}
+async function pvDel(id) {
+  if (!confirm('حذف هذا المحور؟')) return;
+  const r = await fetch(`${REST}/pivots?id=eq.${id}`, { method: 'DELETE', headers: hdr() }); toast(r.ok ? '🗑️ تم الحذف' : '❌ فشل'); map.closePopup(); loadPivots();
 }
 
 enter();
