@@ -195,7 +195,7 @@
 #sheet{display:none}
 .card .hd{padding:2mm 15mm 0}.card .lc{position:absolute;right:3mm;top:2.5mm;height:15mm}.back .lb{height:13mm;margin:0 auto 2mm}
 @media print{
-  @page{size:A4;margin:8mm}
+  
   html,body{display:block!important;height:auto!important;overflow:visible!important;background:#fff!important}
   body>*:not(#sheet){display:none!important}
   #sheet{display:flex!important;flex-wrap:wrap;gap:4mm}
@@ -209,7 +209,7 @@
 #sheet .cin{position:absolute;left:50%;top:50%;width:85.6mm;height:54mm;transform:translate(-50%,-50%) scale(var(--k,1));font-size:8pt;color:#000}
 #sheet .cin.bk{display:flex;flex-direction:column;justify-content:center;text-align:center;padding:4mm;font-size:7pt;line-height:1.6}
 #sheet .bk .lb{height:13mm;margin:0 auto 2mm}
-@media print{#sheet{display:block!important}}
+@media print{html,body{margin:0!important;padding:0!important;height:auto!important;min-height:0!important}#sheet{display:block!important;margin:0!important;padding:0!important}#sheet .pg{padding:0!important;width:var(--w)!important;height:var(--h)!important}}
 
 /* ===== صفحة المؤشرات ===== */
 #dash-page{display:none;position:fixed;inset:0;z-index:8200;overflow:auto;direction:rtl;font-family:Tahoma,Arial,sans-serif;background:#0d1710;color:#e8efe8}
@@ -1073,10 +1073,10 @@
     </div>
 
     <div id="c-set" class="box admin-only"><h3>⚙️ إعدادات الطباعة (للمدير)</h3>
-      <div class="grid"><div><label>العرض (مم)</label><input id="s_w" type="number" step="0.1"></div><div><label>الارتفاع (مم)</label><input id="s_h" type="number" step="0.1"></div>
-      <div><label>هامش القص Bleed (مم)</label><input id="s_b" type="number" step="0.1"></div><div><label>المنطقة الآمنة (مم)</label><input id="s_s" type="number" step="0.1"></div></div>
+      <div class="grid"><div><label>العرض (مم)</label><input id="s_w" type="number" step="0.1" oninput="previewSize()"></div><div><label>الارتفاع (مم)</label><input id="s_h" type="number" step="0.1" oninput="previewSize()"></div>
+      <div><label>المنطقة الآمنة (مم)</label><input id="s_s" type="number" step="0.1" oninput="previewSize()"></div></div>
       <select id="s_preset" onchange="applyPreset(this.value)"><option value="">مقاس جاهز…</option><option value="85.6x54">ISO / CR80 — 85.6×54 مم</option><option value="85x55">8.5×5.5 سم</option></select>
-      <button onclick="saveSettings()">💾 حفظ</button> <small>حجم الصفحة المطبوعة = المقاس + 2×القص (القص الموصى به 3 مم، الآمنة 3–5 مم)</small></div>
+      <button onclick="saveSettings()">💾 حفظ</button> <small>صفحة الطباعة = مقاس البطاقة تمامًا. المنطقة الآمنة: مسافة بين النصوص وحافة البطاقة (3–5 مم).</small></div>
     <!-- قائمة العمال -->
     <div class="box">
       <input id="q" placeholder="بحث بالاسم أو الرقم..." oninput="render()">
@@ -1223,14 +1223,14 @@ async function printSelected(){
     const d=w.birth_date?w.birth_date.split("-").reverse().join("/"):"";
     html+=`<div class="card">
       <img class="lc" src="${LOGO_EMB}" alt="">
-      <div class="hd">الديوان الجزائري المهني للحبوب (OAIC)<br>تعاونية الحبوب و البقول الجافة أدرار (CCLS)</div>
+      <div class="hd">الديوان الجزائري المهني للحبوب (OAIC)</div>
       <div class="tt">بطاقة مهنية</div>
       ${img?`<img class="ph" src="${img}" crossorigin="anonymous">`:""}
       <div class="ft">رقم التعريف: <b>${esc(w.card_no)}</b><br>الاسم: ${esc(w.first_name_ar)}<br>اللقب: ${esc(w.last_name_ar)}<br>
         تاريخ الميلاد: ${d}<br>مكان الميلاد: ${esc(w.birth_place)}<br>المهنة: ${esc(w.job_title)}</div>
       <div class="fr">${esc(w.name_fr)}</div></div>
       <div class="card back"><img class="lb" src="${LOGO_EMB}" alt=""><b>الجمهورية الجزائرية الديمقراطية الشعبية<br>وزارة الفلاحة و التنمية الريفية</b>
-      الديوان الجزائري المهني للحبوب (OAIC)<br>تعاونية الحبوب و البقول الجافة أدرار (CCLS)<br><br>
+      الديوان الجزائري المهني للحبوب (OAIC)<br><br>
       <b>تنبيه:</b> هذه البطاقة شخصية لا يحملها إلا صاحبها.<br>في حالة ضياع البطاقة أو إتلافها يجب إخطار الإدارة الوصية.</div>`;
   }
   $("sheet").innerHTML=html;
@@ -1301,17 +1301,22 @@ async function doImport(){
 }
 
 // ===== إعدادات الطباعة + طباعة كل وجه في صفحة مستقلة =====
-let CARDSET = { w: 85.6, h: 54, bleed: 3, safe: 3 };
-function updInfo() { const e = $('pinfo'); if (e) e.textContent = `صفحة الطباعة: ${(CARDSET.w + 2 * CARDSET.bleed).toFixed(1)}×${(CARDSET.h + 2 * CARDSET.bleed).toFixed(1)} مم`; }
-function fillSettings() { [['s_w', 'w'], ['s_h', 'h'], ['s_b', 'bleed'], ['s_s', 'safe']].forEach(([i, k]) => $(i).value = CARDSET[k]); updInfo(); }
+let CARDSET = { w: 85.6, h: 54, bleed: 0, safe: 3 };
+function updInfo() { const e = $('pinfo'); if (e) e.textContent = `صفحة الطباعة: ${CARDSET.w.toFixed(1)}×${CARDSET.h.toFixed(1)} مم`; }
+function fillSettings() { [['s_w', 'w'], ['s_h', 'h'], ['s_s', 'safe']].forEach(([i, k]) => $(i).value = CARDSET[k]); updInfo(); }
 async function loadSettings() {
   const { data } = await sb.from('app_settings').select('value').eq('key', 'card_print').maybeSingle();
-  if (data && data.value) CARDSET = { ...CARDSET, ...data.value };
+  if (data && data.value) CARDSET = { ...CARDSET, ...data.value }; CARDSET.bleed = 0;
   fillSettings();
 }
-function applyPreset(v) { if (!v) return; const [w, h] = v.split('x'); $('s_w').value = w; $('s_h').value = h; }
+function previewSize() {
+  const w = +$('s_w').value, h = +$('s_h').value;
+  const dirty = w !== CARDSET.w || h !== CARDSET.h || +$('s_s').value !== CARDSET.safe;
+  $('pinfo').textContent = `صفحة الطباعة: ${w.toFixed(1)}×${h.toFixed(1)} مم` + (dirty ? ' ⚠️ لم تُحفظ بعد' : '');
+}
+function applyPreset(v) { if (!v) return; const [w, h] = v.split('x'); $('s_w').value = w; $('s_h').value = h; previewSize(); }
 async function saveSettings() {
-  const v = { w: +$('s_w').value, h: +$('s_h').value, bleed: +$('s_b').value, safe: +$('s_s').value };
+  const v = { w: +$('s_w').value, h: +$('s_h').value, bleed: 0, safe: +$('s_s').value };
   if (!(v.w >= 30 && v.w <= 300 && v.h >= 30 && v.h <= 300 && v.bleed >= 0 && v.bleed <= 10 && v.safe >= 0 && v.safe <= 15 && v.w > 2 * v.safe + 10 && v.h > 2 * v.safe + 10)) return alert('قيم غير منطقية، راجع المقاس والهوامش');
   const { error } = await sb.from('app_settings').upsert({ key: 'card_print', value: v }, { onConflict: 'key' });
   if (error) return alert('تعذر الحفظ: ' + error.message);
@@ -1321,17 +1326,17 @@ async function printSelected() {
   const ids = [...document.querySelectorAll('.sel:checked')].map(x => +x.value);
   if (!ids.length) return alert('حدّد عاملاً واحداً على الأقل');
   const S = CARDSET, mode = $('pmode').value, k = Math.min((S.w - 2 * S.safe) / 79.6, (S.h - 2 * S.safe) / 48);
-  $('pgstyle').textContent = `@page{size:${(S.w + 2 * S.bleed)}mm ${(S.h + 2 * S.bleed)}mm;margin:0}`;
-  $('sheet').style.cssText = `--w:${S.w}mm;--h:${S.h}mm;--b:${S.bleed}mm;--k:${k}`;
+  $('pgstyle').textContent = `@page{size:${S.w}mm ${S.h}mm;margin:0}`;
+  $('sheet').style.cssText = `--w:${S.w}mm;--h:${S.h}mm;--b:0mm;--k:${k}`;
   const back = `<div class="pg"><div class="card"><div class="cin bk"><img class="lb" src="${LOGO_EMB}" alt=""><b>الجمهورية الجزائرية الديمقراطية الشعبية<br>وزارة الفلاحة و التنمية الريفية</b>
-    الديوان الجزائري المهني للحبوب (OAIC)<br>تعاونية الحبوب و البقول الجافة أدرار (CCLS)<br><br>
+    الديوان الجزائري المهني للحبوب (OAIC)<br><br>
     <b>تنبيه:</b> هذه البطاقة شخصية لا يحملها إلا صاحبها.<br>في حالة ضياع البطاقة أو إتلافها يجب إخطار الإدارة الوصية.</div></div></div>`;
   let html = '';
   for (const w of workers.filter(w => ids.includes(w.id))) {
     if (mode !== 'back') {
       const img = await photoUrl(w.photo_path), d = w.birth_date ? w.birth_date.split('-').reverse().join('/') : '';
       html += `<div class="pg"><div class="card"><div class="cin"><img class="lc" src="${LOGO_EMB}" alt="">
-        <div class="hd">الديوان الجزائري المهني للحبوب (OAIC)<br>تعاونية الحبوب و البقول الجافة أدرار (CCLS)</div>
+        <div class="hd">الديوان الجزائري المهني للحبوب (OAIC)</div>
         <div class="tt">بطاقة مهنية</div>${img ? `<img class="ph" src="${img}" crossorigin="anonymous">` : ''}
         <div class="ft">رقم التعريف: <b>${esc(w.card_no)}</b><br>الاسم: ${esc(w.first_name_ar)}<br>اللقب: ${esc(w.last_name_ar)}<br>
         تاريخ الميلاد: ${d}<br>مكان الميلاد: ${esc(w.birth_place)}<br>المهنة: ${esc(w.job_title)}</div>
@@ -1341,7 +1346,7 @@ async function printSelected() {
   }
   $('sheet').innerHTML = html;
   await Promise.all([...$('sheet').querySelectorAll('img')].map(i => i.complete ? 1 : new Promise(r => { i.onload = i.onerror = r; })));
-  print();
+  const _t = document.title; document.title = ' '; print(); document.title = _t;
 }
 
 // ===== تنبيهات المخزون التلقائية: امتلاء > 90% أو لا تحديث منذ أكثر من 7 أيام =====
