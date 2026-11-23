@@ -1521,11 +1521,12 @@ function morph(m, W, H, erode) {
   return o;
 }
 function detClear() { detLayer.clearLayers(); DET = []; $('det-st').textContent = ''; }
-async function runDetect() {
+async function runDetect() { try { await runDetect0(); } catch (e) { $('det-st').textContent = '❌ خطأ: ' + e.message; console.error(e); } }
+async function runDetect0() {
   const st = $('det-st'), Z = 15, sens = +$('det-sens').value / 100, rmin = +$('det-rmin').value, rmax = +$('det-rmax').value;
   detClear(); const b = map.getBounds(), tx = g => (g + 180) / 360 * 2 ** Z, ty = a => (1 - Math.log(Math.tan(a * Math.PI / 180) + 1 / Math.cos(a * Math.PI / 180)) / Math.PI) / 2 * 2 ** Z;
   const x0 = Math.floor(tx(b.getWest())), y0 = Math.floor(ty(b.getNorth())), nx = Math.floor(tx(b.getEast())) - x0 + 1, ny = Math.floor(ty(b.getSouth())) - y0 + 1;
-  if (nx * ny > 30) { st.textContent = '⚠️ المنطقة كبيرة، قرّب الخريطة'; return; }
+  if (nx * ny > 60) { st.textContent = '⚠️ المنطقة كبيرة، قرّب الخريطة'; return; }
   st.textContent = '⏳ تحميل صور القمر الصناعي...';
   const cv = document.createElement('canvas'); cv.width = nx * 256; cv.height = ny * 256; const cx = cv.getContext('2d', { willReadFrequently: true });
   try { await Promise.all([...Array(nx * ny).keys()].map(async k => { const i = k % nx, j = Math.floor(k / nx); cx.drawImage(await loadImg(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${Z}/${y0 + j}/${x0 + i}`), i * 256, j * 256); })); }
@@ -1534,27 +1535,27 @@ async function runDetect() {
   st.textContent = '⏳ تحليل الصورة...'; await new Promise(r => setTimeout(r, 30));
   const W = cv.width >> 1, H = cv.height >> 1, N = W * H, L = new Float32Array(N), RG = new Float32Array(N);
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { let l = 0, d = 0; for (let k = 0; k < 4; k++) { const p = ((2 * y + (k >> 1)) * cv.width + 2 * x + (k & 1)) * 4; l += .299 * data[p] + .587 * data[p + 1] + .114 * data[p + 2]; d += data[p] - data[p + 1]; } L[y * W + x] = l / 4; RG[y * W + x] = d / 4; }
-  const Bg = Float32Array.from(L).sort()[Math.floor(N * .8)], sand = []; for (let i = 0; i < N; i += 7) if (L[i] > Bg * .93) sand.push(RG[i]);
-  sand.sort((a, c) => a - c); const sRG = sand.length ? sand[sand.length >> 1] : 0;
-  let m = new Uint8Array(N); for (let i = 0; i < N; i++) m[i] = (L[i] < Bg * (1 - sens) && (sRG < 8 || RG[i] < sRG * .6)) ? 1 : 0;
+  const Bg = Float32Array.from(L).sort()[Math.floor(N * .8)];
+  let m = new Uint8Array(N), cov = 0; for (let i = 0; i < N; i++) { m[i] = L[i] < Bg * (1 - sens) ? 1 : 0; cov += m[i]; }
   m = morph(morph(morph(morph(m, W, H, true), W, H, true), W, H, false), W, H, false);
-  const lab = new Uint8Array(N), stack = new Int32Array(N);
+  const lab = new Uint8Array(N), stack = new Int32Array(N); let tot = 0; const rej = { edge: 0, shape: 0, size: 0, dark: 0 };
   for (let s0 = 0; s0 < N; s0++) {
-    if (!m[s0] || lab[s0]) continue; let sp = 0, area = 0, xa = W, xb = 0, ya = H, yb = 0, edge = false; stack[sp++] = s0; lab[s0] = 1;
+    if (!m[s0] || lab[s0]) continue; let sp = 0, area = 0, sl = 0, xa = W, xb = 0, ya = H, yb = 0, edge = false; stack[sp++] = s0; lab[s0] = 1;
     while (sp) {
-      const q = stack[--sp], qx = q % W, qy = (q / W) | 0; area++; if (qx < xa) xa = qx; if (qx > xb) xb = qx; if (qy < ya) ya = qy; if (qy > yb) yb = qy; if (qx === 0 || qy === 0 || qx === W - 1 || qy === H - 1) edge = true;
+      const q = stack[--sp], qx = q % W, qy = (q / W) | 0; area++; sl += L[q]; if (qx < xa) xa = qx; if (qx > xb) xb = qx; if (qy < ya) ya = qy; if (qy > yb) yb = qy; if (qx === 0 || qy === 0 || qx === W - 1 || qy === H - 1) edge = true;
       for (const n of [qx > 0 ? q - 1 : -1, qx < W - 1 ? q + 1 : -1, q - W, q + W]) if (n >= 0 && n < N && m[n] && !lab[n]) { lab[n] = 1; stack[sp++] = n; }
     }
-    if (edge) continue;
+    tot++; if (edge) { rej.edge++; continue; }
     const w = xb - xa + 1, h = yb - ya + 1, asp = Math.min(w, h) / Math.max(w, h), fill = area / (w * h);
     const X = x0 * 256 + (xa + xb + 1), Y = y0 * 256 + (ya + yb + 1), sz = 256 * 2 ** Z;
     const lng = X / sz * 360 - 180, lat = Math.atan(Math.sinh(Math.PI - 2 * Math.PI * Y / sz)) * 180 / Math.PI;
     const r = (w + h) / 2 * 156543.03392 * Math.cos(lat * Math.PI / 180) / 2 ** Z;
-    if (asp > .8 && fill > .62 && fill < .92 && r >= rmin && r <= rmax) DET.push({ lat, lng, r });
+    if (!(asp > .8 && fill > .6 && fill < .93)) rej.shape++; else if (!(r >= rmin && r <= rmax)) rej.size++; else if (sl / area < Bg * .5) rej.dark++; else DET.push({ lat, lng, r });
   }
   DET.forEach((d, i) => L.circle([d.lat, d.lng], { radius: d.r, color: '#FFEB3B', weight: 2, fillOpacity: .08, dashArray: '6 6' }).addTo(detLayer)
     .bindPopup(`<div class="probe"><b>🌀 محور مُكتشف #${i + 1}</b><br>نصف القطر ≈ ${Math.round(d.r)} م<br><button class="panel-btn gps-btn" style="width:100%" data-i="${i}" onclick="detAdd(+this.dataset.i)">➕ إضافة واسم الفلاح</button></div>`));
-  st.textContent = DET.length ? `✅ تم العثور على ${DET.length} محور — اضغط أي دائرة صفراء، أو «حفظ الكل»` : 'لم يُعثر على محاور. جرّب تقليل الحساسية أو تعديل المدى';
+  const diag = `(بقع: ${tot} • عند الحافة: ${rej.edge} • شكل غير دائري: ${rej.shape} • حجم خارج المدى: ${rej.size} • مظلمة: ${rej.dark} • تغطية القناع: ${(cov / N * 100).toFixed(0)}%)`;
+  st.textContent = DET.length ? `✅ تم العثور على ${DET.length} محور — اضغط أي دائرة صفراء، أو «حفظ الكل»` : `لم يُعثر على محاور ${diag}`;
   if (DET.length) map.fitBounds(L.latLngBounds(DET.map(d => [d.lat, d.lng])).pad(.3));
 }
 function detAdd(i) { const d = DET[i]; pvOpen(null, { lat: d.lat, lng: d.lng, radius_m: Math.round(d.r) }); }
