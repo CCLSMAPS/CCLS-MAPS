@@ -238,6 +238,9 @@
 /* شريط التنقل لا يغطي زر العودة للرؤية الشاملة */
 body.admin .ui-controls{left:290px}
 @media(max-width:768px){body.admin .ui-controls{left:12px;top:56px}}
+.st-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.st-bar select{background:#101c14;color:#e8efe8;border:1px solid #2f4a36;border-radius:8px;padding:7px;font:12px Tahoma}
+.st-tabs{display:flex;gap:4px;flex-wrap:wrap}.st-tabs button{background:#1d3324;color:#cfe8d3;border:1px solid #2f4a36;border-radius:8px;padding:7px 10px;cursor:pointer;font:12px Tahoma}.st-tabs button.on{background:#2E7D32;color:#fff}
+.st-note{font-size:11px;color:#8fae95;margin:8px 0;line-height:1.7}.st-mini{background:#2b3f30;color:#fff;border:1px solid #416048;border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -334,6 +337,11 @@ body.admin .ui-controls{left:290px}
         <div class="form-group"><label>المخزن</label><select id="st-loc" onchange="stockHint()"></select></div>
         <div class="form-group"><label>التاريخ</label><input type="date" id="st-date"></div>
         <div class="form-group"><label>الكمية الحالية في المخزن (قنطار)</label><input type="number" id="st-qty" min="0" oninput="stockHint()"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <div class="form-group"><label>➕ وارد اليوم (استلام)</label><input type="number" id="st-in" min="0"></div>
+          <div class="form-group"><label>➖ صادر اليوم (صرف)</label><input type="number" id="st-out" min="0"></div>
+          <div class="form-group"><label>فاقد</label><input type="number" id="st-loss" min="0"></div>
+          <div class="form-group"><label>تالف</label><input type="number" id="st-dmg" min="0"></div></div>
         <div class="form-group"><label>ملاحظة (اختياري)</label><input type="text" id="st-note"></div>
         <div id="st-info" style="font-size:13px;margin-top:6px"></div>
         <div class="modal-btns"><button onclick="saveStock()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 حفظ</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
@@ -1021,7 +1029,7 @@ body.admin .ui-controls{left:290px}
             const mine = PROFILE.role === 'admin' ? locations : locations.filter(l => String(l.id) === String(PROFILE.location_id));
             if (!mine.length) return toast('لم يُسند إليك أي مخزن');
             $('st-loc').innerHTML = mine.map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');
-            $('st-date').value = new Date().toISOString().slice(0, 10); $('st-qty').value = ''; $('st-note').value = '';
+            $('st-date').value = new Date().toISOString().slice(0, 10); $('st-qty').value = ''; $('st-note').value = ''; ['st-in', 'st-out', 'st-loss', 'st-dmg'].forEach(i => $(i).value = '');
             stockHint(); $('stock-modal').style.display = 'block';
         }
         function stockHint() {
@@ -1031,7 +1039,7 @@ body.admin .ui-controls{left:290px}
         }
         async function saveStock() {
             const q = parseFloat($('st-qty').value); if (isNaN(q) || q < 0) return toast('أدخل كمية صحيحة');
-            const r = await fetch(`${REST}/stock_entries?on_conflict=location_id,entry_date`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ location_id: $('st-loc').value, entry_date: $('st-date').value, quantity: q, note: $('st-note').value.trim() }) });
+            const r = await fetch(`${REST}/stock_entries?on_conflict=location_id,entry_date`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ location_id: $('st-loc').value, entry_date: $('st-date').value, quantity: q, received: +$('st-in').value || 0, issued: +$('st-out').value || 0, loss: +$('st-loss').value || 0, damaged: +$('st-dmg').value || 0, note: $('st-note').value.trim() }) });
             if (!r.ok) return toast('❌ فشل الحفظ (تحقق من الصلاحيات)');
             $('stock-modal').style.display = 'none'; toast('✅ تم تسجيل الكمية'); await loadStock(); renderMapAndList();
         }
@@ -1450,7 +1458,7 @@ async function openDash() {
   await loadStock(); updateAlertBadge();
   const d = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
   const r = await fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity&entry_date=gte.${d}&order=entry_date.asc&limit=5000`, { headers: hdr() });
-  $('dp-body').innerHTML = buildDash(r.ok ? await r.json() : []); $('dp-date').textContent = new Date().toLocaleString('ar-DZ');
+  $('dp-body').innerHTML = buildDash(r.ok ? await r.json() : []); $('dp-date').textContent = new Date().toLocaleString('ar-DZ'); initStudies();
 }
 function closeDash() { $('dash-page').style.display = 'none'; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDash(); });
@@ -1727,6 +1735,92 @@ async function detSaveAll() {
     console.error(err);
     toast('❌ ' + (err.message || 'حدث خطأ أثناء حفظ المحاور'));
   }
+}
+
+// ===== الدراسات التحليلية للمخزون (5 دراسات) =====
+let ST = { tab: 1, cur: [], pv: {}, d0: '', d1: '', ok: true }, PLANS = {};
+const D = s => new Date(s + 'T00:00:00Z'), iso = d => d.toISOString().slice(0, 10), n0 = v => +v || 0;
+const pc = v => v == null || !isFinite(v) ? '—' : v.toFixed(1) + '%', nz = v => v == null || !isFinite(v) ? '—' : nf(v);
+function initStudies() {
+  const d = document.createElement('div'); d.className = 'dp-card dp-wide'; d.id = 'studies';
+  d.innerHTML = `<h4>📚 الدراسات التحليلية للمخزون</h4><div class="st-bar"><select id="sp-range" onchange="stRun()"><option value="7">آخر 7 أيام</option><option value="30" selected>آخر 30 يومًا</option><option value="90">آخر 90 يومًا</option><option value="365">آخر سنة</option></select>
+  <select id="sp-loc" onchange="stRender()"><option value="">كل المخازن</option>${dashScope().map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('')}</select>
+  <select id="sp-gran" onchange="stRender()"><option value="day">يوميًا</option><option value="week">أسبوعيًا</option><option value="month" selected>شهريًا</option><option value="quarter">فصليًا</option><option value="year">سنويًا</option></select></div>
+  <div class="st-tabs">${['1️⃣ المؤشرات الكمية', '2️⃣ حركة المخزون', '3️⃣ الأداء التخزيني', '4️⃣ الدراسة الزمنية', '5️⃣ المقارنة بين المخازن'].map((t, i) => `<button data-t="${i + 1}" class="${i ? '' : 'on'}" onclick="stTab(${i + 1})">${t}</button>`).join('')}</div><div id="st-body" style="margin-top:12px"></div>`;
+  $('dp-body').appendChild(d); ST.tab = 1; stRun();
+}
+function stTab(t) { ST.tab = t; document.querySelectorAll('.st-tabs button').forEach(b => b.classList.toggle('on', +b.dataset.t === t)); stRender(); }
+async function stRun() {
+  $('st-body').innerHTML = '<div style="padding:20px;text-align:center">⏳ جاري التحليل...</div>';
+  const days = +$('sp-range').value; ST.d1 = iso(new Date()); ST.d0 = iso(new Date(Date.now() - (days - 1) * 864e5));
+  const q = f => fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity,received,issued,loss,damaged&${f}`, { headers: hdr() });
+  const [a, b, pl] = await Promise.all([q(`entry_date=gte.${ST.d0}&order=entry_date.asc&limit=20000`), q(`entry_date=lt.${ST.d0}&order=entry_date.desc&limit=3000`), fetch(`${REST}/app_settings?key=eq.stock_plans&select=value`, { headers: hdr() })]);
+  ST.ok = a.ok; ST.cur = a.ok ? await a.json() : []; ST.pv = {}; (b.ok ? await b.json() : []).forEach(e => { if (!ST.pv[e.location_id]) ST.pv[e.location_id] = e; });
+  PLANS = {}; if (pl.ok) { const j = await pl.json(); if (j[0]) PLANS = j[0].value || {}; }
+  stRender();
+}
+function stStats(l) {
+  const id = String(l.id), E = ST.cur.filter(e => String(e.location_id) === id), pv = ST.pv[id], days = (D(ST.d1) - D(ST.d0)) / 864e5 + 1, f = E[0];
+  const open = pv ? n0(pv.quantity) : f ? n0(f.quantity) - n0(f.received) + n0(f.issued) + n0(f.loss) + n0(f.damaged) : 0;
+  const sum = k => E.reduce((s, e) => s + n0(e[k]), 0), rec = sum('received'), iss = sum('issued'), loss = sum('loss'), dmg = sum('damaged'), act = E.length ? n0(E[E.length - 1].quantity) : open;
+  let pq = open, pd = D(ST.d0), w = 0; E.forEach(e => { const d = D(e.entry_date); w += pq * (d - pd) / 864e5; pq = n0(e.quantity); pd = d; }); w += pq * ((D(ST.d1) - pd) / 864e5 + 1);
+  let cs = 0, cn = 0; E.forEach((e, i) => { const p = i ? n0(E[i - 1].quantity) : pv ? n0(pv.quantity) : null; if (p == null) return; const book = p + n0(e.received) - n0(e.issued) - n0(e.loss) - n0(e.damaged), q = n0(e.quantity); cs += 1 - Math.abs(q - book) / Math.max(q, book, 1); cn++; });
+  const cap = capNum(l), pl = PLANS[id] || {}, since = iso(new Date(D(ST.d1) - 30 * 864e5)), base = open + rec;
+  return { l, days, open, rec, iss, loss, dmg, act, calc: open + rec - iss - loss - dmg, avg: w / days, cap, util: cap ? act / cap * 100 : null, conf: cn ? cs / cn * 100 : null,
+    lossP: base ? loss / base * 100 : null, dmgP: base ? dmg / base * 100 : null, rexec: pl.in ? rec / (pl.in * days / 30) * 100 : null, iexec: pl.out ? iss / (pl.out * days / 30) * 100 : null,
+    stag: act > 0 && !E.some(e => e.entry_date >= since && n0(e.issued) > 0), n: E.length, planned: !!(pl.in || pl.out) };
+}
+function stTotals(S) { const t = { open: 0, rec: 0, iss: 0, loss: 0, dmg: 0, act: 0, calc: 0, avg: 0, cap: 0, stagAct: 0, days: S[0] ? S[0].days : 1 }; S.forEach(s => { ['open', 'rec', 'iss', 'loss', 'dmg', 'act', 'calc', 'avg', 'cap'].forEach(k => t[k] += s[k]); if (s.stag) t.stagAct += s.act; }); return t; }
+function stScore(s) { const c = []; if (s.conf != null) c.push(s.conf); if (s.lossP != null) c.push(100 - Math.min(100, (s.lossP + s.dmgP) * 10)); if (s.rexec != null) c.push(Math.min(100, s.rexec)); if (s.iexec != null) c.push(Math.min(100, s.iexec)); return c.length ? c.reduce((a, b) => a + b) / c.length : null; }
+const stLevel = v => v == null ? '—' : v >= 85 ? '🟢 ممتاز' : v >= 70 ? '🔵 جيد' : v >= 50 ? '🟠 متوسط' : '🔴 ضعيف';
+const stTbl = (h, rows) => `<div style="overflow:auto;max-height:430px"><table class="dp-tbl"><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+function stT1(S, t) {
+  const util = t.cap ? t.act / t.cap * 100 : null, diff = t.act - t.calc;
+  return `<div class="dp-kpis">${KP('📥', 'المخزون الافتتاحي', nf(t.open) + ' ق', 'الكمية بداية الفترة', '#1E88E5')}${KP('➕', 'إجمالي الاستلامات', nf(t.rec) + ' ق', 'مجموع الكميات المستلمة', '#4CAF50')}${KP('➖', 'إجمالي الخرجات', nf(t.iss) + ' ق', 'مجموع الكميات المصروفة', '#EF6C00')}
+  ${KP('🧮', 'المخزون النهائي (محسوب)', nf(t.calc) + ' ق', 'الافتتاحي + الوارد − الصادر − الفاقد − التالف', '#C9A227')}${KP('📦', 'المخزون الفعلي', nf(t.act) + ' ق', 'فرق الجرد: ' + nf(diff) + ' ق', Math.abs(diff) > t.cap * .01 ? '#d32f2f' : '#2E7D32')}${KP('📊', 'الطاقة التخزينية المستغلة', pc(util), 'المخزون الفعلي ÷ الطاقة الإجمالية × 100', fillColor(util || 0))}</div>
+  <div class="dp-card"><h4>نسبة امتلاء المخزن = الكمية المخزنة ÷ السعة × 100</h4>${bars(S.filter(s => s.util != null).sort((a, b) => b.util - a.util).map(s => ({ l: s.l.name, v: s.util, c: fillColor(s.util) })), r => r.v.toFixed(0) + '%', 100)}</div>`;
+}
+function stT2(S, t) {
+  const turn = t.avg > 0 ? t.iss * 365 / t.days / t.avg : null, stagP = t.act ? t.stagAct / t.act * 100 : null;
+  const row = s => { const a = s.avg > 0 ? s.iss * 365 / s.days / s.avg : null; return `<tr><td><b>${esc(s.l.name)}</b></td><td>${a == null ? '—' : a.toFixed(2)}</td><td>${a ? nf(365 / a) + ' يوم' : '—'}</td><td>${nz(s.rec / s.days)}</td><td>${nz(s.iss / s.days)}</td><td>${s.stag ? '🟠 راكد' : '🟢 نشط'}</td></tr>`; };
+  return `<div class="dp-kpis">${KP('🔄', 'معدل دوران المخزون', turn == null ? '—' : turn.toFixed(2) + ' مرة/سنة', 'الصرف السنوي ÷ متوسط المخزون', '#1E88E5')}${KP('⏳', 'متوسط مدة البقاء', turn ? nf(365 / turn) + ' يوم' : '—', '365 ÷ معدل الدوران', '#8E24AA')}
+  ${KP('📥', 'معدل الاستلام', nz(t.rec / t.days) + ' ق/يوم', nz(t.rec / t.days * 30) + ' ق/شهر', '#4CAF50')}${KP('📤', 'معدل الصرف', nz(t.iss / t.days) + ' ق/يوم', nz(t.iss / t.days * 30) + ' ق/شهر', '#EF6C00')}
+  ${KP('🧊', 'نسبة المخزون الراكد', pc(stagP), 'مخزون بلا صرف منذ 30 يومًا', stagP > 30 ? '#d32f2f' : '#2E7D32')}${KP('♻️', 'معدل تجديد المخزون', t.avg > 0 ? (t.rec / t.avg).toFixed(2) + ' مرة' : '—', 'الاستلامات ÷ متوسط المخزون', '#00ACC1')}</div>
+  ${stTbl(['المخزن', 'معدل الدوران', 'مدة البقاء', 'استلام يومي', 'صرف يومي', 'الحالة'], S.map(row).join(''))}`;
+}
+function stT3(S, t) {
+  const row = s => `<tr><td><b>${esc(s.l.name)}</b></td><td>${pc(s.util)}</td><td>${pc(s.conf)}</td><td>${pc(s.lossP)}</td><td>${pc(s.dmgP)}</td><td>${pc(s.rexec)}</td><td>${pc(s.iexec)}</td><td><button class="st-mini admin-only" data-id="${esc(s.l.id)}" onclick="stPlan(this.dataset.id)">🎯 الهدف الشهري</button></td></tr>`;
+  const tl = t.open + t.rec;
+  return stTbl(['المخزن', 'استغلال الطاقة', 'مطابقة الجرد للسجلات', 'نسبة الفاقد', 'نسبة التلف', 'تنفيذ الاستلام', 'تنفيذ التسليم', ''], S.map(row).join('') + `<tr style="font-weight:bold"><td>الإجمالي</td><td>${pc(t.cap ? t.act / t.cap * 100 : null)}</td><td>—</td><td>${pc(tl ? t.loss / tl * 100 : null)}</td><td>${pc(tl ? t.dmg / tl * 100 : null)}</td><td>—</td><td>—</td><td></td></tr>`)
+    + '<div class="st-note">• المطابقة = 1 − |المخزون الفعلي − (مخزون أمس + وارد − صادر − فاقد − تالف)| ÷ المخزون، متوسط أيام الإدخال.<br>• نسبتا الفاقد والتلف = الكمية ÷ (الافتتاحي + المستلم).<br>• نسبتا تنفيذ الاستلام والتسليم تحتاجان هدفًا شهريًا يحدده المدير بزر 🎯 لكل مخزن.</div>';
+}
+function stKey(ds, g) { const d = D(ds); if (g === 'day') return ds; if (g === 'week') return iso(new Date(d - ((d.getUTCDay() + 6) % 7) * 864e5)); if (g === 'month') return ds.slice(0, 7); if (g === 'quarter') return d.getUTCFullYear() + '-Q' + (Math.floor(d.getUTCMonth() / 3) + 1); return ds.slice(0, 4); }
+function stT4(S) {
+  const g = $('sp-gran').value, ids = new Set(S.map(s => String(s.l.id))), E = ST.cur.filter(e => ids.has(String(e.location_id))), G = {}, by = {};
+  E.forEach(e => { const k = stKey(e.entry_date, g), o = G[k] = G[k] || { rec: 0, iss: 0, end: '' }; o.rec += n0(e.received); o.iss += n0(e.issued); if (e.entry_date > o.end) o.end = e.entry_date; (by[e.location_id] = by[e.location_id] || []).push(e); });
+  const keys = Object.keys(G).sort(); if (!keys.length) return '<small>لا توجد إدخالات في الفترة المختارة</small>';
+  const cur = {}, ptr = {}; keys.forEach(k => { let tot = 0; S.forEach(x => { const id = String(x.l.id), a = by[id] || []; ptr[id] = ptr[id] || 0; if (cur[id] === undefined) cur[id] = ST.pv[id] ? n0(ST.pv[id].quantity) : 0; while (ptr[id] < a.length && a[ptr[id]].entry_date <= G[k].end) cur[id] = n0(a[ptr[id]++].quantity); tot += cur[id]; }); G[k].stock = tot; });
+  const mx = Math.max(1, ...keys.map(k => Math.max(G[k].rec, G[k].iss))), peak = keys.reduce((a, k) => G[k].rec > G[a].rec ? k : a, keys[0]), low = keys.reduce((a, k) => G[k].stock < G[a].stock ? k : a, keys[0]), top = S.slice().sort((a, b) => (b.rec + b.iss) - (a.rec + a.iss))[0];
+  return `<div class="dp-kpis">${KP('📈', 'أعلى فترة استلام', peak, nf(G[peak].rec) + ' ق', '#4CAF50')}${KP('📉', 'أدنى مخزون', low, nf(G[low].stock) + ' ق', '#EF6C00')}${KP('🏆', 'الأكثر نشاطًا', esc(top.l.name), nf(top.rec + top.iss) + ' ق حركة', '#C9A227')}</div>`
+    + stTbl(['الفترة', 'الاستلامات', 'الصرف', 'المخزون في نهايتها'], keys.map(k => `<tr><td>${k}</td><td style="min-width:130px">${nf(G[k].rec)}<div class="dp-trk"><i style="width:${G[k].rec / mx * 100}%;background:#4CAF50"></i></div></td><td style="min-width:130px">${nf(G[k].iss)}<div class="dp-trk"><i style="width:${G[k].iss / mx * 100}%;background:#EF6C00"></i></div></td><td>${nf(G[k].stock)}</td></tr>`).join(''));
+}
+function stT5(S, t) {
+  const R = S.map(s => ({ s, sc: stScore(s) })).sort((a, b) => (b.sc ?? -1) - (a.sc ?? -1));
+  return stTbl(['المخزن', 'الطاقة', 'المستلم', 'المصروف', 'المتبقي', 'الاستغلال', 'الفاقد+التالف', 'مستوى الأداء'], R.map(({ s, sc }) => `<tr><td><b>${esc(s.l.name)}</b></td><td>${nf(s.cap)}</td><td>${nf(s.rec)}</td><td>${nf(s.iss)}</td><td>${nf(s.act)}</td><td>${s.util == null ? '—' : `<span class="dp-pill" style="background:${fillColor(s.util)}">${s.util.toFixed(0)}%</span>`}</td><td>${nf(s.loss + s.dmg)}</td><td>${stLevel(sc)}${sc != null ? ' (' + sc.toFixed(0) + ')' : ''}</td></tr>`).join('')
+    + `<tr style="font-weight:bold"><td>الإجمالي</td><td>${nf(t.cap)}</td><td>${nf(t.rec)}</td><td>${nf(t.iss)}</td><td>${nf(t.act)}</td><td>${pc(t.cap ? t.act / t.cap * 100 : null)}</td><td>${nf(t.loss + t.dmg)}</td><td></td></tr>`)
+    + '<div class="st-note">مستوى الأداء = متوسط: مطابقة الجرد، وجودة الحفظ (100 − 10×(الفاقد%+التلف%))، وتنفيذ الاستلام والتسليم (إن حُدد هدف). ممتاز ≥ 85 • جيد ≥ 70 • متوسط ≥ 50 • ضعيف أقل.</div>';
+}
+function stRender() {
+  if (!ST.ok) { $('st-body').innerHTML = '<div class="st-note" style="color:#ffb74d">⚠️ تعذر قراءة حقول الحركة. شغّل ملف supabase_studies.sql في Supabase أولًا.</div>'; return; }
+  const sel = $('sp-loc').value, S = dashScope().filter(l => l.status !== 'inactive' && (!sel || String(l.id) === sel)).map(stStats);
+  if (!S.length) { $('st-body').innerHTML = '<small>لا توجد مخازن</small>'; return; }
+  $('st-body').innerHTML = [stT1, stT2, stT3, stT4, stT5][ST.tab - 1](S, stTotals(S)) + `<div class="st-note">الفترة: ${ST.d0} → ${ST.d1} • تُحسب الدراسات من إدخالات المخازن اليومية (الوارد والصادر والفاقد والتالف).</div>`;
+}
+async function stPlan(id) {
+  const c = PLANS[id] || {}, a = prompt('الهدف الشهري للاستلام (قنطار)', c.in || ''); if (a === null) return; const b = prompt('الهدف الشهري للتسليم/الصرف (قنطار)', c.out || ''); if (b === null) return;
+  PLANS[id] = { in: +a || 0, out: +b || 0 };
+  const r = await fetch(`${REST}/app_settings?on_conflict=key`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ key: 'stock_plans', value: PLANS }) });
+  toast(r.ok ? '✅ حُفظ الهدف الشهري' : '❌ فشل الحفظ'); stRender();
 }
 
 enter();
