@@ -1,0 +1,20 @@
+{
+  "name": "ccls-maps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "منصة CCLS أدرار - الخرائط والبطاقات المهنية",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "npx esbuild src/pivot-radii-chart.jsx --bundle --minify --format=iife --outfile=dist/pivot-chart.js --define:process.env.NODE_ENV=\\\"production\\\" && node --check server.js",
+    "lint": "node --check server.js"
+  },
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "express": "^4.21.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "recharts": "^3.11.1"
+  }
+}

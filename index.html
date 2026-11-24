@@ -111,17 +111,63 @@
         .legend { 
             position: fixed; bottom: 20px; right: 365px; z-index: 1000; 
             background: rgba(26, 26, 26, 0.95); padding: 10px; border-radius: 8px; 
-            border: 2px solid #2E7D32; color: white; width: 195px; 
+            border: 2px solid #2E7D32; color: white; width: 210px; 
             transition: right 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         .legend.expanded { right: 20px; }
         .legend-title { font-weight: bold; border-bottom: 1px solid #444; margin-bottom: 8px; padding-bottom: 4px; color: #4CAF50; text-align: center; font-size: 12px; }
         .legend-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 11px; }
-        .legend-box-icon { width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-left: 8px; border: 2px solid white; }
+        .legend-box-icon { width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-left: 8px; border: 2px solid white; position: relative; }
+        .legend-box-icon.legend-pulse { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.8); animation: cclsClusterPulse 1.6s ease-out infinite; }
         .legend-box-selected { width: 20px; height: 12px; border: 2px solid #ff0000; background: rgba(255,0,0,0.25); margin-left: 10px; }
         .legend-box-all { width: 20px; height: 12px; border: 2px solid #ff9800; background: rgba(255,152,0,0.15); margin-left: 10px; }
+
+        .marker-dot-wrap { position: relative; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
+        .marker-dot-core { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 6px rgba(0,0,0,0.8); box-sizing: border-box; position: relative; z-index: 2; display: block; }
+        .marker-dot-wrap.is-inactive .marker-dot-core { background-color: #d32f2f; box-shadow: 0 0 10px rgba(211, 47, 47, 0.95); animation: cclsMarkerCorePulse 1.6s ease-in-out infinite; }
+        .marker-dot-wrap.is-inactive .marker-pulse-ring { position: absolute; inset: -6px; border-radius: 50%; background: rgba(255, 61, 61, 0.42); border: 2px solid rgba(255, 82, 82, 0.95); pointer-events: none; z-index: 1; animation: cclsMarkerRingPulse 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite; }
+        .marker-wind-badge { position: absolute; top: -11px; right: -11px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 4; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9)); }
+        .cluster-wind-badge { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; pointer-events: none; z-index: 5; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.9)); }
+        .badge-wind { color: #FFB74D; font-size: 11px; font-weight: bold; margin-right: 4px; white-space: nowrap; }
+        .wx-wind-warn { color: #FFB74D; }
+        .marker-cluster.cluster-has-inactive { background-color: rgba(211, 47, 47, 0.45) !important; box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.75); animation: cclsClusterPulse 1.6s ease-out infinite; }
+        .marker-cluster.cluster-has-inactive div { background-color: rgba(211, 47, 47, 0.88) !important; color: #fff !important; }
+        @keyframes cclsMarkerRingPulse {
+            0% { transform: scale(0.55); opacity: 0.95; }
+            75% { transform: scale(1.95); opacity: 0; }
+            100% { transform: scale(1.95); opacity: 0; }
+        }
+        @keyframes cclsMarkerCorePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.16); }
+        }
+        @keyframes cclsClusterPulse {
+            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.8); }
+            70% { box-shadow: 0 0 0 14px rgba(211, 47, 47, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .legend-box-icon.legend-pulse,
+            .marker-dot-wrap.is-inactive .marker-dot-core,
+            .marker-dot-wrap.is-inactive .marker-pulse-ring,
+            .marker-cluster.cluster-has-inactive { animation: none; }
+        }
         
         .label-style { background: rgba(0,0,0,0.85); color: #fff; border: 1px solid #4CAF50; padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .maint-quick { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+        .maint-quick button { flex: 1; min-width: 90px; padding: 6px 8px; font-size: 11px; font-weight: bold; border: 1px solid #444; border-radius: 5px; background: #2b2b2b; color: #eee; cursor: pointer; }
+        .maint-quick button:hover { background: #2E7D32; border-color: #4CAF50; }
+        .maint-list { max-height: 210px; overflow-y: auto; border: 1px solid #383838; border-radius: 6px; background: #161616; padding: 4px; margin-bottom: 10px; }
+        .maint-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border-bottom: 1px solid #252525; font-size: 12px; cursor: pointer; }
+        .maint-item:last-child { border-bottom: 0; }
+        .maint-item:hover { background: #232b24; }
+        .maint-item input { width: auto; margin: 0; accent-color: #4CAF50; }
+        .maint-result { background: #141c15; border: 1px solid #2E7D32; border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 12px; }
+        .maint-leg { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 5px 4px; border-top: 1px dashed #2e3b30; cursor: pointer; }
+        .maint-leg:hover { background: rgba(76,175,80,0.12); }
+        .maint-step-badge { width: 24px; height: 24px; border-radius: 50%; background: #00838F; color: #fff; border: 2px solid #fff; font: bold 12px/20px Tahoma,Arial; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.85); }
+        .maint-step-badge.is-start { background: #2E7D32; }
+        .maint-step-badge.is-out { background: #d32f2f; }
         .leaflet-control-measure, .leaflet-control-layers { background: #1a1a1a !important; color: white !important; border: 2px solid #2E7D32 !important; }
 
         #loading-overlay {
@@ -234,16 +280,75 @@
 .dp-tbl{width:100%;border-collapse:collapse;font-size:12px}.dp-tbl th{background:#1d3324;color:#c9a227;position:sticky;top:0}
 .dp-tbl td,.dp-tbl th{padding:7px 8px;border-bottom:1px solid #243a2a;text-align:right;white-space:nowrap}.dp-tbl tbody tr{cursor:pointer}.dp-tbl tbody tr:hover{background:#1b2f21}
 .dp-pill{padding:2px 8px;border-radius:10px;color:#fff;font-size:11px}
+.pv-chart-shell{display:flex;flex-direction:column;gap:12px}
+.pv-chart-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.pv-stats-inline{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:#a9c4ae;font-variant-numeric:tabular-nums}
+.pv-stats-inline b{color:#e8efe8}
+.pv-seg{display:inline-flex;gap:4px;padding:3px;background:#101c14;border:1px solid #27402d;border-radius:8px}
+.pv-seg button{background:transparent;color:#a9c4ae;border:0;border-radius:6px;padding:5px 10px;font:12px Tahoma,Arial;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.pv-seg button.on{background:#2E7D32;color:#fff;font-weight:bold}
+.pv-empty{padding:24px 12px;text-align:center;background:#101c14;border:1px dashed #27402d;border-radius:8px}
+.pv-action-btn{background:#2E7D32;color:#fff;border:0;border-radius:6px;padding:7px 14px;font:12px Tahoma,Arial;cursor:pointer}
+.pv-filter-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:8px 10px;background:#101c14;border:1px solid #243a2a;border-radius:8px;font-size:12px;color:#bcd5c0}
+.pv-filter-item{display:inline-flex;align-items:center;gap:6px}
+.pv-select{background:#16241a;color:#e8efe8;border:1px solid #2e4a35;border-radius:6px;padding:4px 8px;font:12px Tahoma,Arial;cursor:pointer}
+.pv-range-wrap input[type=range]{accent-color:#00E5FF;cursor:pointer;width:130px}
+.pv-reset-btn{background:#263629;color:#e8efe8;border:1px solid #3c5942;border-radius:6px;padding:4px 10px;font:11px Tahoma,Arial;cursor:pointer;margin-right:auto}
+.pv-reset-btn:hover{background:#2f4734}
+.fc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.fc-head h4{margin:0}
+.fc-ctrl-bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:8px 12px;background:#101c14;border:1px solid #243a2a;border-radius:8px;font-size:12px;color:#bcd5c0;margin-bottom:12px;font-variant-numeric:tabular-nums}
+.fc-ctrl{display:inline-flex;align-items:center;gap:6px}
+.fc-ctrl input,.fc-ctrl select{background:#16241a;color:#e8efe8;border:1px solid #2e4a35;border-radius:6px;padding:4px 8px;font:12px Tahoma,Arial}
+.fc-ctrl input[type=number]{width:64px;text-align:center}
+.fc-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:10px;margin-bottom:14px;font-variant-numeric:tabular-nums}
+.fc-box{background:#101c14;border:1px solid #243a2a;border-radius:8px;padding:11px 12px;display:flex;flex-direction:column;gap:4px}
+.fc-box span{font-size:12px;color:#9bb7a0}
+.fc-box b{font-size:18px;color:#e8efe8}
+.fc-box small{font-size:11px;color:#8fae95;line-height:1.45}
+.fc-split{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.fc-subhdr{font-size:13px;font-weight:bold;color:#e8efe8;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.fc-subhdr small{font-weight:normal;color:#8fae95;font-size:11px}
+.fc-status{font-weight:bold;font-size:11px}
+.fc-status.crit{color:#ff8a80}
+.fc-status.warn{color:#ffd54f}
+.fc-status.low{color:#4fc3f7}
+.fc-status.ok{color:#81c784}
+.fc-route-list{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto}
+.fc-route-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:#101c14;border:1px solid #243a2a;border-radius:6px;font-size:12px;font-variant-numeric:tabular-nums}
+.fc-route-row small{color:#8fae95;display:block;margin-top:2px;font-size:11px}
+
+/* ===== منظومة المؤشرات القياسية (7 مجموعات + الأولوية 1-10) ===== */
+.kpi-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px;background:#101c14;border:1px solid #243a2a;border-radius:8px}
+.kpi-tab{background:transparent;color:#a9c4ae;border:0;border-radius:6px;padding:6px 10px;font:12px Tahoma,Arial;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
+.kpi-tab:hover{color:#e8efe8;background:#1b2f21}
+.kpi-tab.on{background:#2E7D32;color:#fff;font-weight:bold}
+.kpi-grid-dense{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:10px;font-variant-numeric:tabular-nums}
+.kpi-cell{background:#101c14;border:1px solid #243a2a;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.kpi-cell-top{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:12px;color:#9bb7a0}
+.kpi-rank{font-size:11px;font-weight:bold;color:#c9a227;background:rgba(201,162,39,.12);border:1px solid rgba(201,162,39,.3);border-radius:4px;padding:1px 6px}
+.kpi-cell b{font-size:17px;color:#e8efe8}
+.kpi-formula{font-size:11px;color:#8fae95;line-height:1.45}
+.kpi-sort-btn{background:#1d3324;color:#e8efe8;border:1px solid #35543e;border-radius:6px;padding:5px 10px;font:11px Tahoma,Arial;cursor:pointer}
+.kpi-sort-btn:hover{background:#274430}
+#ops-modal{display:none;position:fixed;inset:0;z-index:8700;background:rgba(0,0,0,.72);overflow:auto;padding:16px;direction:rtl;font-family:Tahoma,Arial,sans-serif}
+#ops-modal .ops-box{max-width:680px;margin:20px auto;background:#16241a;color:#e8efe8;border:1px solid #2e4a35;border-top:3px solid #c9a227;border-radius:12px;padding:16px}
+#ops-modal h3{margin:0 0 8px;color:#c9a227;font-size:16px}
+#ops-modal label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#bcd5c0}
+#ops-modal input,#ops-modal select{background:#101c14;color:#e8efe8;border:1px solid #2e4a35;border-radius:6px;padding:7px 9px;font:12px Tahoma,Arial;width:100%}
+.ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:10px 0}
+.ops-sec{font-size:12px;font-weight:bold;color:#c9a227;margin:12px 0 4px;padding-bottom:4px;border-bottom:1px solid #243a2a}
+.ops-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.ops-actions button{border:0;border-radius:7px;padding:8px 14px;font:12px Tahoma,Arial;cursor:pointer;color:#fff;background:#2E7D32}
+.ops-actions button.sec{background:#34493a}
 
 /* شريط التنقل لا يغطي زر العودة للرؤية الشاملة */
 body.admin .ui-controls{left:290px}
 @media(max-width:768px){body.admin .ui-controls{left:12px;top:56px}}
-.st-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.st-bar select{background:#101c14;color:#e8efe8;border:1px solid #2f4a36;border-radius:8px;padding:7px;font:12px Tahoma}
-.st-tabs{display:flex;gap:4px;flex-wrap:wrap}.st-tabs button{background:#1d3324;color:#cfe8d3;border:1px solid #2f4a36;border-radius:8px;padding:7px 10px;cursor:pointer;font:12px Tahoma}.st-tabs button.on{background:#2E7D32;color:#fff}
-.st-note{font-size:11px;color:#8fae95;margin:8px 0;line-height:1.7}.st-mini{background:#2b3f30;color:#fff;border:1px solid #416048;border-radius:6px;padding:3px 7px;cursor:pointer;font-size:11px}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="/dist/pivot-chart.js"></script>
 </head>
 <body>
 
@@ -262,10 +367,13 @@ body.admin .ui-controls{left:290px}
             
             <div class="filter-buttons">
                 <button class="filter-btn active" onclick="setCropFilter('all', this)">الكل</button>
+                <button class="filter-btn" onclick="setCropFilter('حبوب', this)">حبوب</button>
                 <button class="filter-btn" onclick="setCropFilter('إستهلاكي', this)">استهلاكي</button>
                 <button class="filter-btn" onclick="setCropFilter('بذور', this)">بذور</button>
-                <button class="filter-btn" onclick="setCropFilter('بقوليات', this)">بقوليات</button>
                 <button class="filter-btn" onclick="setCropFilter('شعير', this)">شعير</button>
+                <button class="filter-btn" onclick="setCropFilter('بقوليات', this)">بقوليات</button>
+                <button class="filter-btn" onclick="setCropFilter('أعلاف', this)">أعلاف</button>
+                <button class="filter-btn" onclick="setCropFilter('خضروات', this)">خضروات</button>
                 <button class="filter-btn" onclick="setCropFilter('أسمدة', this)">أسمدة</button>
             </div>
 
@@ -323,7 +431,8 @@ body.admin .ui-controls{left:290px}
         <div id="map-legend" class="legend">
             <div class="legend-title">مفتاح الخريطة</div>
             <div class="legend-item"><span class="legend-box-icon" style="background:#2E7D32;"></span> <span><b>مركز نشط</b></span></div>
-            <div class="legend-item"><span class="legend-box-icon" style="background:#d32f2f;"></span> <span><b>خارج الخدمة</b></span></div>
+            <div class="legend-item"><span class="legend-box-icon legend-pulse" style="background:#d32f2f;"></span> <span><b>خارج الخدمة</b></span></div>
+            <div class="legend-item"><span style="display:inline-flex;width:18px;justify-content:center;margin-left:8px;"><svg viewBox="0 0 24 24" width="15" height="15"><path d="M12 2L1 21h22L12 2z" fill="#FFB300" stroke="#111" stroke-width="1.6"/><path d="M12 9v5m0 3v.5" stroke="#111" stroke-width="2.2" stroke-linecap="round"/></svg></span> <span><b>رياح شديدة (&gt; 40 كم/س)</b></span></div>
             <div class="legend-item"><div class="legend-box-selected"></div> <span><b>حدود المركز المحدد</b></span></div>
             <div class="legend-item"><div class="legend-box-all"></div> <span><b>حدود باقي المراكز</b></span></div>
         </div>
@@ -337,11 +446,6 @@ body.admin .ui-controls{left:290px}
         <div class="form-group"><label>المخزن</label><select id="st-loc" onchange="stockHint()"></select></div>
         <div class="form-group"><label>التاريخ</label><input type="date" id="st-date"></div>
         <div class="form-group"><label>الكمية الحالية في المخزن (قنطار)</label><input type="number" id="st-qty" min="0" oninput="stockHint()"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-          <div class="form-group"><label>➕ وارد اليوم (استلام)</label><input type="number" id="st-in" min="0"></div>
-          <div class="form-group"><label>➖ صادر اليوم (صرف)</label><input type="number" id="st-out" min="0"></div>
-          <div class="form-group"><label>فاقد</label><input type="number" id="st-loss" min="0"></div>
-          <div class="form-group"><label>تالف</label><input type="number" id="st-dmg" min="0"></div></div>
         <div class="form-group"><label>ملاحظة (اختياري)</label><input type="text" id="st-note"></div>
         <div id="st-info" style="font-size:13px;margin-top:6px"></div>
         <div class="modal-btns"><button onclick="saveStock()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 حفظ</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
@@ -353,11 +457,37 @@ body.admin .ui-controls{left:290px}
         <div class="form-group"><select id="u-role" onchange="$('u-loc').parentElement.style.display=this.value==='manager'?'':'none'"><option value="manager">مسؤول مخزن</option><option value="printer">طابع بطاقات (طباعة فقط)</option><option value="admin">مدير (كل الصلاحيات)</option></select></div>
         <div class="form-group"><label>المخزن المسؤول عنه</label><select id="u-loc"></select></div>
         <div class="modal-btns"><button onclick="addUser()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">➕ إضافة مستخدم</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
+    <div id="maint-modal" class="custom-modal" style="max-width:480px;max-height:88vh;overflow:auto"><h4>🛠️ مسار الصيانة الميدانية المُحسّن</h4>
+        <div class="form-group"><label>نقطة الانطلاق</label><select id="maint-start"></select></div>
+        <div class="maint-quick">
+            <button type="button" onclick="maintQuickSelect('inactive')">⚠️ المراكز خارج الخدمة</button>
+            <button type="button" onclick="maintQuickSelect('wind')">💨 رياح شديدة (&gt;40)</button>
+            <button type="button" onclick="maintQuickSelect('all')">✅ تحديد الكل</button>
+            <button type="button" onclick="maintQuickSelect('none')">🧹 مسح</button>
+        </div>
+        <div class="form-group" style="margin-bottom:6px"><input type="text" id="maint-search" placeholder="🔍 تصفية المراكز..." oninput="maintFilterList()"></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#81C784;margin-bottom:4px">
+            <span>اختر المراكز المشمولة بالصيانة:</span>
+            <span>المحدد: <b id="maint-cnt">0</b></span>
+        </div>
+        <div id="maint-list" class="maint-list"></div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#ccc;margin-bottom:10px;cursor:pointer">
+            <input type="checkbox" id="maint-roundtrip" style="width:auto;margin:0;accent-color:#4CAF50">
+            <span>العودة إلى نقطة الانطلاق (مسار دائري)</span>
+        </label>
+        <div class="modal-btns">
+            <button id="maint-go-btn" onclick="buildMaintRoute()" style="flex:1;padding:9px;background:#00838F;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">🧭 رسم المسار المُحسّن</button>
+            <button onclick="clearMaintRoute()" style="padding:9px 12px;background:#6D4C41;color:white;border:none;border-radius:5px;cursor:pointer;">🧹 مسح</button>
+            <button onclick="$('maint-modal').style.display='none'" style="padding:9px 14px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button>
+        </div>
+        <div id="maint-result"></div>
+    </div>
     <div id="pv-modal" class="custom-modal"><h4>🌀 محور دوّار</h4>
         <div class="form-group"><label>لمن يتبع (اسم الفلاح) *</label><input type="text" id="pv-name"></div>
         <div class="form-group"><label>الهاتف</label><input type="text" id="pv-phone" dir="ltr"></div>
         <div class="form-group"><label>المحصول</label><input type="text" id="pv-crop"></div>
-        <div class="form-group"><label>نصف القطر (م)</label><input type="number" id="pv-r" oninput="if(pvDraw)pvDraw.setRadius(+this.value||1)"></div>
+        <div class="form-group"><label>نصف القطر (م)</label><input type="number" id="pv-r" oninput="if(pvDraw)pvDraw.setRadius(+this.value||1);updatePvAreaHint()"></div>
+        <div class="info-detail"><span>📐 المساحة بالهكتار</span><b id="pv-area-ha" style="color:#00E5FF">— هكتار</b></div>
         <div class="form-group"><label>ملاحظات</label><input type="text" id="pv-notes"></div>
         <div class="info-detail"><span>📍 الإحداثيات</span><b id="pv-ll" style="direction:ltr"></b></div>
         <div class="modal-btns"><button onclick="pvSave()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 حفظ</button><button onclick="pvClose()" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إلغاء</button></div></div>
@@ -382,10 +512,13 @@ body.admin .ui-controls{left:290px}
             <label>اختر المخازن المراد تصديرها:</label>
             <select id="excel-type-select">
                 <option value="all">جميع المخازن والأنشطة</option>
+                <option value="حبوب">الحبوب فقط</option>
                 <option value="consumption">مخازن القمح الاستهلاكي فقط</option>
                 <option value="seeds">مخازن البذور فقط</option>
-                <option value="bougholiat">محلات بيع البقوليات فقط</option>
                 <option value="chaar">الشعير فقط</option>
+                <option value="bougholiat">محلات بيع البقوليات فقط</option>
+                <option value="أعلاف">الأعلاف فقط</option>
+                <option value="خضروات">الخضروات فقط</option>
                 <option value="asmida">الأسمدة فقط</option>
             </select>
         </div>
@@ -417,8 +550,11 @@ body.admin .ui-controls{left:290px}
                 <option value="قمح إستهلاكي">قمح إستهلاكي</option>
                 <option value="بذور عادية">بذور عادية</option>
                 <option value="قمح إستهلاكي + بذور نظامية">قمح إستهلاكي + بذور نظامية</option>
+                <option value="حبوب">حبوب</option>
                 <option value="محلات بيع البقوليات">محلات بيع البقوليات</option>
                 <option value="الشعير">الشعير</option>
+                <option value="أعلاف">أعلاف</option>
+                <option value="خضروات">خضروات</option>
                 <option value="الأسمدة">الأسمدة</option>
             </select>
         </div>
@@ -445,7 +581,29 @@ body.admin .ui-controls{left:290px}
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind2aG91d2JranRieHN0eXdxanRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ5MTM2NzUsImV4cCI6MjExMDQ4OTY3NX0.fWbEatL0wsNsIsX3XumE2bf2xCWRWwZmIics8A6m2bs';
 
         let locations = [];
-        let markersLayer = L.markerClusterGroup({ maxClusterRadius: 40, showCoverageOnHover: false });
+        const WIND_WARN_KMH = 40;
+        const WIND_ICON_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M12 2L1 21h22L12 2z" fill="#FFB300" stroke="#111" stroke-width="1.6"/><path d="M12 9v5m0 3v.5" stroke="#111" stroke-width="2.2" stroke-linecap="round"/></svg>';
+        let WX_CACHE = {}, LOC_UI = {}, CURRENT_LOC_ID = null, _wxFetching = false, _wxLastTs = 0;
+
+        let markersLayer = L.markerClusterGroup({
+            maxClusterRadius: 40,
+            showCoverageOnHover: false,
+            iconCreateFunction: function (cluster) {
+                const markers = cluster.getAllChildMarkers();
+                const count = cluster.getChildCount();
+                const hasInactive = markers.some(m => m.options.locStatus === 'inactive');
+                const hasWind = markers.some(m => m.options.highWind);
+                let tier = ' marker-cluster-';
+                if (count < 10) tier += 'small';
+                else if (count < 100) tier += 'medium';
+                else tier += 'large';
+                return new L.DivIcon({
+                    html: `<div><span>${count}</span></div>${hasWind ? `<span class="cluster-wind-badge" title="تحذير: رياح شديدة تتجاوز 40 كم/س">${WIND_ICON_SVG}</span>` : ''}`,
+                    className: 'marker-cluster' + tier + (hasInactive ? ' cluster-has-inactive' : ''),
+                    iconSize: new L.Point(40, 40)
+                });
+            }
+        });
         let allPolygonsLayer = L.layerGroup();
         let currentGeoLayer = null;
         let nearestLineLayer = null;
@@ -533,11 +691,34 @@ body.admin .ui-controls{left:290px}
             document.getElementById('map-legend').classList.toggle('expanded');
         }
 
-        function createCustomMarker(status) {
-            let color = (status === 'inactive') ? '#d32f2f' : '#2E7D32';
+        function getWindInfo(loc) {
+            return WX_CACHE[String(loc.id)] || null;
+        }
+        function isHighWind(loc) {
+            const w = getWindInfo(loc);
+            return !!(w && Number.isFinite(w.wind) && w.wind > WIND_WARN_KMH);
+        }
+        function formatLocTooltip(loc) {
+            const prov = loc.province || 'أدرار';
+            const badgeText = (loc.status === 'inactive') ? ' ⚠️ (خارج الخدمة)' : '';
+            const w = getWindInfo(loc);
+            const windText = (w && w.wind > WIND_WARN_KMH) ? ` — ⚠️ رياح شديدة ${Math.round(w.wind)} كم/س` : '';
+            return `${esc(loc.name)} (${esc(prov)})${badgeText}${windText}`;
+        }
+        function formatWxHtml(w) {
+            if (!w || !Number.isFinite(w.temp) || !Number.isFinite(w.wind)) return '—';
+            const base = `${Math.round(w.temp)}°م — رياح ${Math.round(w.wind)} كم/س`;
+            return w.wind > WIND_WARN_KMH
+                ? `<span class="wx-wind-warn">⚠️ ${Math.round(w.temp)}°م — رياح شديدة ${Math.round(w.wind)} كم/س</span>`
+                : base;
+        }
+
+        function createCustomMarker(status, highWind = false) {
+            const isInactive = status === 'inactive';
+            const color = isInactive ? '#d32f2f' : '#2E7D32';
             return L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color: ${color}; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.8);"></div>`,
+                className: 'custom-div-icon' + (isInactive ? ' marker-inactive-icon' : '') + (highWind ? ' marker-high-wind' : ''),
+                html: `<div class="marker-dot-wrap${isInactive ? ' is-inactive' : ''}">${isInactive ? '<span class="marker-pulse-ring"></span>' : ''}<span class="marker-dot-core" style="background-color: ${color};"></span>${highWind ? `<span class="marker-wind-badge" title="رياح شديدة تتجاوز 40 كم/س">${WIND_ICON_SVG}</span>` : ''}</div>`,
                 iconSize: [16, 16],
                 iconAnchor: [8, 8]
             });
@@ -565,6 +746,7 @@ body.admin .ui-controls{left:290px}
                 locations = await response.json();
                 try { localStorage.setItem("ccls_cache", JSON.stringify({ t: Date.now(), d: locations })); } catch (e) {}
                 document.getElementById('loading-overlay').style.display = 'none';
+                _wxLastTs = 0;
                 renderMapAndList();
 
             } catch (err) {
@@ -584,6 +766,7 @@ body.admin .ui-controls{left:290px}
         function renderMapAndList() {
             markersLayer.clearLayers();
             allPolygonsLayer.clearLayers();
+            LOC_UI = {};
             const listContainer = document.getElementById('locations-list');
             listContainer.innerHTML = '';
 
@@ -604,32 +787,49 @@ body.admin .ui-controls{left:290px}
                 }
 
                 let prov = loc.province || 'أدرار';
-                let marker = L.marker([lat, lng], { icon: createCustomMarker(loc.status) }).addTo(markersLayer);
-                let badgeText = (loc.status === 'inactive') ? " ⚠️ (خارج الخدمة)" : "";
-                marker.bindTooltip(`${esc(loc.name)} (${esc(prov)})${badgeText}`, {permanent: false, direction: 'top', className: 'label-style', offset: [0, -10]});
+                let highWind = isHighWind(loc);
+                let w = getWindInfo(loc);
+                let marker = L.marker([lat, lng], {
+                    icon: createCustomMarker(loc.status, highWind),
+                    locStatus: loc.status,
+                    highWind: highWind,
+                    zIndexOffset: Math.max(loc.status === 'inactive' ? 600 : 0, highWind ? 450 : 0)
+                }).addTo(markersLayer);
+                marker.bindTooltip(formatLocTooltip(loc), {permanent: false, direction: 'top', className: 'label-style', offset: [0, -10]});
                 marker.on('click', () => showDetails(loc));
 
                 const item = document.createElement('div');
                 item.className = 'list-item';
-                item.setAttribute('data-crop', loc.area);
+                item.setAttribute('data-crop', loc.area || '');
+                item.setAttribute('data-cap', parseInt(String(loc.cap).replace(/[^0-9]/g, '')) || 0);
                 let statusBadge = (loc.status === 'inactive') ? `<span class="badge-out">خارج الخدمة</span>` : '';
-                item.innerHTML = `<span>🏠⚖️ <b>${esc(loc.name)}</b> <span class="province-tag">(${esc(prov)})</span></span> ${statusBadge}${pctBadge(loc)}`;
+                let windBadge = highWind ? `<span class="badge-wind" title="رياح شديدة تتجاوز 40 كم/س">⚠️ ${Math.round(w.wind)} كم/س</span>` : `<span class="badge-wind" style="display:none"></span>`;
+                item.innerHTML = `<span>🏠⚖️ <b>${esc(loc.name)}</b> <span class="province-tag">(${esc(prov)})</span></span> <span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0">${windBadge}${statusBadge}${pctBadge(loc)}</span>`;
                 item.onclick = () => {
                     showDetails(loc);
                     if (window.innerWidth < 768) toggleSidebar();
                 };
                 listContainer.appendChild(item);
+                LOC_UI[String(loc.id)] = { loc, marker, item, windEl: item.querySelector('.badge-wind') };
             });
+            const emptyMsg = document.createElement('div');
+            emptyMsg.id = 'list-empty';
+            emptyMsg.style.cssText = 'display:none;padding:20px 14px;text-align:center;color:#aaa;font-size:12px;';
+            emptyMsg.textContent = '🔍 لا توجد مراكز مطابقة لتصنيف المحصول أو البحث الحالي.';
+            listContainer.appendChild(emptyMsg);
+            applyFilters();
             updateHeat();
             updateAlertBadge();
             if (!window._dl) { window._dl = 1; openFromHash(); }
+            if (locations.length && Date.now() - _wxLastTs > 60000) refreshAllWinds();
         }
 
         function showDetails(loc, extraNote = "") {
             let lat = parseFloat(loc.lat);
             let lng = parseFloat(loc.lng);
+            CURRENT_LOC_ID = String(loc.id);
             map.flyTo([lat, lng], 16);
-            setTimeout(() => loadWx(lat, lng), 0);
+            setTimeout(() => loadWx(lat, lng, loc.id), 0);
             history.replaceState(null, "", "#c=" + encodeURIComponent(loc.id));
             document.getElementById('ui-home').style.display = 'block';
             
@@ -657,6 +857,7 @@ body.admin .ui-controls{left:290px}
                 <div class="info-detail"><span>🌡️ الطقس الآن:</span> <b id="wx">…</b></div>
                 <div class="panel-actions">
                     <button data-lat="${lat}" data-lng="${lng}" onclick="routeTo(+this.dataset.lat,+this.dataset.lng)" class="panel-btn" style="background:#1565C0">🧭 مسار</button>
+                    <button data-id="${esc(loc.id)}" onclick="openMaintRoute(this.dataset.id)" class="panel-btn admin-only" style="background:#00838F">🛠️ مسار صيانة</button>
                     <button onclick="copyText(location.href)" class="panel-btn" style="background:#6A1B9A">🔗 رابط</button>
                     <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
                     <button data-id="${esc(loc.id)}" onclick="openEditById(this.dataset.id)" class="panel-btn edit-btn">✏️ تعديل</button>
@@ -675,7 +876,13 @@ body.admin .ui-controls{left:290px}
             
             document.getElementById('edit-name').value = loc.name;
             document.getElementById('edit-province').value = loc.province || 'أدرار';
-            document.getElementById('edit-area').value = loc.area;
+            const areaSel = document.getElementById('edit-area');
+            if (loc.area && ![...areaSel.options].some(o => o.value === loc.area)) {
+                const opt = document.createElement('option');
+                opt.value = loc.area; opt.textContent = loc.area;
+                areaSel.appendChild(opt);
+            }
+            areaSel.value = loc.area || 'قمح إستهلاكي';
             document.getElementById('edit-cap').value = loc.cap;
             document.getElementById('edit-status').value = loc.status || 'active';
             
@@ -780,11 +987,12 @@ body.admin .ui-controls{left:290px}
             document.getElementById('excel-modal').style.display = 'none';
 
             let filtered = locations.filter(loc => {
-                if (type === 'consumption') return loc.area.includes('إستهلاكي');
-                if (type === 'seeds') return loc.area.includes('بذور');
-                if (type === 'bougholiat') return loc.area.includes('بقوليات');
-                if (type === 'chaar') return loc.area.includes('الشعير');
-                if (type === 'asmida') return loc.area.includes('الأسمدة');
+                if (type === 'consumption') return matchesCropCategory(loc.area, 'إستهلاكي');
+                if (type === 'seeds') return matchesCropCategory(loc.area, 'بذور');
+                if (type === 'bougholiat') return matchesCropCategory(loc.area, 'بقوليات');
+                if (type === 'chaar') return matchesCropCategory(loc.area, 'شعير');
+                if (type === 'asmida') return matchesCropCategory(loc.area, 'أسمدة');
+                if (type === 'حبوب' || type === 'أعلاف' || type === 'خضروات') return matchesCropCategory(loc.area, type);
                 return true;
             });
 
@@ -831,11 +1039,40 @@ body.admin .ui-controls{left:290px}
         }
 
         function goHome() { history.replaceState(null, "", location.pathname + location.search); 
+            CURRENT_LOC_ID = null;
             map.flyTo([homeLat, homeLng], homeZoom); 
             document.getElementById('ui-home').style.display = 'none'; 
             document.getElementById('info-panel').style.display = 'none'; 
             if (currentGeoLayer) map.removeLayer(currentGeoLayer);
             if (nearestLineLayer) map.removeLayer(nearestLineLayer);
+            if (maintRouteLayer) maintRouteLayer.clearLayers();
+        }
+
+        function normalizeAr(s) {
+            return String(s || '').toLowerCase()
+                .replace(/[أإآٱ]/g, 'ا')
+                .replace(/ة/g, 'ه')
+                .replace(/ى/g, 'ي')
+                .replace(/[\u064B-\u065F\u0670]/g, '');
+        }
+        const CROP_CATEGORY_SYNONYMS = {
+            'حبوب': ['حبوب', 'قمح', 'شعير', 'ذره', 'ارز', 'شوفان', 'فرينه', 'سميد'],
+            'اعلاف': ['اعلاف', 'علف', 'شعير', 'ذره', 'برسيم', 'قرط', 'تبان', 'نخاله'],
+            'خضروات': ['خضروات', 'خضر', 'بطاطا', 'طماطم', 'بصل', 'ثوم', 'فلفل', 'خس', 'جزر'],
+            'استهلاكي': ['استهلاكي', 'قمح استهلاكي'],
+            'بذور': ['بذور', 'بذره', 'تقاوي'],
+            'بقوليات': ['بقوليات', 'عدس', 'حمص', 'فاصوليا', 'لوبيا', 'فول'],
+            'شعير': ['شعير'],
+            'اسمده': ['اسمده', 'سماد']
+        };
+        function matchesCropCategory(areaText, filterKey) {
+            if (!filterKey || filterKey === 'all') return true;
+            const normText = normalizeAr(areaText);
+            const normKey = normalizeAr(filterKey);
+            if (!normText) return false;
+            if (normText.includes(normKey)) return true;
+            const syns = CROP_CATEGORY_SYNONYMS[normKey];
+            return Array.isArray(syns) ? syns.some(k => normText.includes(k)) : false;
         }
 
         function setCropFilter(cropType, btnElement) {
@@ -846,15 +1083,27 @@ body.admin .ui-controls{left:290px}
         }
 
         function applyFilters() {
-            let searchText = document.getElementById('listSearch').value.toLowerCase();
+            let searchText = normalizeAr(document.getElementById('listSearch').value);
             let items = document.getElementsByClassName('list-item');
+            let visibleCount = 0, visibleCap = 0;
             for (let i = 0; i < items.length; i++) {
-                let itemText = items[i].innerText.toLowerCase();
-                let itemCrop = items[i].getAttribute('data-crop');
+                let itemText = normalizeAr(items[i].innerText);
+                let itemCrop = items[i].getAttribute('data-crop') || '';
                 let matchesSearch = itemText.includes(searchText);
-                let matchesCrop = (currentCropFilter === 'all') || itemCrop.includes(currentCropFilter);
-                items[i].style.display = (matchesSearch && matchesCrop) ? "flex" : "none";
+                let matchesCrop = matchesCropCategory(itemCrop, currentCropFilter);
+                let show = matchesSearch && matchesCrop;
+                items[i].style.display = show ? "flex" : "none";
+                if (show) {
+                    visibleCount++;
+                    visibleCap += parseInt(items[i].getAttribute('data-cap')) || 0;
+                }
             }
+            const scEl = document.getElementById('sidebar-count');
+            const tcEl = document.getElementById('total-cap');
+            if (scEl) scEl.innerText = visibleCount;
+            if (tcEl) tcEl.innerText = visibleCap.toLocaleString();
+            const emp = document.getElementById('list-empty');
+            if (emp) emp.style.display = (items.length && visibleCount === 0) ? 'block' : 'none';
         }
     
         // ===== تطويرات: GIS / Geocoding / UTM / DEM / Geofencing / Location Intelligence =====
@@ -943,10 +1192,80 @@ body.admin .ui-controls{left:290px}
         }
     
         // ===== ميزات إضافية =====
-        function loadWx(lat, lng) {
+        function applyWindVisuals() {
+            Object.values(LOC_UI).forEach(({ loc, marker, windEl }) => {
+                const highWind = isHighWind(loc);
+                const w = getWindInfo(loc);
+                if (marker.options.highWind !== highWind) {
+                    marker.options.highWind = highWind;
+                    marker.setIcon(createCustomMarker(loc.status, highWind));
+                    marker.setZIndexOffset(Math.max(loc.status === 'inactive' ? 600 : 0, highWind ? 450 : 0));
+                }
+                marker.setTooltipContent(formatLocTooltip(loc));
+                if (windEl) {
+                    if (highWind) {
+                        windEl.textContent = `⚠️ ${Math.round(w.wind)} كم/س`;
+                        windEl.title = 'رياح شديدة تتجاوز 40 كم/س';
+                        windEl.style.display = '';
+                    } else {
+                        windEl.textContent = '';
+                        windEl.style.display = 'none';
+                    }
+                }
+            });
+            try { if (markersLayer && markersLayer.refreshClusters) markersLayer.refreshClusters(); } catch (_) {}
+            if (CURRENT_LOC_ID && WX_CACHE[CURRENT_LOC_ID]) {
+                const e = $('wx'); if (e) e.innerHTML = formatWxHtml(WX_CACHE[CURRENT_LOC_ID]);
+            }
+        }
+        async function refreshAllWinds(force = false) {
+            if (_wxFetching || !locations.length) return;
+            if (!force && Date.now() - _wxLastTs < 60000) return;
+            const valid = locations.filter(l => !isNaN(parseFloat(l.lat)) && !isNaN(parseFloat(l.lng)));
+            if (!valid.length) return;
+            _wxFetching = true;
+            try {
+                for (let i = 0; i < valid.length; i += 40) {
+                    const chunk = valid.slice(i, i + 40);
+                    const lats = chunk.map(l => parseFloat(l.lat)).join(',');
+                    const lngs = chunk.map(l => parseFloat(l.lng)).join(',');
+                    const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lngs}&current=temperature_2m,wind_speed_10m`);
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const list = Array.isArray(data) ? data : [data];
+                    chunk.forEach((loc, idx) => {
+                        const cur = list[idx] && list[idx].current;
+                        if (cur && typeof cur.wind_speed_10m === 'number') {
+                            WX_CACHE[String(loc.id)] = { temp: cur.temperature_2m, wind: cur.wind_speed_10m, ts: Date.now() };
+                        }
+                    });
+                }
+                _wxLastTs = Date.now();
+                applyWindVisuals();
+            } catch (_) {
+            } finally {
+                _wxFetching = false;
+            }
+        }
+        setInterval(() => { if (locations.length) refreshAllWinds(true); }, 10 * 60000);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && locations.length && Date.now() - _wxLastTs > 5 * 60000) refreshAllWinds(true);
+        });
+        function loadWx(lat, lng, locId) {
+            const cached = locId != null ? WX_CACHE[String(locId)] : null;
+            if (cached) {
+                const e = $('wx'); if (e) e.innerHTML = formatWxHtml(cached);
+            }
             fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,wind_speed_10m`).then(r => r.json()).then(j => {
-                const e = $('wx'); if (e) e.textContent = `${Math.round(j.current.temperature_2m)}°م — رياح ${Math.round(j.current.wind_speed_10m)} كم/س`;
-            }).catch(() => { const e = $('wx'); if (e) e.textContent = '—'; });
+                if (j && j.current && typeof j.current.wind_speed_10m === 'number') {
+                    const w = { temp: j.current.temperature_2m, wind: j.current.wind_speed_10m, ts: Date.now() };
+                    if (locId != null) {
+                        WX_CACHE[String(locId)] = w;
+                        applyWindVisuals();
+                    }
+                    const e = $('wx'); if (e) e.innerHTML = formatWxHtml(w);
+                }
+            }).catch(() => { const e = $('wx'); if (e && !cached) e.textContent = '—'; });
         }
         function routeTo(lat, lng) {
             if (!navigator.geolocation) return toast('المتصفح لا يدعم تحديد الموقع');
@@ -961,6 +1280,233 @@ body.admin .ui-controls{left:290px}
                     toast(`🧭 ${(rt.distance / 1000).toFixed(1)} كم — حوالي ${Math.round(rt.duration / 60)} دقيقة بالسيارة`);
                 } catch (e) { toast('تعذر حساب المسار، تحقق من الاتصال'); }
             }, () => toast('فعّل إذن الـ GPS في المتصفح'));
+        }
+
+        const maintRouteLayer = L.layerGroup().addTo(map);
+        function openMaintRoute(centerId) {
+            if (!PROFILE || PROFILE.role !== 'admin') return toast('هذه الميزة مخصصة للمدير فقط');
+            const valid = locations.filter(l => !isNaN(parseFloat(l.lat)) && !isNaN(parseFloat(l.lng)));
+            if (valid.length < 2) return toast('يلزم توفر مركزين على الأقل لرسم مسار');
+            const startOpts = [`<option value="__gps__">📍 موقعي الحالي (GPS)</option>`].concat(
+                valid.map(l => `<option value="${esc(l.id)}">${esc(l.name)} (${esc(l.province || 'أدرار')})</option>`)
+            );
+            $('maint-start').innerHTML = startOpts.join('');
+            if (centerId && valid.some(l => String(l.id) === String(centerId))) $('maint-start').value = String(centerId);
+            $('maint-search').value = '';
+            const hasInactive = valid.some(l => l.status === 'inactive');
+            $('maint-list').innerHTML = valid.map(l => {
+                const isSelf = String(l.id) === String(centerId);
+                const checked = isSelf || (hasInactive && l.status === 'inactive');
+                const tagOut = l.status === 'inactive' ? `<span class="badge-out" style="margin-right:4px">خارج الخدمة</span>` : '';
+                const tagWind = isHighWind(l) ? `<span class="badge-wind">⚠️</span>` : '';
+                return `<label class="maint-item" data-text="${esc((l.name + ' ' + (l.province || '') + ' ' + (l.area || '')).toLowerCase())}">
+                    <span style="display:flex;align-items:center;gap:6px"><input type="checkbox" class="maint-chk" value="${esc(l.id)}" ${checked ? 'checked' : ''} onchange="maintUpdateCount()"><b>${esc(l.name)}</b> <small style="color:#aaa">(${esc(l.province || 'أدرار')})</small></span>
+                    <span style="display:inline-flex;align-items:center;gap:3px">${tagWind}${tagOut}</span>
+                </label>`;
+            }).join('');
+            maintUpdateCount();
+            $('maint-modal').style.display = 'block';
+        }
+        function maintFilterList() {
+            const q = ($('maint-search').value || '').trim().toLowerCase();
+            document.querySelectorAll('#maint-list .maint-item').forEach(el => {
+                el.style.display = !q || (el.dataset.text || '').includes(q) ? 'flex' : 'none';
+            });
+        }
+        function maintQuickSelect(mode) {
+            const byId = {};
+            locations.forEach(l => { byId[String(l.id)] = l; });
+            const startId = $('maint-start').value;
+            document.querySelectorAll('#maint-list .maint-chk').forEach(cb => {
+                const l = byId[cb.value];
+                if (!l) return;
+                if (mode === 'all') cb.checked = true;
+                else if (mode === 'none') cb.checked = (cb.value === startId);
+                else if (mode === 'inactive') cb.checked = (l.status === 'inactive') || (cb.value === startId);
+                else if (mode === 'wind') cb.checked = isHighWind(l) || (cb.value === startId);
+            });
+            maintUpdateCount();
+        }
+        function maintUpdateCount() {
+            const n = document.querySelectorAll('#maint-list .maint-chk:checked').length;
+            const el = $('maint-cnt'); if (el) el.textContent = n;
+        }
+        function clearMaintRoute() {
+            maintRouteLayer.clearLayers();
+            const r = $('maint-result'); if (r) r.innerHTML = '';
+            toast('🧹 تم مسح مسار الصيانة');
+        }
+        function haversineKm(a, b) {
+            const R = 6371, rad = Math.PI / 180;
+            const dLat = (b.lat - a.lat) * rad, dLng = (b.lng - a.lng) * rad;
+            const s = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+            return 2 * R * Math.asin(Math.sqrt(s));
+        }
+        function solveLocalTsp(stops, roundtrip) {
+            if (stops.length <= 2) return [...stops];
+            const rem = stops.slice(1), ordered = [stops[0]];
+            while (rem.length) {
+                const last = ordered[ordered.length - 1];
+                let bestIdx = 0, bestD = Infinity;
+                rem.forEach((p, idx) => { const d = haversineKm(last, p); if (d < bestD) { bestD = d; bestIdx = idx; } });
+                ordered.push(rem.splice(bestIdx, 1)[0]);
+            }
+            let improved = true;
+            const totalDist = arr => {
+                let d = 0;
+                for (let i = 0; i < arr.length - 1; i++) d += haversineKm(arr[i], arr[i + 1]);
+                if (roundtrip && arr.length > 1) d += haversineKm(arr[arr.length - 1], arr[0]);
+                return d;
+            };
+            while (improved && ordered.length > 3) {
+                improved = false;
+                for (let i = 1; i < ordered.length - 1; i++) {
+                    for (let j = i + 1; j < ordered.length; j++) {
+                        const cand = ordered.slice(0, i).concat(ordered.slice(i, j + 1).reverse(), ordered.slice(j + 1));
+                        if (totalDist(cand) + 1e-6 < totalDist(ordered)) { ordered.splice(0, ordered.length, ...cand); improved = true; }
+                    }
+                }
+            }
+            return ordered;
+        }
+        function fmtDur(sec) {
+            const mins = Math.round(sec / 60);
+            if (mins < 60) return `${mins} دقيقة`;
+            const h = Math.floor(mins / 60), m = mins % 60;
+            return m ? `${h} س ${m} د` : `${h} ساعة`;
+        }
+        async function buildMaintRoute() {
+            const startVal = $('maint-start').value;
+            const roundtrip = $('maint-roundtrip').checked;
+            const selIds = [...document.querySelectorAll('#maint-list .maint-chk:checked')].map(x => x.value);
+            const locMap = {};
+            locations.forEach(l => { locMap[String(l.id)] = l; });
+
+            const btn = $('maint-go-btn');
+            btn.disabled = true; btn.textContent = '⏳ جاري تحسين المسار...';
+            try {
+                let startNode = null;
+                if (startVal === '__gps__') {
+                    if (!navigator.geolocation) throw new Error('المتصفح لا يدعم تحديد الموقع');
+                    const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, () => rej(new Error('فعّل إذن الـ GPS أو اختر مركز انطلاق من القائمة')), { enableHighAccuracy: true, timeout: 8000 }));
+                    startNode = { id: '__gps__', name: 'موقعي الحالي (GPS)', province: '', lat: pos.coords.latitude, lng: pos.coords.longitude, status: 'start', isGps: true };
+                } else {
+                    const sl = locMap[startVal];
+                    if (sl) startNode = { id: String(sl.id), name: sl.name, province: sl.province || 'أدرار', lat: parseFloat(sl.lat), lng: parseFloat(sl.lng), status: sl.status };
+                }
+                if (!startNode) throw new Error('اختر نقطة انطلاق صالحة');
+
+                const stops = [startNode];
+                selIds.forEach(id => {
+                    if (id === String(startNode.id)) return;
+                    const l = locMap[id];
+                    if (l && !isNaN(parseFloat(l.lat)) && !isNaN(parseFloat(l.lng))) {
+                        stops.push({ id: String(l.id), name: l.name, province: l.province || 'أدرار', lat: parseFloat(l.lat), lng: parseFloat(l.lng), status: l.status });
+                    }
+                });
+                if (stops.length < 2) throw new Error('اختر مركزاً واحداً على الأقل بالإضافة لنقطة الانطلاق');
+                if (stops.length > 25) throw new Error('الحد الأقصى للمسار الواحد هو 25 نقطة لضمان دقة التوجيه');
+
+                let ordered = [], geometry = null, totalDistM = 0, totalDurS = 0, legs = [], isRoad = true;
+                try {
+                    const coordStr = stops.map(p => `${p.lng},${p.lat}`).join(';');
+                    const r = await fetch(`https://router.project-osrm.org/trip/v1/driving/${coordStr}?source=first&roundtrip=${roundtrip}&overview=full&geometries=geojson`);
+                    const j = await r.json();
+                    if (j.code === 'Ok' && j.trips && j.trips[0] && j.waypoints) {
+                        j.waypoints.forEach((wp, origIdx) => { ordered[wp.waypoint_index] = stops[origIdx]; });
+                        ordered = ordered.filter(Boolean);
+                        geometry = j.trips[0].geometry;
+                        totalDistM = j.trips[0].distance;
+                        totalDurS = j.trips[0].duration;
+                        legs = j.trips[0].legs || [];
+                    } else {
+                        throw new Error('trip-fallback');
+                    }
+                } catch (_) {
+                    ordered = solveLocalTsp(stops, roundtrip);
+                    const routePts = roundtrip ? ordered.concat([ordered[0]]) : ordered;
+                    try {
+                        const coordStr = routePts.map(p => `${p.lng},${p.lat}`).join(';');
+                        const r2 = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`);
+                        const j2 = await r2.json();
+                        if (j2.code === 'Ok' && j2.routes && j2.routes[0]) {
+                            geometry = j2.routes[0].geometry;
+                            totalDistM = j2.routes[0].distance;
+                            totalDurS = j2.routes[0].duration;
+                            legs = j2.routes[0].legs || [];
+                        } else {
+                            throw new Error('route-fallback');
+                        }
+                    } catch (_2) {
+                        isRoad = false;
+                        geometry = { type: 'LineString', coordinates: routePts.map(p => [p.lng, p.lat]) };
+                        legs = [];
+                        for (let i = 0; i < routePts.length - 1; i++) {
+                            const dM = haversineKm(routePts[i], routePts[i + 1]) * 1000;
+                            const durS = (dM / 1000) / 70 * 3600;
+                            totalDistM += dM; totalDurS += durS;
+                            legs.push({ distance: dM, duration: durS });
+                        }
+                    }
+                }
+
+                if (nearestLineLayer) map.removeLayer(nearestLineLayer);
+                maintRouteLayer.clearLayers();
+                L.geoJSON(geometry, { style: { color: '#0d1710', weight: 8, opacity: 0.75 } }).addTo(maintRouteLayer);
+                const routeLine = L.geoJSON(geometry, {
+                    style: { color: '#00E5FF', weight: 4.5, dashArray: isRoad ? null : '8, 8' }
+                }).addTo(maintRouteLayer);
+
+                ordered.forEach((p, idx) => {
+                    const cls = idx === 0 ? 'is-start' : (p.status === 'inactive' ? 'is-out' : '');
+                    const icon = L.divIcon({
+                        className: 'maint-step-icon',
+                        html: `<div class="maint-step-badge ${cls}">${idx + 1}</div>`,
+                        iconSize: [24, 24],
+                        iconAnchor: [12, 12]
+                    });
+                    const m = L.marker([p.lat, p.lng], { icon, zIndexOffset: 1000 + ordered.length - idx }).addTo(maintRouteLayer);
+                    const legInfo = idx > 0 && legs[idx - 1] ? ` — ${(legs[idx - 1].distance / 1000).toFixed(1)} كم (${fmtDur(legs[idx - 1].duration)})` : ' (نقطة الانطلاق)';
+                    m.bindTooltip(`<b>#${idx + 1} ${esc(p.name)}</b>${legInfo}`, { direction: 'top', className: 'label-style', offset: [0, -12] });
+                    if (!p.isGps) m.on('click', () => { const fullLoc = locMap[p.id]; if (fullLoc) showDetails(fullLoc); });
+                });
+
+                map.fitBounds(routeLine.getBounds(), { padding: [60, 60] });
+                $('ui-home').style.display = 'block';
+
+                const gOrigin = `${ordered[0].lat},${ordered[0].lng}`;
+                const gDestObj = roundtrip ? ordered[0] : ordered[ordered.length - 1];
+                const gDest = `${gDestObj.lat},${gDestObj.lng}`;
+                const gWaypts = roundtrip ? ordered.slice(1) : ordered.slice(1, -1);
+                const gUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(gOrigin)}&destination=${encodeURIComponent(gDest)}${gWaypts.length ? `&waypoints=${encodeURIComponent(gWaypts.map(w => `${w.lat},${w.lng}`).join('|'))}` : ''}`;
+
+                const stepsHtml = ordered.map((p, idx) => {
+                    const leg = idx > 0 && legs[idx - 1] ? `${(legs[idx - 1].distance / 1000).toFixed(1)} كم • ${fmtDur(legs[idx - 1].duration)}` : 'نقطة الانطلاق';
+                    const outTag = p.status === 'inactive' ? ' 🔴' : '';
+                    return `<div class="maint-leg" onclick="map.flyTo([${p.lat},${p.lng}],15)">
+                        <span><b>${idx + 1}.</b> ${esc(p.name)}${outTag}</span>
+                        <small style="color:#81C784;white-space:nowrap">${leg}</small>
+                    </div>`;
+                }).join('') + (roundtrip && legs[ordered.length - 1] ? `<div class="maint-leg" onclick="map.flyTo([${ordered[0].lat},${ordered[0].lng}],15)">
+                    <span><b>${ordered.length + 1}.</b> العودة: ${esc(ordered[0].name)}</span>
+                    <small style="color:#81C784;white-space:nowrap">${(legs[ordered.length - 1].distance / 1000).toFixed(1)} كم • ${fmtDur(legs[ordered.length - 1].duration)}</small>
+                </div>` : '');
+
+                $('maint-result').innerHTML = `<div class="maint-result">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;color:#00E5FF;font-weight:bold">
+                        <span>🛣️ المسافة: ${(totalDistM / 1000).toFixed(1)} كم</span>
+                        <span>⏱️ الزمن التقديري: ${fmtDur(totalDurS)}</span>
+                    </div>
+                    ${!isRoad ? '<div style="color:#ffb74d;font-size:11px;margin-bottom:6px">⚠️ مسار تقديري مباشر (تعذر الوصول لخدمة الطرق)</div>' : ''}
+                    ${stepsHtml}
+                    <a href="${gUrl}" target="_blank" class="panel-btn gps-btn" style="display:block;margin-top:8px;text-align:center">🚗 فتح المسار المرتّب في خرائط Google</a>
+                </div>`;
+                toast(`🛠️ تم رسم مسار الصيانة (${ordered.length} محطات — ${(totalDistM / 1000).toFixed(1)} كم)`);
+            } catch (err) {
+                toast('❌ ' + (err && err.message ? err.message : 'تعذر حساب مسار الصيانة'));
+            } finally {
+                btn.disabled = false; btn.textContent = '🧭 رسم المسار المُحسّن';
+            }
         }
         let impLayer = null;
         function importGeo(inp) {
@@ -1029,7 +1575,7 @@ body.admin .ui-controls{left:290px}
             const mine = PROFILE.role === 'admin' ? locations : locations.filter(l => String(l.id) === String(PROFILE.location_id));
             if (!mine.length) return toast('لم يُسند إليك أي مخزن');
             $('st-loc').innerHTML = mine.map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');
-            $('st-date').value = new Date().toISOString().slice(0, 10); $('st-qty').value = ''; $('st-note').value = ''; ['st-in', 'st-out', 'st-loss', 'st-dmg'].forEach(i => $(i).value = '');
+            $('st-date').value = new Date().toISOString().slice(0, 10); $('st-qty').value = ''; $('st-note').value = '';
             stockHint(); $('stock-modal').style.display = 'block';
         }
         function stockHint() {
@@ -1039,7 +1585,7 @@ body.admin .ui-controls{left:290px}
         }
         async function saveStock() {
             const q = parseFloat($('st-qty').value); if (isNaN(q) || q < 0) return toast('أدخل كمية صحيحة');
-            const r = await fetch(`${REST}/stock_entries?on_conflict=location_id,entry_date`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ location_id: $('st-loc').value, entry_date: $('st-date').value, quantity: q, received: +$('st-in').value || 0, issued: +$('st-out').value || 0, loss: +$('st-loss').value || 0, damaged: +$('st-dmg').value || 0, note: $('st-note').value.trim() }) });
+            const r = await fetch(`${REST}/stock_entries?on_conflict=location_id,entry_date`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ location_id: $('st-loc').value, entry_date: $('st-date').value, quantity: q, note: $('st-note').value.trim() }) });
             if (!r.ok) return toast('❌ فشل الحفظ (تحقق من الصلاحيات)');
             $('stock-modal').style.display = 'none'; toast('✅ تم تسجيل الكمية'); await loadStock(); renderMapAndList();
         }
@@ -1126,8 +1672,43 @@ body.admin .ui-controls{left:290px}
   </div>
 </main></div>
 <div id="dash-page"><header><h2>📊 لوحة المؤشرات</h2><small id="dp-date"></small>
-<button onclick="openDash()">🔄 تحديث</button><button onclick="exportDashXlsx()">📥 Excel</button><button onclick="closeDash()">✕ إغلاق</button></header>
+<button class="mgr-only" onclick="openOpsModal()">📝 الجودة واللوجستيات</button><button onclick="openDash()">🔄 تحديث</button><button onclick="exportDashXlsx()">📥 Excel</button><button onclick="closeDash()">✕ إغلاق</button></header>
 <div id="dp-body"></div></div>
+<div id="ops-modal" onclick="if(event.target===this)closeOpsModal()">
+  <div class="ops-box">
+    <h3>📝 إدخال مؤشرات الجودة والفاقد والأداء اللوجستي</h3>
+    <small style="color:#9bb7a0;display:block;margin-bottom:10px">تُحفظ البيانات لكل مخزن وتُحسب منها نسب الفاقد ومطابقة الجرد ومعدلات الأداء اللوجستي تلقائياً.</small>
+    <label>المخزن / المركز
+      <select id="ops-loc" onchange="loadOpsLocFields()"></select>
+    </label>
+    <div class="ops-sec">4. مؤشرات الجودة والفاقد (Qualité et Pertes)</div>
+    <div class="ops-grid">
+      <label>نسبة الرطوبة (%)<input id="ops-moisture" type="number" step="0.1" min="0" max="100" placeholder="مثال: 11.5"></label>
+      <label>نسبة الشوائب (%)<input id="ops-impurities" type="number" step="0.1" min="0" max="100" placeholder="مثال: 1.2"></label>
+      <label>نسبة الحبوب المكسورة (%)<input id="ops-broken" type="number" step="0.1" min="0" max="100" placeholder="مثال: 2.0"></label>
+      <label>نسبة التلف (%)<input id="ops-damage" type="number" step="0.1" min="0" max="100" placeholder="مثال: 0.5"></label>
+      <label>الكمية المفقودة (ق)<input id="ops-lost-q" type="number" step="0.1" min="0" placeholder="مثال: 15"></label>
+      <label>الكمية المرجعية لحساب الفاقد (ق)<input id="ops-ref-q" type="number" step="0.1" min="0" placeholder="مثال: 5000"></label>
+      <label>الرصيد الدفتري للجرد (ق)<input id="ops-book-q" type="number" step="0.1" min="0" placeholder="مثال: 12000"></label>
+      <label>الرصيد الفعلي للجرد (ق)<input id="ops-actual-q" type="number" step="0.1" min="0" placeholder="مثال: 11980"></label>
+    </div>
+    <div class="ops-sec">5. مؤشرات الأداء اللوجستي (Performance Logistique)</div>
+    <div class="ops-grid">
+      <label>متوسط انتظار الشاحنات (دقيقة)<input id="ops-wait-min" type="number" step="1" min="0" placeholder="مثال: 35"></label>
+      <label>متوسط زمن تفريغ الشاحنة (دقيقة)<input id="ops-unload-min" type="number" step="1" min="0" placeholder="مثال: 45"></label>
+      <label>الشاحنات المستقبلة يومياً<input id="ops-trucks-day" type="number" step="0.1" min="0" placeholder="مثال: 12"></label>
+      <label>متوسط الاستلام للشاحنة (ق)<input id="ops-avg-in-q" type="number" step="1" min="0" placeholder="مثال: 250"></label>
+      <label>متوسط الصرف للشاحنة (ق)<input id="ops-avg-out-q" type="number" step="1" min="0" placeholder="مثال: 220"></label>
+      <label>مدة معالجة طلب التسليم (ساعة)<input id="ops-order-hr" type="number" step="0.1" min="0" placeholder="مثال: 2.5"></label>
+      <label>معدل استغلال وسائل النقل (%)<input id="ops-fleet-pct" type="number" step="0.1" min="0" max="100" placeholder="مثال: 82"></label>
+    </div>
+    <div class="ops-actions">
+      <button class="sec" onclick="clearOpsLocFields()">مسح قياسات المركز</button>
+      <button class="sec" onclick="closeOpsModal()">إلغاء</button>
+      <button onclick="saveOpsMetrics()">💾 حفظ المؤشرات</button>
+    </div>
+  </div>
+</div>
 <style id="pgstyle"></style>
 <div id="sheet"></div>
 <div id="gate"><div class="gb">
@@ -1404,7 +1985,6 @@ function alertsSection() {
   return `<div style="border:1px solid #d32f2f;border-radius:8px;padding:8px;margin-bottom:10px;background:rgba(211,47,47,.08)">${head}` + a.map(x =>
     `<div data-id="${esc(x.l.id)}" onclick="goAlert(this.dataset.id)" style="cursor:pointer;font-size:12px;padding:6px 0;border-top:1px solid #333"><b>${esc(x.l.name)}</b><br>${x.full ? `<span style="color:#ff8a80">🔴 الامتلاء ${x.p}%</span> ` : ''}${x.stale ? `<span style="color:#ffb74d">⏰ ${x.days == null ? 'لا يوجد أي إدخال' : 'آخر تحديث منذ ' + x.days + ' يوم'}</span>` : ''}</div>`).join('') + '</div>';
 }
-function goAlert(id) { const l = locations.find(x => String(x.id) === String(id)); if (!l) return; $('dash-modal').style.display = 'none'; showDetails(l); }
 function updateAlertBadge() {
   const n = computeAlerts().length, b = document.querySelector('button[onclick="openDash()"]');
   if (b) b.textContent = '📈 المؤشرات' + (n ? ' 🔴' + n : '');
@@ -1417,7 +1997,827 @@ const sumBy = (a, f) => a.reduce((s, x) => s + f(x), 0), nf = n => Math.round(n)
 const PAL = ['#2E7D32', '#C9A227', '#B23A22', '#1E88E5', '#8E24AA', '#00ACC1', '#EF6C00', '#6D4C41'];
 const dashScope = () => PROFILE && PROFILE.role === 'manager' ? locations.filter(l => String(l.id) === String(PROFILE.location_id)) : locations;
 const grp = (a, fn) => { const m = {}; a.forEach(l => { const k = fn(l) || '—'; m[k] = (m[k] || 0) + capNum(l); }); return Object.entries(m).map(([l, v]) => ({ l, v })).sort((x, y) => y.v - x.v); };
-const KP = (ic, lb, v, sub, col) => `<div class="dp-kpi" style="border-top:3px solid ${col}"><span>${ic} ${lb}</span><b>${v}</b><small>${sub}</small></div>`;
+const KP = (ic, lb, v, sub, col, id = '') => `<div class="dp-kpi"${id ? ` id="${id}"` : ''} style="border-top:3px solid ${col}"><span>${ic} ${lb}</span><b>${v}</b><small>${sub}</small></div>`;
+const formatPivotHa = (v, d = 1) => Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: Math.max(d, 2) });
+function calcPivotAreaStats(pivotsList = PIVOTS, opts = {}) {
+  const list = Array.isArray(pivotsList) ? pivotsList : [];
+  const minR = Number(opts.minRadius) || 0;
+  const maxR = Number(opts.maxRadius) > 0 ? Number(opts.maxRadius) : Infinity;
+  const cropFilter = (opts.crop || 'all').trim();
+  const items = [];
+  for (let i = 0; i < list.length; i++) {
+    const p = list[i];
+    if (!p) continue;
+    const r = Number(p.radius_m ?? p.radius ?? p.r ?? 0);
+    if (!Number.isFinite(r) || r <= 0) continue;
+    if (r < minR || r > maxR) continue;
+    const crop = (p.crop || 'غير محدد').trim() || 'غير محدد';
+    if (cropFilter && cropFilter !== 'all' && crop !== cropFilter) continue;
+    const areaHa = Math.PI * r * r / 1e4;
+    items.push({ ...p, radius_m: r, areaHa, areaM2: areaHa * 1e4 });
+  }
+  const totalHa = items.reduce((s, p) => s + p.areaHa, 0);
+  const count = items.length;
+  const avgHa = count ? totalHa / count : 0;
+  const avgRadiusM = count ? items.reduce((s, p) => s + p.radius_m, 0) / count : 0;
+  return { count, registeredCount: list.length, totalHa, totalAreaM2: totalHa * 1e4, avgHa, avgRadiusM, items };
+}
+function calcTotalPivotAreaHa(pivotsList = PIVOTS, opts = {}) {
+  return calcPivotAreaStats(pivotsList, opts).totalHa;
+}
+function updateDashPivotKpi(statsPayload) {
+  const card = $('dp-kpi-pivots');
+  if (!card) return;
+  const st = statsPayload && statsPayload.filtered ? statsPayload.filtered : (statsPayload || calcPivotAreaStats(PIVOTS));
+  const tot = statsPayload && statsPayload.total ? statsPayload.total : st;
+  const isFiltered = !!(statsPayload && statsPayload.isFiltered);
+  const b = card.querySelector('b'), sm = card.querySelector('small');
+  if (b) b.textContent = formatPivotHa(st.totalHa, 1) + ' هكتار';
+  if (sm) {
+    sm.textContent = isFiltered
+      ? `${st.count} من ${tot.count} محور • الكلي ${formatPivotHa(tot.totalHa, 1)} هـ`
+      : (st.count
+        ? `${st.count} محور مسجّل • متوسط نق ${Math.round(st.avgRadiusM ?? st.avgRadius ?? 0)} م (${formatPivotHa(st.avgHa, 1)} هـ)`
+        : 'لا توجد محاور مسجّلة');
+  }
+}
+function syncDashPivots() {
+  const dash = $('dash-page');
+  if (!dash || dash.style.display === 'none') return;
+  updateDashPivotKpi(calcPivotAreaStats(PIVOTS));
+  mountPivotRadiiChart();
+  updateForecastView();
+}
+let LAST_DASH_HIST = [], LAST_FORECAST = null;
+function readForecastParams() {
+  return {
+    yieldQPerHa: Math.max(1, Number($('fc-yield')?.value) || 35),
+    intakeRatePct: Math.min(100, Math.max(5, Number($('fc-intake-pct')?.value) || 75)),
+    horizonDays: Math.max(15, Number($('fc-horizon')?.value) || 60),
+    truckCapQ: Math.max(20, Number($('fc-truck')?.value) || 250)
+  };
+}
+function computeSeasonalForecast(hist = LAST_DASH_HIST, params = {}) {
+  const yieldQPerHa = Number(params.yieldQPerHa) || 35;
+  const intakeRatePct = Number(params.intakeRatePct) || 75;
+  const horizonDays = Number(params.horizonDays) || 60;
+  const truckCapQ = Number(params.truckCapQ) || 250;
+
+  const sc = dashScope();
+  const act = sc.filter(l => l.status !== 'inactive');
+  const inactive = sc.filter(l => l.status === 'inactive');
+  const pvStats = calcPivotAreaStats(PIVOTS);
+
+  // 1) حساب اتجاه المخزون اليومي من سجل آخر 30 يومًا لكل مركز
+  const byLoc = {};
+  (Array.isArray(hist) ? hist : []).forEach(h => {
+    const k = String(h.location_id);
+    (byLoc[k] = byLoc[k] || []).push({ d: h.entry_date, q: +h.quantity || 0 });
+  });
+  const dailySlopeById = {};
+  Object.entries(byLoc).forEach(([id, arr]) => {
+    arr.sort((a, b) => a.d.localeCompare(b.d));
+    if (arr.length >= 2) {
+      const first = arr[0], last = arr[arr.length - 1];
+      const days = Math.max(1, Math.round((new Date(last.d + 'T00:00:00') - new Date(first.d + 'T00:00:00')) / 864e5));
+      dailySlopeById[id] = (last.q - first.q) / days;
+    }
+  });
+
+  // 2) ربط كل محور بأقرب مركز نشط لحساب الاستلامات المتوقعة ومسافات التوريد
+  const intakeByLoc = {};
+  let totalPivotIntakeQ = 0, totalPivotHaulKm = 0, weightedDistSum = 0;
+  pvStats.items.forEach(p => {
+    const expQ = p.areaHa * yieldQPerHa * (intakeRatePct / 100);
+    totalPivotIntakeQ += expQ;
+    let bestLoc = null, bestKm = Infinity;
+    const pLat = Number(p.lat), pLng = Number(p.lng);
+    if (Number.isFinite(pLat) && Number.isFinite(pLng)) {
+      act.forEach(l => {
+        const lLat = Number(l.lat), lLng = Number(l.lng);
+        if (!Number.isFinite(lLat) || !Number.isFinite(lLng)) return;
+        const km = haversineKm({ lat: pLat, lng: pLng }, { lat: lLat, lng: lLng });
+        if (km < bestKm) { bestKm = km; bestLoc = l; }
+      });
+    }
+    if (bestLoc) {
+      const key = String(bestLoc.id);
+      intakeByLoc[key] = (intakeByLoc[key] || 0) + expQ;
+      const trips = Math.max(1, Math.ceil(expQ / truckCapQ));
+      totalPivotHaulKm += trips * bestKm * 2;
+      weightedDistSum += expQ * bestKm;
+    }
+  });
+
+  // في حال عدم وجود محاور أو وجود تدفق تاريخي إضافي
+  let totalHistInflowQ = 0;
+  let totalHistOutflowQ = 0;
+  act.forEach(l => {
+    const slope = dailySlopeById[String(l.id)] || 0;
+    if (slope > 0) totalHistInflowQ += slope * horizonDays;
+    else if (slope < 0) totalHistOutflowQ += Math.abs(slope) * horizonDays;
+  });
+
+  const expectedIntakeQ = totalPivotIntakeQ > 0 ? totalPivotIntakeQ : totalHistInflowQ;
+  const totalCapQ = sumBy(act, capNum);
+  const currentQtyQ = sumBy(act, l => STOCK[l.id] ? +STOCK[l.id].quantity : 0);
+  const currentFreeQ = Math.max(0, totalCapQ - currentQtyQ);
+
+  // 3) تحليل كل مركز نشط: الامتلاء المتوقع، بلوغ الطاقة القصوى، واحتمال النقص/الفائض
+  const centerForecasts = act.map(l => {
+    const id = String(l.id);
+    const cap = capNum(l);
+    const cur = STOCK[l.id] ? +STOCK[l.id].quantity : 0;
+    const curPct = cap > 0 ? Math.round((cur / cap) * 100) : 0;
+    const slope = dailySlopeById[id] || 0;
+    const pivotIn = intakeByLoc[id] || 0;
+    const trendDelta = slope * horizonDays;
+    const projectedQty = Math.max(0, cur + pivotIn + trendDelta);
+    const projectedPct = cap > 0 ? Math.round((projectedQty / cap) * 100) : 0;
+    const dailyIn = (pivotIn / horizonDays) + Math.max(0, slope);
+    const dailyOut = slope < 0 ? Math.abs(slope) : 0;
+
+    let daysToFull = null;
+    if (cap > 0 && dailyIn > dailyOut) {
+      const netDaily = dailyIn - dailyOut;
+      daysToFull = cur >= cap ? 0 : Math.ceil((cap - cur) / netDaily);
+    }
+    let daysToEmpty = null;
+    if (dailyOut > dailyIn && cur > 0) {
+      daysToEmpty = Math.ceil(cur / (dailyOut - dailyIn));
+    }
+
+    const overflowQ = cap > 0 ? Math.max(0, projectedQty - cap) : 0;
+    const deficitTargetQ = cap > 0 ? Math.max(0, (cap * 0.20) - projectedQty) : 0;
+
+    let riskType = 'ok';
+    let riskLabel = 'متوازن';
+    let riskProb = 15;
+    if (projectedPct > 100) {
+      riskType = 'crit'; riskLabel = 'تجاوز الطاقة القصوى (فائض)';
+      riskProb = Math.min(99, 75 + Math.round((projectedPct - 100) * 0.6));
+    } else if (projectedPct >= 90 || curPct >= 90) {
+      riskType = 'warn'; riskLabel = 'مهدد ببلوغ الطاقة القصوى';
+      riskProb = Math.min(92, 55 + Math.round((Math.max(projectedPct, curPct) - 85) * 2.2));
+    } else if (cur === 0 && pivotIn === 0) {
+      riskType = 'low'; riskLabel = 'احتمال نقص (بدون مخزون)';
+      riskProb = 85;
+    } else if (projectedPct < 20 || (daysToEmpty !== null && daysToEmpty <= horizonDays)) {
+      riskType = 'low'; riskLabel = 'احتمال نقص في المخزون';
+      riskProb = Math.min(90, 45 + Math.round((25 - Math.min(25, projectedPct)) * 1.8));
+    }
+
+    return {
+      loc: l, id, cap, cur, curPct, pivotIn, trendDelta, projectedQty, projectedPct,
+      daysToFull, daysToEmpty, overflowQ, deficitTargetQ, riskType, riskLabel, riskProb
+    };
+  });
+
+  const maxCapCenters = centerForecasts
+    .filter(c => c.projectedPct >= 85 || c.curPct >= 85)
+    .sort((a, b) => b.projectedPct - a.projectedPct);
+
+  const deficitCenters = centerForecasts
+    .filter(c => c.riskType === 'low')
+    .sort((a, b) => b.riskProb - a.riskProb);
+
+  const surplusCenters = centerForecasts
+    .filter(c => c.projectedPct > 90)
+    .sort((a, b) => (b.projectedQty - b.cap) - (a.projectedQty - a.cap));
+
+  const projectedTotalQtyQ = sumBy(centerForecasts, c => c.projectedQty);
+  const netStorageGapQ = projectedTotalQtyQ - totalCapQ; // > 0 => نقص في المساحة التخزينية، < 0 => فائض مساحة
+  const requiredExtraCapQ = Math.max(0, netStorageGapQ);
+  const totalOverflowQ = sumBy(centerForecasts, c => c.overflowQ);
+  const effectiveNeededStorageQ = Math.max(requiredExtraCapQ, totalOverflowQ);
+  const neededWarehouses = effectiveNeededStorageQ > 0 ? Math.ceil(effectiveNeededStorageQ / 50000) : 0;
+
+  // 4) احتمالات النقص / الفائض على مستوى الشبكة
+  const avgProjFill = totalCapQ > 0 ? (projectedTotalQtyQ / totalCapQ) * 100 : 0;
+  let balanceTitle = 'توازن مستقر';
+  let surplusProbPct = 0, deficitProbPct = 0;
+  if (avgProjFill >= 95 || totalOverflowQ > totalCapQ * 0.08) {
+    balanceTitle = 'مرجّح فائض / ضغط تخزيني';
+    surplusProbPct = Math.min(96, Math.round(55 + (avgProjFill - 80) * 1.1));
+    deficitProbPct = Math.max(4, 100 - surplusProbPct);
+  } else if (avgProjFill <= 30 || deficitCenters.length > act.length * 0.4) {
+    balanceTitle = 'مرجّح عجز / نقص مخزون';
+    deficitProbPct = Math.min(92, Math.round(50 + (35 - Math.min(35, avgProjFill)) * 1.3));
+    surplusProbPct = Math.max(8, 100 - deficitProbPct);
+  } else {
+    surplusProbPct = Math.min(60, Math.max(15, Math.round(avgProjFill * 0.55)));
+    deficitProbPct = Math.min(60, Math.max(15, Math.round((100 - avgProjFill) * 0.45)));
+    balanceTitle = surplusProbPct > deficitProbPct + 12 ? 'يميل للفائض المحدود' : (deficitProbPct > surplusProbPct + 12 ? 'يميل للنقص الموضعي' : 'توازن جيد بين العرض والسعة');
+  }
+
+  // 5) خطة النقل والتوزيع: استلامات المحاور + تحويلات إعادة التوازن بين المخازن
+  const receivers = centerForecasts
+    .filter(c => c.cap > 0 && c.projectedQty < c.cap * 0.80)
+    .map(c => ({ ...c, availQ: Math.max(0, c.cap * 0.85 - c.projectedQty) }));
+  const donors = centerForecasts
+    .filter(c => c.cap > 0 && c.projectedQty > c.cap * 0.90)
+    .map(c => ({ ...c, excessQ: Math.max(0, c.projectedQty - c.cap * 0.88) }))
+    .sort((a, b) => b.excessQ - a.excessQ);
+
+  const transferLegs = [];
+  donors.forEach(src => {
+    let rem = src.excessQ;
+    const candidates = receivers
+      .filter(dst => dst.availQ > 100 && dst.id !== src.id)
+      .map(dst => ({
+        dst,
+        km: haversineKm({ lat: +src.loc.lat, lng: +src.loc.lng }, { lat: +dst.loc.lat, lng: +dst.loc.lng })
+      }))
+      .sort((a, b) => a.km - b.km);
+    for (let i = 0; i < candidates.length && rem > 100; i++) {
+      const { dst, km } = candidates[i];
+      const moveQ = Math.min(rem, dst.availQ);
+      if (moveQ <= 0) continue;
+      rem -= moveQ;
+      dst.availQ -= moveQ;
+      transferLegs.push({
+        from: src.loc,
+        to: dst.loc,
+        qtyQ: Math.round(moveQ),
+        distKm: Math.round(km),
+        trucks: Math.ceil(moveQ / truckCapQ),
+        windWarn: isHighWind(src.loc) || isHighWind(dst.loc)
+      });
+    }
+  });
+
+  const intakeTrucks = Math.ceil(expectedIntakeQ / truckCapQ);
+  const transferQtyTotalQ = sumBy(transferLegs, t => t.qtyQ);
+  const transferTrucks = sumBy(transferLegs, t => t.trucks);
+  const transferKmTotal = sumBy(transferLegs, t => t.trucks * t.distKm * 2);
+  const totalTrucks = intakeTrucks + transferTrucks;
+  const totalTransportKm = Math.round(totalPivotHaulKm + transferKmTotal);
+  const avgHaulKm = totalPivotIntakeQ > 0 ? Math.round(weightedDistSum / totalPivotIntakeQ) : 0;
+
+  return {
+    params: { yieldQPerHa, intakeRatePct, horizonDays, truckCapQ },
+    activeCount: act.length,
+    inactiveCount: inactive.length,
+    pivotCount: pvStats.count,
+    pivotTotalHa: pvStats.totalHa,
+    totalCapQ,
+    currentQtyQ,
+    currentFreeQ,
+    expectedIntakeQ,
+    projectedTotalQtyQ,
+    netStorageGapQ,
+    requiredExtraCapQ,
+    totalOverflowQ,
+    effectiveNeededStorageQ,
+    neededWarehouses,
+    avgProjFill,
+    maxCapCenters,
+    deficitCenters,
+    surplusCenters,
+    balanceTitle,
+    surplusProbPct,
+    deficitProbPct,
+    centerForecasts: centerForecasts.sort((a, b) => b.projectedPct - a.projectedPct),
+    transferLegs,
+    intakeTrucks,
+    transferTrucks,
+    transferQtyTotalQ,
+    totalTrucks,
+    totalTransportKm,
+    avgHaulKm
+  };
+}
+function renderForecastBody(fc) {
+  if (!fc) return '';
+  const storageState = fc.effectiveNeededStorageQ > 0
+    ? `يلزم إضافة ${nf(fc.effectiveNeededStorageQ)} ق (~${fc.neededWarehouses} مخزن 50 ألف ق)`
+    : `فائض متاح ${nf(Math.max(0, fc.totalCapQ - fc.projectedTotalQtyQ))} ق بعد الموسم`;
+  const storageMain = fc.effectiveNeededStorageQ > 0
+    ? `+${nf(fc.effectiveNeededStorageQ)} ق مطلوبة`
+    : `${nf(Math.max(0, fc.totalCapQ - fc.projectedTotalQtyQ))} ق متاحة`;
+  const intakeTons = Math.round(fc.expectedIntakeQ * 0.1);
+
+  const riskRows = fc.centerForecasts.slice(0, 12).map(c => {
+    const timeNote = c.daysToFull != null
+      ? (c.daysToFull === 0 ? 'ممتلئ الآن' : `يمتلئ خلال ${c.daysToFull} ي`)
+      : (c.daysToEmpty != null ? `ينفد خلال ${c.daysToEmpty} ي` : 'مستقر');
+    return `<tr data-id="${esc(c.id)}" onclick="goAlert(this.dataset.id)">
+      <td><b>${esc(c.loc.name)}</b></td>
+      <td>${c.curPct}%</td>
+      <td><b>${c.projectedPct}%</b></td>
+      <td><span class="fc-status ${c.riskType}">${c.riskLabel} (${c.riskProb}%)</span></td>
+      <td>${timeNote}</td>
+    </tr>`;
+  }).join('');
+
+  const routesHtml = fc.transferLegs.length
+    ? fc.transferLegs.map(t => `<div class="fc-route-row">
+        <div>
+          <b>${esc(t.from.name)} ← ${esc(t.to.name)}</b>
+          <small>${nf(t.qtyQ)} ق · المسافة ${t.distKm} كم${t.windWarn ? ' · ⚠️ تنبيه رياح شديدة' : ''}</small>
+        </div>
+        <div style="text-align:left;white-space:nowrap">
+          <b style="color:#00E5FF">${t.trucks} رحلة</b>
+        </div>
+      </div>`).join('')
+    : `<div style="padding:14px;background:#101c14;border:1px dashed #27402d;border-radius:8px;font-size:12px;color:#9bb7a0">
+        لا توجد تحويلات فائض إلزامية حالياً بين المخازن؛ النقل يقتصر على استلامات المحاور (${fc.intakeTrucks} رحلة تقديرية).
+      </div>`;
+
+  return `<div class="fc-kpis">
+    <div class="fc-box" style="border-top:3px solid #C9A227">
+      <span>1. الاحتياجات من المساحات التخزينية</span>
+      <b>${storageMain}</b>
+      <small>${storageState} · السعة الحالية ${nf(fc.totalCapQ)} ق</small>
+    </div>
+    <div class="fc-box" style="border-top:3px solid #4CAF50">
+      <span>2. حجم الاستلامات للموسم القادم</span>
+      <b>${nf(fc.expectedIntakeQ)} ق</b>
+      <small>${nf(intakeTons)} طن · من ${fc.pivotCount} محور (${formatPivotHa(fc.pivotTotalHa, 1)} هكتار)</small>
+    </div>
+    <div class="fc-box" style="border-top:3px solid #d32f2f">
+      <span>3. مخازن قد تصل لطاقتها القصوى</span>
+      <b>${fc.maxCapCenters.length} مركز</b>
+      <small>${fc.maxCapCenters.length ? fc.maxCapCenters.slice(0, 2).map(c => esc(c.loc.name) + ' (' + c.projectedPct + '%)').join(' · ') : 'لا توجد مخازن تتجاوز 85%'}</small>
+    </div>
+    <div class="fc-box" style="border-top:3px solid #1E88E5">
+      <span>4. احتمالات النقص أو الفائض</span>
+      <b>فائض ${fc.surplusProbPct}% · نقص ${fc.deficitProbPct}%</b>
+      <small>${fc.balanceTitle} · ${fc.deficitCenters.length} عجز · ${fc.surplusCenters.length} فائض</small>
+    </div>
+    <div class="fc-box" style="border-top:3px solid #00ACC1">
+      <span>5. احتياجات النقل والتوزيع</span>
+      <b>${nf(fc.totalTrucks)} رحلة شاحنة</b>
+      <small>استلام ${nf(fc.intakeTrucks)} + تحويل ${nf(fc.transferTrucks)} · ~${nf(fc.totalTransportKm)} كم (ذهاب/إياب)</small>
+    </div>
+  </div>
+  <div class="fc-split">
+    <div>
+      <div class="fc-subhdr">
+        <span>🏭 توقعات السعة والخطورة حسب المركز</span>
+        <small>اضغط على المركز لفتحه على الخريطة</small>
+      </div>
+      <div style="overflow:auto;max-height:280px">
+        <table class="dp-tbl">
+          <thead><tr><th>المركز</th><th>الحالي</th><th>المتوقع</th><th>التقييم والاحتمال</th><th>الأفق الزمني</th></tr></thead>
+          <tbody>${riskRows || '<tr><td colspan="5">لا توجد مراكز نشطة</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="fc-subhdr">
+        <span>🚚 خطة النقل والتحويلات المقترحة</span>
+        <small>شاحنة ${fc.params.truckCapQ} ق · متوسط بُعد المحاور ${fc.avgHaulKm} كم</small>
+      </div>
+      <div class="fc-route-list">${routesHtml}</div>
+    </div>
+  </div>`;
+}
+function updateForecastView() {
+  const el = $('dp-forecast-body');
+  if (!el) return;
+  LAST_FORECAST = computeSeasonalForecast(LAST_DASH_HIST, readForecastParams());
+  el.innerHTML = renderForecastBody(LAST_FORECAST);
+  LAST_KPI_SUITE = computeKpiSuite(LAST_DASH_HIST);
+  const kw = $('dp-kpi-suite');
+  if (kw && KPI_ACTIVE_TAB === 'predictive') kw.innerHTML = renderKpiSuiteCard(LAST_KPI_SUITE);
+}
+let LAST_KPI_SUITE = null, KPI_ACTIVE_TAB = 'top10', KPI_SORT_DIR = 'desc', OPS_METRICS = {};
+const OPS_STORE_KEY = 'ccls_ops_metrics_v1';
+const OPS_FIELDS = [
+  ['ops-moisture', 'moisture'], ['ops-impurities', 'impurities'], ['ops-broken', 'broken'], ['ops-damage', 'damage'],
+  ['ops-lost-q', 'lostQ'], ['ops-ref-q', 'refQ'], ['ops-book-q', 'bookQ'], ['ops-actual-q', 'actualQ'],
+  ['ops-wait-min', 'waitMin'], ['ops-unload-min', 'unloadMin'], ['ops-trucks-day', 'trucksPerDay'],
+  ['ops-avg-in-q', 'avgInTruckQ'], ['ops-avg-out-q', 'avgOutTruckQ'], ['ops-order-hr', 'orderProcHr'], ['ops-fleet-pct', 'fleetUtilPct']
+];
+async function loadOpsMetrics() {
+  let localObj = {};
+  try { localObj = JSON.parse(localStorage.getItem(OPS_STORE_KEY) || '{}') || {}; } catch (_) {}
+  OPS_METRICS = localObj;
+  if (typeof sb !== 'undefined' && sb) {
+    try {
+      const { data } = await sb.from('app_settings').select('value').eq('key', 'ccls_ops_metrics').maybeSingle();
+      if (data && data.value && typeof data.value === 'object') {
+        OPS_METRICS = { ...localObj, ...data.value };
+        try { localStorage.setItem(OPS_STORE_KEY, JSON.stringify(OPS_METRICS)); } catch (_) {}
+      }
+    } catch (_) {}
+  }
+  return OPS_METRICS;
+}
+function loadOpsLocFields() {
+  const id = $('ops-loc')?.value;
+  const rec = (id && OPS_METRICS[id]) ? OPS_METRICS[id] : {};
+  OPS_FIELDS.forEach(([elId, key]) => {
+    const el = $(elId);
+    if (el) el.value = (rec[key] != null && rec[key] !== '') ? rec[key] : '';
+  });
+}
+function openOpsModal(locId) {
+  const sel = $('ops-loc');
+  if (!sel) return;
+  const sc = dashScope();
+  sel.innerHTML = sc.map(l => `<option value="${esc(l.id)}">${esc(l.name)}${l.status === 'inactive' ? ' (خارج الخدمة)' : ''}</option>`).join('');
+  if (locId && sc.some(l => String(l.id) === String(locId))) sel.value = String(locId);
+  loadOpsLocFields();
+  $('ops-modal').style.display = 'block';
+}
+function closeOpsModal() { const m = $('ops-modal'); if (m) m.style.display = 'none'; }
+function clearOpsLocFields() {
+  OPS_FIELDS.forEach(([elId]) => { const el = $(elId); if (el) el.value = ''; });
+}
+async function saveOpsMetrics() {
+  const id = $('ops-loc')?.value;
+  if (!id) return;
+  const rec = {};
+  let hasAny = false;
+  OPS_FIELDS.forEach(([elId, key]) => {
+    const raw = $(elId)?.value;
+    if (raw !== undefined && raw !== null && String(raw).trim() !== '') {
+      const n = Number(raw);
+      if (Number.isFinite(n) && n >= 0) { rec[key] = n; hasAny = true; }
+    }
+  });
+  const next = { ...OPS_METRICS };
+  if (hasAny) { rec.updatedAt = new Date().toISOString().slice(0, 10); next[id] = rec; }
+  else delete next[id];
+  OPS_METRICS = next;
+  try { localStorage.setItem(OPS_STORE_KEY, JSON.stringify(OPS_METRICS)); } catch (_) {}
+  let savedRemote = false;
+  if (typeof sb !== 'undefined' && sb) {
+    try {
+      const { error } = await sb.from('app_settings').upsert({ key: 'ccls_ops_metrics', value: OPS_METRICS }, { onConflict: 'key' });
+      savedRemote = !error;
+    } catch (_) {}
+  }
+  closeOpsModal();
+  toast(savedRemote ? '✅ تم حفظ مؤشرات الجودة واللوجستيات' : '✅ تم الحفظ محلياً في المتصفح');
+  if ($('dash-page')?.style.display === 'block') {
+    LAST_KPI_SUITE = computeKpiSuite(LAST_DASH_HIST);
+    const wrap = $('dp-kpi-suite');
+    if (wrap) wrap.innerHTML = renderKpiSuiteCard(LAST_KPI_SUITE);
+  }
+}
+function computeKpiSuite(hist = LAST_DASH_HIST, opsMap = OPS_METRICS) {
+  const sc = dashScope();
+  const act = sc.filter(l => l.status !== 'inactive');
+  const entries = Array.isArray(hist) ? hist : [];
+  const nowMs = Date.now();
+  const d30Cut = new Date(nowMs - 30 * 864e5).toISOString().slice(0, 10);
+
+  const histByLoc = {};
+  entries.forEach(h => {
+    const k = String(h.location_id);
+    if (!h.entry_date) return;
+    (histByLoc[k] = histByLoc[k] || []).push({ d: String(h.entry_date).slice(0, 10), q: +h.quantity || 0 });
+  });
+
+  const periodDays = 30;
+  const dailyOutTotals = {};
+  const centerRows = act.map(l => {
+    const id = String(l.id);
+    const capQ = capNum(l);
+    const curQ = STOCK[l.id] ? +STOCK[l.id].quantity : 0;
+    const allSorted = (histByLoc[id] || []).slice().sort((a, b) => a.d.localeCompare(b.d));
+    // توحيد قراءات اليوم الواحد بآخر قيمة مسجلة
+    const dayMap = {};
+    allSorted.forEach(x => { dayMap[x.d] = x.q; });
+    const uniq = Object.entries(dayMap).sort((a, b) => a[0].localeCompare(b[0])).map(([d, q]) => ({ d, q }));
+
+    const curWin = uniq.filter(x => x.d >= d30Cut);
+    const prevWin = uniq.filter(x => x.d < d30Cut);
+
+    const calcFlux = arr => {
+      let inf = 0, outf = 0, inOps = 0, outOps = 0;
+      for (let i = 1; i < arr.length; i++) {
+        const delta = arr[i].q - arr[i - 1].q;
+        if (delta > 0) { inf += delta; inOps++; }
+        else if (delta < 0) {
+          const absD = Math.abs(delta);
+          outf += absD; outOps++;
+          dailyOutTotals[arr[i].d] = (dailyOutTotals[arr[i].d] || 0) + absD;
+        }
+      }
+      return { inf, outf, inOps, outOps, move: inf + outf };
+    };
+
+    const curFlux = calcFlux(curWin);
+    const prevFlux = calcFlux(prevWin);
+    const openingQ = curWin.length ? curWin[0].q : (prevWin.length ? prevWin[prevWin.length - 1].q : curQ);
+    const closingQ = Math.max(0, openingQ + curFlux.inf - curFlux.outf);
+    const closingFinalQ = STOCK[l.id] ? curQ : closingQ;
+    const avgStockQ = (openingQ + closingFinalQ) / 2;
+    const usedCapQ = closingFinalQ;
+    const freeCapQ = Math.max(0, capQ - usedCapQ);
+    const fillPctVal = capQ > 0 ? (usedCapQ / capQ) * 100 : null;
+    const unusedPctVal = capQ > 0 ? (freeCapQ / capQ) * 100 : null;
+    const overrunPctVal = capQ > 0 && usedCapQ > capQ ? (usedCapQ / capQ) * 100 : (capQ > 0 ? 0 : null);
+    const annualOutQ = curFlux.outf * (365 / periodDays);
+    const rotation = avgStockQ > 0 && annualOutQ > 0 ? annualOutQ / avgStockQ : 0;
+    const durationDays = rotation > 0 ? 365 / rotation : null;
+    const mRec = (opsMap && opsMap[id]) ? opsMap[id] : {};
+    const cLossPct = (mRec.refQ > 0 && mRec.lostQ != null) ? (mRec.lostQ / mRec.refQ) * 100 : null;
+    const cAuditPct = (mRec.bookQ > 0 && mRec.actualQ != null) ? (mRec.actualQ / mRec.bookQ) * 100 : null;
+
+    return {
+      loc: l, id, capQ, capTons: capQ * 0.1,
+      openingQ, inflowQ: curFlux.inf, outflowQ: curFlux.outf,
+      closingCalcQ: closingQ, closingQ: closingFinalQ, avgStockQ,
+      usedCapQ, freeCapQ, fillPctVal, unusedPctVal, overrunPctVal,
+      inOps: curFlux.inOps, outOps: curFlux.outOps,
+      dailyInQ: curFlux.inf / periodDays, dailyOutQ: curFlux.outf / periodDays,
+      totalMoveQ: curFlux.move, prevMoveQ: prevFlux.move,
+      flowBalance: curFlux.outf > 0 ? (curFlux.inf / curFlux.outf) : null,
+      rotation, durationDays,
+      lossPct: cLossPct, auditPct: cAuditPct, ops: mRec
+    };
+  });
+
+  const totalClosingQ = sumBy(centerRows, c => c.closingQ);
+  centerRows.forEach(c => {
+    c.sharePct = totalClosingQ > 0 ? (c.closingQ / totalClosingQ) * 100 : 0;
+  });
+
+  // 1. مؤشرات المخزون والكميات
+  const openingStockQ = sumBy(centerRows, c => c.openingQ);
+  const totalInflowQ = sumBy(centerRows, c => c.inflowQ);
+  const totalOutflowQ = sumBy(centerRows, c => c.outflowQ);
+  const closingFormulaQ = Math.max(0, openingStockQ + totalInflowQ - totalOutflowQ);
+  const closingActualQ = totalClosingQ;
+  const avgStockQ = (openingStockQ + closingActualQ) / 2;
+  const topShareCenter = [...centerRows].sort((a, b) => b.sharePct - a.sharePct)[0] || null;
+
+  // 2. مؤشرات الطاقة التخزينية
+  const theoreticalCapQ = sumBy(centerRows, c => c.capQ);
+  const utilizedCapQ = closingActualQ;
+  const freeCapQ = Math.max(0, theoreticalCapQ - utilizedCapQ);
+  const fillRatePct = theoreticalCapQ > 0 ? (utilizedCapQ / theoreticalCapQ) * 100 : 0;
+  const unusedCapPct = theoreticalCapQ > 0 ? (freeCapQ / theoreticalCapQ) * 100 : 0;
+  const overrunCenters = centerRows.filter(c => c.capQ > 0 && c.usedCapQ > c.capQ);
+  const overrunRatePct = theoreticalCapQ > 0 && utilizedCapQ > theoreticalCapQ ? (utilizedCapQ / theoreticalCapQ) * 100 : 0;
+
+  // 3. مؤشرات حركة الحبوب
+  const receiptOpsCount = sumBy(centerRows, c => c.inOps);
+  const dispatchOpsCount = sumBy(centerRows, c => c.outOps);
+  const dailyReceiptRateQ = totalInflowQ / periodDays;
+  const dailyDispatchRateQ = totalOutflowQ / periodDays;
+  const totalMovementQ = totalInflowQ + totalOutflowQ;
+  const flowBalanceRatio = totalOutflowQ > 0 ? (totalInflowQ / totalOutflowQ) : null;
+  const annualOutflowQ = totalOutflowQ * (365 / periodDays);
+  const rotation = avgStockQ > 0 && annualOutflowQ > 0 ? annualOutflowQ / avgStockQ : 0;
+  const avgStorageDurationDays = rotation > 0 ? 365 / rotation : null;
+  const opsRatePerDay = (receiptOpsCount + dispatchOpsCount) / periodDays;
+
+  // 4. مؤشرات الجودة والفاقد
+  const opsList = sc.map(l => (opsMap && opsMap[String(l.id)]) ? opsMap[String(l.id)] : null).filter(Boolean);
+  const avgField = k => {
+    const vals = opsList.map(o => o[k]).filter(v => Number.isFinite(v));
+    return vals.length ? { val: vals.reduce((s, v) => s + v, 0) / vals.length, n: vals.length } : { val: null, n: 0 };
+  };
+  const moistureAvg = avgField('moisture');
+  const impuritiesAvg = avgField('impurities');
+  const brokenAvg = avgField('broken');
+  const damageAvg = avgField('damage');
+  const lossRecords = opsList.filter(o => Number.isFinite(o.lostQ) && Number.isFinite(o.refQ) && o.refQ > 0);
+  const totalLostQ = sumBy(lossRecords, o => o.lostQ);
+  const totalRefQ = sumBy(lossRecords, o => o.refQ);
+  const lossPct = totalRefQ > 0 ? (totalLostQ / totalRefQ) * 100 : null;
+  const auditRecords = opsList.filter(o => Number.isFinite(o.actualQ) && Number.isFinite(o.bookQ) && o.bookQ > 0);
+  const totalBookQ = sumBy(auditRecords, o => o.bookQ);
+  const totalActualQ = sumBy(auditRecords, o => o.actualQ);
+  const auditMatchPct = totalBookQ > 0 ? (totalActualQ / totalBookQ) * 100 : null;
+  const auditDiffQ = auditRecords.length ? (totalActualQ - totalBookQ) : null;
+
+  // 5. مؤشرات الأداء اللوجستي
+  const waitMinAvg = avgField('waitMin');
+  const unloadMinAvg = avgField('unloadMin');
+  const trucksDaySum = (() => {
+    const vals = opsList.map(o => o.trucksPerDay).filter(v => Number.isFinite(v));
+    return vals.length ? { val: vals.reduce((s, v) => s + v, 0), n: vals.length } : { val: null, n: 0 };
+  })();
+  const avgInTruckAvg = avgField('avgInTruckQ');
+  const avgOutTruckAvg = avgField('avgOutTruckQ');
+  const orderProcHrAvg = avgField('orderProcHr');
+  const fleetUtilPctAvg = avgField('fleetUtilPct');
+
+  // 6. المؤشرات الإحصائية والمقارنة
+  const moves = centerRows.map(c => c.totalMoveQ);
+  const nMoves = moves.length;
+  const meanMoveQ = nMoves ? sumBy(moves, x => x) / nMoves : 0;
+  const sortedMoves = [...moves].sort((a, b) => a - b);
+  const medianMoveQ = nMoves
+    ? (nMoves % 2 === 1 ? sortedMoves[(nMoves - 1) / 2] : (sortedMoves[nMoves / 2 - 1] + sortedMoves[nMoves / 2]) / 2)
+    : 0;
+  const variance = nMoves ? sumBy(moves, x => Math.pow(x - meanMoveQ, 2)) / nMoves : 0;
+  const stdDevQ = Math.sqrt(variance);
+  const cvPct = meanMoveQ > 0 ? (stdDevQ / meanMoveQ) * 100 : null;
+  const growthRatePct = openingStockQ > 0 ? ((closingActualQ - openingStockQ) / openingStockQ) * 100 : null;
+  const prevTotalMovementQ = sumBy(centerRows, c => c.prevMoveQ);
+  const monthlyChangePct = prevTotalMovementQ > 0 ? ((totalMovementQ - prevTotalMovementQ) / prevTotalMovementQ) * 100 : null;
+
+  // 7. مؤشرات التنبؤ واتخاذ القرار (مع فترات ارتفاع الصادرات والمخازن ضعيفة النشاط)
+  const fc = LAST_FORECAST || computeSeasonalForecast(entries, readForecastParams());
+  const peakExportDays = Object.entries(dailyOutTotals)
+    .map(([d, q]) => ({ d, q }))
+    .sort((a, b) => b.q - a.q)
+    .slice(0, 3);
+  const lowActivityThreshold = meanMoveQ > 0 ? meanMoveQ * 0.25 : 0;
+  const lowActivityCenters = centerRows.filter(c => c.totalMoveQ <= lowActivityThreshold || (c.inOps + c.outOps) === 0);
+
+  // 9. المؤشرات العشرة ذات الأولوية
+  const fmtPct = (v, d = 1) => v == null ? '—' : `${Number(v).toFixed(d)}%`;
+  const top10 = [
+    { rank: 1, title: 'نسبة استغلال الطاقة التخزينية', value: fmtPct(fillRatePct, 1), sub: `${nf(utilizedCapQ)} / ${nf(theoreticalCapQ)} ق`, color: fillColor(Math.round(fillRatePct)) },
+    { rank: 2, title: 'معدل دوران المخزون', value: rotation > 0 ? `${rotation.toFixed(2)}×/سنة` : '0.00×', sub: 'الصرف السنوي ÷ متوسط المخزون', color: '#00ACC1' },
+    { rank: 3, title: 'إجمالي الاستلامات', value: `${nf(totalInflowQ)} ق`, sub: `${nf(Math.round(totalInflowQ * 0.1))} طن • ${receiptOpsCount} عملية`, color: '#2E7D32' },
+    { rank: 4, title: 'إجمالي الصادرات', value: `${nf(totalOutflowQ)} ق`, sub: `${nf(Math.round(totalOutflowQ * 0.1))} طن • ${dispatchOpsCount} عملية`, color: '#1E88E5' },
+    { rank: 5, title: 'متوسط مدة التخزين', value: avgStorageDurationDays != null ? `${Math.round(avgStorageDurationDays)} يوم` : '—', sub: '365 ÷ معدل دوران المخزون', color: '#8E24AA' },
+    { rank: 6, title: 'نسبة الفاقد', value: lossPct != null ? fmtPct(lossPct, 2) : '—', sub: lossRecords.length ? `${nf(totalLostQ)} / ${nf(totalRefQ)} ق (${lossRecords.length} مركز)` : 'أدخل بيانات الجرد والفاقد', color: lossPct != null && lossPct > 2 ? '#d32f2f' : '#EF6C00' },
+    { rank: 7, title: 'نسبة مطابقة الجرد', value: auditMatchPct != null ? fmtPct(auditMatchPct, 2) : '—', sub: auditRecords.length ? `فارق ${auditDiffQ >= 0 ? '+' : ''}${nf(auditDiffQ)} ق (${auditRecords.length} مركز)` : 'أدخل الرصيد الفعلي والدفتري', color: '#4CAF50' },
+    { rank: 8, title: 'معدل نشاط المخزن', value: `${nf(meanMoveQ)} ق/مركز`, sub: `${opsRatePerDay.toFixed(1)} عملية/يوم إجمالاً`, color: '#C9A227' },
+    { rank: 9, title: 'معدل نمو الحركة الشهرية', value: monthlyChangePct != null ? `${monthlyChangePct >= 0 ? '+' : ''}${monthlyChangePct.toFixed(1)}%` : '—', sub: prevTotalMovementQ > 0 ? `السابق ${nf(prevTotalMovementQ)} ق ← الحالي ${nf(totalMovementQ)} ق` : 'يتطلب سجل 60 يوماً للمقارنة', color: monthlyChangePct != null && monthlyChangePct >= 0 ? '#4CAF50' : '#EF6C00' },
+    { rank: 10, title: 'الطاقة التخزينية الشاغرة', value: `${nf(freeCapQ)} ق`, sub: `${nf(Math.round(freeCapQ * 0.1))} طن (${unusedCapPct.toFixed(1)}% غير مستغلة)`, color: '#00897B' }
+  ];
+
+  return {
+    periodDays,
+    activeCount: act.length,
+    centerRows,
+    top10,
+    stock: { openingStockQ, totalInflowQ, totalOutflowQ, closingFormulaQ, closingActualQ, avgStockQ, topShareCenter },
+    capacity: { theoreticalCapQ, theoreticalCapTons: theoreticalCapQ * 0.1, utilizedCapQ, freeCapQ, fillRatePct, unusedCapPct, overrunRatePct, overrunCenters },
+    flux: { receiptOpsCount, dispatchOpsCount, dailyReceiptRateQ, dailyDispatchRateQ, totalMovementQ, flowBalanceRatio, rotation, avgStorageDurationDays, opsRatePerDay },
+    quality: { moistureAvg, impuritiesAvg, brokenAvg, damageAvg, lossPct, totalLostQ, totalRefQ, lossN: lossRecords.length, auditMatchPct, auditDiffQ, totalBookQ, totalActualQ, auditN: auditRecords.length },
+    logistics: { waitMinAvg, unloadMinAvg, trucksDaySum, avgInTruckAvg, avgOutTruckAvg, orderProcHrAvg, fleetUtilPctAvg, recordedCenters: opsList.length },
+    stats: { meanMoveQ, medianMoveQ, stdDevQ, cvPct, growthRatePct, monthlyChangePct, prevTotalMovementQ },
+    predictive: { fc, peakExportDays, lowActivityCenters }
+  };
+}
+function kpiCell(title, value, formula, color = '#4CAF50', rank = null) {
+  return `<div class="kpi-cell" style="border-top:3px solid ${color}">
+    <div class="kpi-cell-top"><span>${title}</span>${rank != null ? `<span class="kpi-rank">#${rank}</span>` : ''}</div>
+    <b>${value}</b>
+    <span class="kpi-formula">${formula}</span>
+  </div>`;
+}
+function switchKpiTab(tabKey) {
+  KPI_ACTIVE_TAB = tabKey || 'top10';
+  const el = $('dp-kpi-suite');
+  if (el && LAST_KPI_SUITE) el.innerHTML = renderKpiSuiteCard(LAST_KPI_SUITE);
+}
+function toggleKpiSort() {
+  KPI_SORT_DIR = KPI_SORT_DIR === 'desc' ? 'asc' : 'desc';
+  const el = $('dp-kpi-suite');
+  if (el && LAST_KPI_SUITE) el.innerHTML = renderKpiSuiteCard(LAST_KPI_SUITE);
+}
+function renderKpiSuiteCard(suite) {
+  if (!suite) return '';
+  const tabs = [
+    ['top10', '⭐ الأولوية (1–10)'],
+    ['stockCap', '1–2. المخزون والطاقة'],
+    ['flux', '3. حركة الحبوب والدوران'],
+    ['quality', '4. الجودة والفاقد'],
+    ['logistics', '5. الأداء اللوجستي'],
+    ['stats', '6. التحليل الإحصائي والترتيب'],
+    ['predictive', '7. التنبؤ واتخاذ القرار']
+  ];
+  const tabsHtml = tabs.map(([k, lb]) => `<button class="kpi-tab${KPI_ACTIVE_TAB === k ? ' on' : ''}" onclick="switchKpiTab('${k}')">${lb}</button>`).join('');
+  const qTons = q => `${nf(q)} ق (${nf(Math.round(q * 0.1))} طن)`;
+  const fPct = (v, d = 1) => v == null ? '—' : `${Number(v).toFixed(d)}%`;
+  let bodyHtml = '';
+
+  if (KPI_ACTIVE_TAB === 'top10') {
+    bodyHtml = `<div class="kpi-grid-dense">${suite.top10.map(item => kpiCell(item.title, item.value, item.sub, item.color, item.rank)).join('')}</div>`;
+  } else if (KPI_ACTIVE_TAB === 'stockCap') {
+    const s = suite.stock, c = suite.capacity;
+    bodyHtml = `<div class="fc-subhdr"><span>1. مؤشرات المخزون والكميات (Indicateurs de Stock)</span><small>آخر ${suite.periodDays} يوماً • 1 طن = 10 ق</small></div>
+    <div class="kpi-grid-dense" style="margin-bottom:14px">
+      ${kpiCell('المخزون الافتتاحي', qTons(s.openingStockQ), 'رصيد بداية الفترة', '#8E24AA')}
+      ${kpiCell('إجمالي الواردات', qTons(s.totalInflowQ), 'مجموع كميات الدخول خلال الفترة', '#2E7D32')}
+      ${kpiCell('إجمالي الصادرات', qTons(s.totalOutflowQ), 'مجموع كميات الخروج خلال الفترة', '#1E88E5')}
+      ${kpiCell('المخزون النهائي', qTons(s.closingActualQ), 'الافتتاحي + الوارد - الصادر', '#C9A227')}
+      ${kpiCell('متوسط المخزون', qTons(s.avgStockQ), '(الافتتاحي + النهائي) ÷ 2', '#00ACC1')}
+      ${kpiCell('أعلى حصة من التعاونية', s.topShareCenter ? `${s.topShareCenter.sharePct.toFixed(1)}%` : '—', s.topShareCenter ? `${esc(s.topShareCenter.loc.name)} (${nf(s.topShareCenter.closingQ)} ق)` : 'مخزون المخزن ÷ الإجمالي × 100', '#EF6C00')}
+    </div>
+    <div class="fc-subhdr"><span>2. مؤشرات الطاقة التخزينية</span><small>${suite.activeCount} مركز نشط</small></div>
+    <div class="kpi-grid-dense">
+      ${kpiCell('الطاقة التخزينية النظرية', `${nf(Math.round(c.theoreticalCapTons))} طن`, `السعة القصوى (${nf(c.theoreticalCapQ)} ق)`, '#C9A227')}
+      ${kpiCell('الطاقة المستغلة', qTons(c.utilizedCapQ), 'كمية المخزون الفعلية', '#1E88E5')}
+      ${kpiCell('الطاقة الشاغرة', qTons(c.freeCapQ), 'الطاقة الإجمالية - المخزون الفعلي', '#00897B')}
+      ${kpiCell('نسبة الامتلاء', fPct(c.fillRatePct, 1), 'المخزون الفعلي ÷ الطاقة التخزينية × 100', fillColor(Math.round(c.fillRatePct)))}
+      ${kpiCell('نسبة الطاقة غير المستغلة', fPct(c.unusedCapPct, 1), 'الطاقة الشاغرة ÷ الطاقة الإجمالية × 100', '#4CAF50')}
+      ${kpiCell('معدل تجاوز الطاقة', c.overrunCenters.length ? `${c.overrunCenters.length} مركز (${fPct(c.overrunRatePct, 1)})` : '0% (ضمن السعة)', 'المخزون الفعلي ÷ الطاقة القصوى × 100', c.overrunCenters.length ? '#d32f2f' : '#2E7D32')}
+    </div>`;
+  } else if (KPI_ACTIVE_TAB === 'flux') {
+    const f = suite.flux;
+    bodyHtml = `<div class="fc-subhdr"><span>3. مؤشرات حركة الحبوب (Flux des Céréales)</span><small>معدلات الدوران والبقاء على أساس سنوي (365 يوماً)</small></div>
+    <div class="kpi-grid-dense">
+      ${kpiCell('عدد عمليات الاستلام', `${f.receiptOpsCount} عملية`, 'إدخالات الزيادة المسجلة', '#2E7D32')}
+      ${kpiCell('عدد عمليات الصرف', `${f.dispatchOpsCount} عملية`, 'إدخالات النقص المسجلة', '#1E88E5')}
+      ${kpiCell('معدل الاستلام اليومي', `${nf(f.dailyReceiptRateQ)} ق/يوم`, `خلال ${suite.periodDays} يوماً`, '#4CAF50')}
+      ${kpiCell('معدل الصرف اليومي', `${nf(f.dailyDispatchRateQ)} ق/يوم`, `خلال ${suite.periodDays} يوماً`, '#0288D1')}
+      ${kpiCell('إجمالي حركة المخزن', qTons(f.totalMovementQ), 'الدخول + الخروج', '#C9A227')}
+      ${kpiCell('معدل توازن التدفقات', f.flowBalanceRatio != null ? `${f.flowBalanceRatio.toFixed(2)}×` : (f.totalMovementQ ? 'واردات فقط' : '—'), 'الواردات ÷ الصادرات', '#EF6C00')}
+      ${kpiCell('معدل دوران المخزون (Rotation)', f.rotation > 0 ? `${f.rotation.toFixed(2)}×` : '0.00×', 'الصرف السنوي ÷ متوسط المخزون', '#00ACC1')}
+      ${kpiCell('متوسط مدة التخزين (Durée)', f.avgStorageDurationDays != null ? `${Math.round(f.avgStorageDurationDays)} يوم` : '—', '365 ÷ معدل دوران المخزون', '#8E24AA')}
+    </div>`;
+  } else if (KPI_ACTIVE_TAB === 'quality') {
+    const q = suite.quality;
+    const noOpsHint = !q.moistureAvg.n && !q.lossN && !q.auditN
+      ? `<div style="margin-bottom:10px;padding:10px 12px;background:#101c14;border:1px dashed #2e4a35;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px">
+          <span>لم يتم تسجيل قياسات المخبر والجرد بعد. أدخل القياسات الفعلية للمراكز لحساب الفاقد ومطابقة الجرد.</span>
+          <button class="pv-action-btn mgr-only" onclick="openOpsModal()">📝 إدخال القياسات</button>
+        </div>` : '';
+    bodyHtml = `${noOpsHint}<div class="fc-subhdr"><span>4. مؤشرات الجودة والفاقد (Qualité et Pertes)</span><small>معدلة بالبيانات المسجلة للمراكز</small></div>
+    <div class="kpi-grid-dense">
+      ${kpiCell('نسبة الرطوبة', fPct(q.moistureAvg.val, 2), q.moistureAvg.n ? `مراقبة ظروف التخزين (${q.moistureAvg.n} مركز)` : 'بانتظار الإدخال المخبري', '#1E88E5')}
+      ${kpiCell('نسبة الشوائب', fPct(q.impuritiesAvg.val, 2), q.impuritiesAvg.n ? `قياس نظافة الحبوب (${q.impuritiesAvg.n} مركز)` : 'بانتظار الإدخال المخبري', '#C9A227')}
+      ${kpiCell('نسبة الحبوب المكسورة', fPct(q.brokenAvg.val, 2), q.brokenAvg.n ? `تقييم الجودة (${q.brokenAvg.n} مركز)` : 'بانتظار الإدخال المخبري', '#EF6C00')}
+      ${kpiCell('نسبة التلف', fPct(q.damageAvg.val, 2), q.damageAvg.n ? `قياس الحبوب المتضررة (${q.damageAvg.n} مركز)` : 'بانتظار الإدخال المخبري', '#d32f2f')}
+      ${kpiCell('نسبة الفاقد', fPct(q.lossPct, 2), q.lossN ? `(الكمية المفقودة ${nf(q.totalLostQ)} ÷ المرجعية ${nf(q.totalRefQ)}) × 100` : '(المفقودة ÷ المرجعية) × 100', '#B23A22')}
+      ${kpiCell('مطابقة الجرد', fPct(q.auditMatchPct, 2), q.auditN ? `الفعلي ${nf(q.totalActualQ)} ق مقابل الدفتري ${nf(q.totalBookQ)} ق (${q.auditDiffQ >= 0 ? '+' : ''}${nf(q.auditDiffQ)} ق)` : 'مقارنة الرصيد الفعلي بالرصيد الدفتري', '#2E7D32')}
+    </div>`;
+  } else if (KPI_ACTIVE_TAB === 'logistics') {
+    const l = suite.logistics;
+    const noLogHint = !l.recordedCenters
+      ? `<div style="margin-bottom:10px;padding:10px 12px;background:#101c14;border:1px dashed #2e4a35;border-radius:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px">
+          <span>لم تُسجّل بيانات الأداء اللوجستي للشاحنات بعد.</span>
+          <button class="pv-action-btn mgr-only" onclick="openOpsModal()">🚚 إدخال بيانات النقل</button>
+        </div>` : '';
+    bodyHtml = `${noLogHint}<div class="fc-subhdr"><span>5. مؤشرات الأداء اللوجستي (Performance Logistique)</span><small>${l.recordedCenters} مركز مسجّل</small></div>
+    <div class="kpi-grid-dense">
+      ${kpiCell('متوسط مدة انتظار الشاحنات', l.waitMinAvg.val != null ? `${Math.round(l.waitMinAvg.val)} دقيقة` : '—', 'قبل التفريغ أو الشحن', '#EF6C00')}
+      ${kpiCell('متوسط زمن تفريغ الشاحنة', l.unloadMinAvg.val != null ? `${Math.round(l.unloadMinAvg.val)} دقيقة` : '—', 'كفاءة الأرصفة والعمالة', '#1E88E5')}
+      ${kpiCell('الشاحنات المستقبلة يومياً', l.trucksDaySum.val != null ? `${l.trucksDaySum.val.toFixed(1)} شاحنة/يوم` : '—', 'إجمالي التدفق اليومي للمراكز المسجلة', '#2E7D32')}
+      ${kpiCell('متوسط كمية الاستلام للشاحنة', l.avgInTruckAvg.val != null ? `${nf(l.avgInTruckAvg.val)} ق` : '—', 'حمولة الشاحنة الواردة', '#C9A227')}
+      ${kpiCell('متوسط كمية الصرف للشاحنة', l.avgOutTruckAvg.val != null ? `${nf(l.avgOutTruckAvg.val)} ق` : '—', 'حمولة الشاحنة الصادرة', '#00ACC1')}
+      ${kpiCell('مدة معالجة طلبات التسليم', l.orderProcHrAvg.val != null ? `${l.orderProcHrAvg.val.toFixed(1)} ساعة` : '—', 'من تسجيل الطلب حتى الخروج', '#8E24AA')}
+      ${kpiCell('معدل استغلال وسائل النقل', fPct(l.fleetUtilPctAvg.val, 1), 'كفاءة تشغيل الأسطول', '#4CAF50')}
+    </div>`;
+  } else if (KPI_ACTIVE_TAB === 'stats') {
+    const st = suite.stats;
+    const sorted = [...suite.centerRows].sort((a, b) => KPI_SORT_DIR === 'desc'
+      ? (b.totalMoveQ - a.totalMoveQ) || (b.closingQ - a.closingQ)
+      : (a.totalMoveQ - b.totalMoveQ) || (a.closingQ - b.closingQ));
+    const tblRows = sorted.map((c, idx) => `<tr data-id="${esc(c.id)}" onclick="goAlert(this.dataset.id)">
+      <td>${idx + 1}</td>
+      <td><b>${esc(c.loc.name)}</b></td>
+      <td>${nf(c.openingQ)}</td>
+      <td style="color:#81c784">+${nf(c.inflowQ)}</td>
+      <td style="color:#4fc3f7">-${nf(c.outflowQ)}</td>
+      <td><b>${nf(c.totalMoveQ)} ق</b></td>
+      <td>${nf(c.closingQ)}</td>
+      <td>${c.sharePct.toFixed(1)}%</td>
+      <td>${c.rotation > 0 ? c.rotation.toFixed(2) + '×' : '—'}</td>
+      <td>${c.durationDays != null ? Math.round(c.durationDays) + ' ي' : '—'}</td>
+    </tr>`).join('');
+    bodyHtml = `<div class="fc-subhdr"><span>6. المؤشرات الإحصائية والمقارنة (Analyse Statistique)</span><small>لقياس الاختلالات والتفاوت بين المخازن</small></div>
+    <div class="kpi-grid-dense" style="margin-bottom:14px">
+      ${kpiCell('المتوسط الحسابي للنشاط', `${nf(st.meanMoveQ)} ق`, 'متوسط حركة المخازن (الدخول + الخروج)', '#2E7D32')}
+      ${kpiCell('الوسيط', `${nf(st.medianMoveQ)} ق`, 'تحديد المستوى المتوسط الفعلي', '#00ACC1')}
+      ${kpiCell('الانحراف المعياري', `${nf(st.stdDevQ)} ق`, 'قياس اختلاف النشاط بين المخازن', '#C9A227')}
+      ${kpiCell('معامل الاختلاف', fPct(st.cvPct, 1), 'مقارنة التفاوت النسبي (الانحراف ÷ المتوسط)', '#EF6C00')}
+      ${kpiCell('نسبة النمو', st.growthRatePct != null ? `${st.growthRatePct >= 0 ? '+' : ''}${st.growthRatePct.toFixed(1)}%` : '—', 'تطور المخزون عن رصيد البداية', '#1E88E5')}
+      ${kpiCell('التغير الشهري', st.monthlyChangePct != null ? `${st.monthlyChangePct >= 0 ? '+' : ''}${st.monthlyChangePct.toFixed(1)}%` : '—', st.prevTotalMovementQ > 0 ? 'مقارنة حركة آخر 30 يوماً بالـ 30 يوماً السابقة' : 'تحديد ارتفاع أو انخفاض الحركة', '#8E24AA')}
+    </div>
+    <div class="fc-subhdr">
+      <span>الترتيب ${KPI_SORT_DIR === 'desc' ? 'التنازلي' : 'التصاعدي'} للمخازن حسب الأداء والحركة</span>
+      <button class="kpi-sort-btn" onclick="toggleKpiSort()">${KPI_SORT_DIR === 'desc' ? '⬇️ تنازلي (اضغط للتصاعدي)' : '⬆️ تصاعدي (اضغط للتنازلي)'}</button>
+    </div>
+    <div style="overflow:auto;max-height:290px">
+      <table class="dp-tbl">
+        <thead><tr><th>#</th><th>المخزن</th><th>الافتتاحي</th><th>الوارد</th><th>الصادر</th><th>إجمالي الحركة</th><th>النهائي</th><th>حصة التعاونية</th><th>الدوران</th><th>مدة البقاء</th></tr></thead>
+        <tbody>${tblRows || '<tr><td colspan="10">لا توجد مراكز نشطة</td></tr>'}</tbody>
+      </table>
+    </div>`;
+  } else if (KPI_ACTIVE_TAB === 'predictive') {
+    const p = suite.predictive, fc = p.fc;
+    const peakText = p.peakExportDays.length
+      ? p.peakExportDays.map(x => `${x.d.slice(5)} (${nf(x.q)} ق)`).join(' · ')
+      : 'لا توجد ذروات صادرات مسجلة';
+    const lowList = p.lowActivityCenters.length
+      ? p.lowActivityCenters.slice(0, 4).map(c => `${esc(c.loc.name)} (${nf(c.totalMoveQ)} ق)`).join(' · ')
+      : 'جميع المخازن ضمن النشاط الطبيعي';
+    bodyHtml = `<div class="fc-subhdr"><span>7. مؤشرات التنبؤ واتخاذ القرار (Analyse Prédictive)</span><small>مرتبطة بلوحة التوقعات الموسمية التفاعلية أدناه</small></div>
+    <div class="kpi-grid-dense">
+      ${kpiCell('توقع الاستلامات الموسمية', `${nf(fc.expectedIntakeQ)} ق`, `${nf(Math.round(fc.expectedIntakeQ * 0.1))} طن من ${fc.pivotCount} محور`, '#2E7D32')}
+      ${kpiCell('الحاجة إلى الطاقة التخزينية', fc.effectiveNeededStorageQ > 0 ? `+${nf(fc.effectiveNeededStorageQ)} ق` : 'السعة كافية', fc.effectiveNeededStorageQ > 0 ? `يلزم ~${fc.neededWarehouses} مخزن إضافي` : `فائض متوقع ${nf(Math.max(0, fc.totalCapQ - fc.projectedTotalQtyQ))} ق`, '#C9A227')}
+      ${kpiCell('المخازن المعرضة للامتلاء', `${fc.maxCapCenters.length} مخزن`, fc.maxCapCenters.length ? fc.maxCapCenters.slice(0, 2).map(c => esc(c.loc.name) + ' ' + c.projectedPct + '%').join(' · ') : 'لا مخازن مهددة حالياً', '#d32f2f')}
+      ${kpiCell('توقع فترات ارتفاع الصادرات', p.peakExportDays.length ? `${nf(p.peakExportDays[0].q)} ق/يوم ذروة` : '—', peakText, '#1E88E5')}
+      ${kpiCell('المخازن ذات النشاط الضعيف', `${p.lowActivityCenters.length} مخزن`, lowList, '#EF6C00')}
+      ${kpiCell('توزيع الكميات حسب الطاقة المتاحة', `${fc.transferLegs.length} مسار تحويل`, `${nf(fc.transferQtyTotalQ)} ق مقترحة لإعادة التوازن (${fc.transferTrucks} رحلة)`, '#00ACC1')}
+    </div>`;
+  }
+
+  return `<div class="fc-head">
+    <h4>📑 منظومة مؤشرات التعاونية (الأولوية 1–10 والمجموعات التحليلية 1–7)</h4>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="kpi-sort-btn mgr-only" onclick="openOpsModal()">📝 إدخال قياسات الجودة واللوجستيات</button>
+    </div>
+  </div>
+  <div class="kpi-tabs">${tabsHtml}</div>
+  <div>${bodyHtml}</div>`;
+}
 function bars(rows, fmt, mx) { mx = mx || Math.max(1, ...rows.map(r => r.v)); return rows.map(r => `<div class="dp-bar"><div><span>${esc(r.l)}</span><b>${fmt(r)}</b></div><div class="dp-trk"><i style="width:${Math.min(100, Math.max(2, r.v / mx * 100))}%;background:${r.c || '#4CAF50'}"></i></div></div>`).join('') || '<small>لا توجد بيانات</small>'; }
 function donut(parts) {
   const tot = sumBy(parts, p => p.v) || 1; let off = 0;
@@ -1439,51 +2839,140 @@ function buildDash(hist) {
   const cap = sumBy(act, capNum), qty = sumBy(act, l => STOCK[l.id] ? +STOCK[l.id].quantity : 0), pct = cap ? Math.round(qty / cap * 100) : 0;
   const last = Object.values(STOCK).map(x => x.entry_date).sort().pop() || '—';
   const rows = sc.map(l => ({ l, s: STOCK[l.id], p: fillPct(l) })).sort((a, b) => (b.p ?? -1) - (a.p ?? -1));
+  const pvStats = calcPivotAreaStats(PIVOTS);
   const kp = [KP('🏭', 'المراكز', sc.length, `${act.length} نشطة • ${sc.length - act.length} خارج الخدمة`, '#4CAF50'), KP('📦', 'السعة الإجمالية', nf(cap) + ' ق', 'المراكز النشطة', '#C9A227'),
     KP('🌾', 'الكمية المخزنة', nf(qty) + ' ق', 'حسب آخر الإدخالات', '#1E88E5'), KP('📊', 'نسبة الامتلاء', pct + '%', pct >= 90 ? 'مرتفعة جدًا' : pct >= 70 ? 'مرتفعة' : 'طبيعية', fillColor(pct)),
-    KP('🚨', 'التنبيهات', al.length, `${al.filter(a => a.full).length} ممتلئة • ${al.filter(a => a.stale).length} متأخرة`, al.length ? '#d32f2f' : '#2E7D32'), KP('⏱', 'آخر إدخال', last, 'تاريخ آخر تحديث', '#8E24AA')];
+    KP('🚨', 'التنبيهات', al.length, `${al.filter(a => a.full).length} ممتلئة • ${al.filter(a => a.stale).length} متأخرة`, al.length ? '#d32f2f' : '#2E7D32'), KP('⏱', 'آخر إدخال', last, 'تاريخ آخر تحديث', '#8E24AA'),
+    KP('🌀', 'مساحة المحاور', formatPivotHa(pvStats.totalHa, 1) + ' هكتار', pvStats.count ? `${pvStats.count} محور مسجّل • متوسط نق ${Math.round(pvStats.avgRadiusM)} م (${formatPivotHa(pvStats.avgHa, 1)} هـ)` : 'لا توجد محاور مسجّلة', '#00ACC1', 'dp-kpi-pivots')];
   if (PROFILE.role === 'admin' && workers.length) kp.push(KP('🪪', 'العمال', workers.length, 'مسجّلون في البطاقات', '#00ACC1'));
   const tbl = rows.map(({ l, s, p }) => { const d = s ? Math.floor((Date.now() - new Date(s.entry_date + 'T00:00:00')) / 864e5) : null;
-    return `<tr data-id="${esc(l.id)}" onclick="goAlert(this.dataset.id)"><td><b>${esc(l.name)}</b></td><td>${esc(l.area || '—')}</td><td>${esc(l.province || 'أدرار')}</td><td>${nf(capNum(l))}</td><td>${s ? nf(s.quantity) : '—'}</td><td>${p == null ? '—' : `<span class="dp-pill" style="background:${fillColor(p)}">${p}%</span>`}</td><td>${s ? esc(s.entry_date) : '—'}${d != null && d > ALERT_DAYS ? ' ⏰' : ''}</td><td>${l.status === 'inactive' ? '🔴 خارج الخدمة' : '🟢 نشط'}</td></tr>`; }).join('');
+    const w = getWindInfo(l), hw = isHighWind(l);
+    return `<tr data-id="${esc(l.id)}" onclick="goAlert(this.dataset.id)"><td><b>${esc(l.name)}</b>${hw ? ` <span class="badge-wind" title="رياح شديدة">⚠️ ${Math.round(w.wind)} كم/س</span>` : ''}</td><td>${esc(l.area || '—')}</td><td>${esc(l.province || 'أدرار')}</td><td>${nf(capNum(l))}</td><td>${s ? nf(s.quantity) : '—'}</td><td>${p == null ? '—' : `<span class="dp-pill" style="background:${fillColor(p)}">${p}%</span>`}</td><td>${s ? esc(s.entry_date) : '—'}${d != null && d > ALERT_DAYS ? ' ⏰' : ''}</td><td>${l.status === 'inactive' ? '🔴 خارج الخدمة' : '🟢 نشط'}</td></tr>`; }).join('');
+  LAST_DASH_HIST = Array.isArray(hist) ? hist : [];
+  LAST_FORECAST = computeSeasonalForecast(LAST_DASH_HIST, { yieldQPerHa: 35, intakeRatePct: 75, horizonDays: 60, truckCapQ: 250 });
+  LAST_KPI_SUITE = computeKpiSuite(LAST_DASH_HIST);
   return `<div class="dp-kpis">${kp.join('')}</div>${al.length || STOCK_READY ? alertsSection() : ''}
+  <div class="dp-grid"><div class="dp-card dp-wide" id="dp-kpi-suite">${renderKpiSuiteCard(LAST_KPI_SUITE)}</div></div>
+  <div class="dp-grid"><div class="dp-card dp-wide" id="dp-forecast-card">
+    <div class="fc-head">
+      <h4>🔮 التوقعات الموسمية وتخطيط السعة والتوزيع</h4>
+      <small style="color:#8fae95;font-size:11px">تقدير ديناميكي من المساحات المسجلة (${formatPivotHa(pvStats.totalHa, 1)} هكتار)، المخزون الحالي، واتجاه آخر 30 يومًا</small>
+    </div>
+    <div class="fc-ctrl-bar">
+      <label class="fc-ctrl"><span>🌾 المردودية (ق/هـ):</span><input id="fc-yield" type="number" min="5" max="120" value="35" oninput="updateForecastView()"></label>
+      <label class="fc-ctrl"><span>📥 نسبة الاستلام للديوان:</span>
+        <select id="fc-intake-pct" onchange="updateForecastView()">
+          <option value="30">30%</option>
+          <option value="50">50%</option>
+          <option value="75" selected>75%</option>
+          <option value="90">90%</option>
+          <option value="100">100%</option>
+        </select>
+      </label>
+      <label class="fc-ctrl"><span>📅 أفق التنبؤ:</span>
+        <select id="fc-horizon" onchange="updateForecastView()">
+          <option value="30">30 يومًا</option>
+          <option value="60" selected>60 يومًا</option>
+          <option value="90">90 يومًا</option>
+          <option value="120">120 يومًا</option>
+        </select>
+      </label>
+      <label class="fc-ctrl"><span>🚚 حمولة الشاحنة:</span>
+        <select id="fc-truck" onchange="updateForecastView()">
+          <option value="100">100 ق (10 طن)</option>
+          <option value="250" selected>250 ق (25 طن)</option>
+          <option value="400">400 ق (40 طن)</option>
+        </select>
+      </label>
+    </div>
+    <div id="dp-forecast-body">${renderForecastBody(LAST_FORECAST)}</div>
+  </div></div>
   <div class="dp-grid"><div class="dp-card dp-span2"><h4>📈 تطور الكمية المخزنة (آخر 30 يومًا)</h4>${trend(hist, act)}</div>
   <div class="dp-card"><h4>🥧 توزيع السعة حسب النشاط</h4>${donut(grp(act, l => l.area))}</div></div>
   <div class="dp-grid"><div class="dp-card"><h4>🏭 امتلاء المخازن</h4>${bars(rows.filter(r => r.p != null).map(r => ({ l: r.l.name, v: r.p, c: fillColor(r.p) })), r => r.v + '%', 100)}</div>
   <div class="dp-card"><h4>🗺️ السعة حسب الولاية</h4>${bars(grp(act, l => l.province || 'أدرار'), r => nf(r.v) + ' ق')}</div></div>
+  <div class="dp-grid"><div class="dp-card dp-wide"><h4>🌀 دراسة المحاور الدوارة حسب المساحة (هكتار)</h4><div id="pivot-radii-chart-root"></div></div></div>
   <div class="dp-card dp-wide"><h4>📋 جدول المراكز التفصيلي</h4><div style="overflow:auto;max-height:420px"><table class="dp-tbl"><thead><tr><th>المركز</th><th>النشاط</th><th>الولاية</th><th>السعة</th><th>الكمية</th><th>الامتلاء</th><th>آخر تحديث</th><th>الحالة</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
+}
+function mountPivotRadiiChart() {
+  const el = $('pivot-radii-chart-root');
+  if (el && typeof window.renderPivotRadiiChart === 'function') {
+    window.renderPivotRadiiChart(el, PIVOTS, {
+      onCloseDash: closeDash,
+      onStatsChange: updateDashPivotKpi
+    });
+  }
 }
 async function openDash() {
   if (!PROFILE) return;
+  if (typeof window.unmountPivotRadiiChart === 'function') window.unmountPivotRadiiChart();
   $('dash-page').style.display = 'block'; $('dp-body').innerHTML = '<div style="padding:40px;text-align:center">⏳ جاري تحميل المؤشرات...</div>';
-  await loadStock(); updateAlertBadge();
-  const d = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
-  const r = await fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity&entry_date=gte.${d}&order=entry_date.asc&limit=5000`, { headers: hdr() });
-  $('dp-body').innerHTML = buildDash(r.ok ? await r.json() : []); $('dp-date').textContent = new Date().toLocaleString('ar-DZ'); initStudies();
+  await Promise.all([loadStock(), loadPivots(), refreshAllWinds(), loadOpsMetrics()]); updateAlertBadge();
+  const d60 = new Date(Date.now() - 60 * 864e5).toISOString().slice(0, 10);
+  const r = await fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity&entry_date=gte.${d60}&order=entry_date.asc&limit=5000`, { headers: hdr() });
+  $('dp-body').innerHTML = buildDash(r.ok ? await r.json() : []); $('dp-date').textContent = new Date().toLocaleString('ar-DZ');
+  mountPivotRadiiChart();
 }
-function closeDash() { $('dash-page').style.display = 'none'; }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDash(); });
+function closeDash() { if (typeof window.unmountPivotRadiiChart === 'function') window.unmountPivotRadiiChart(); $('dash-page').style.display = 'none'; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('ops-modal')?.style.display === 'block') closeOpsModal(); else closeDash(); } });
 function goAlert(id) { const l = locations.find(x => String(x.id) === String(id)); if (!l) return; closeDash(); $('dash-modal').style.display = 'none'; showView('map'); showDetails(l); }
 function exportDashXlsx() {
   const rows = [['المركز', 'النشاط', 'الولاية', 'السعة', 'الكمية', 'الامتلاء %', 'آخر تحديث', 'الحالة']].concat(dashScope().map(l => { const s = STOCK[l.id], p = fillPct(l); return [l.name, l.area || '', l.province || 'أدرار', capNum(l), s ? +s.quantity : '', p == null ? '' : p, s ? s.entry_date : '', l.status === 'inactive' ? 'خارج الخدمة' : 'نشط']; }));
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'المؤشرات'); XLSX.writeFile(wb, 'indicators_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'المؤشرات');
+  const suite = LAST_KPI_SUITE || computeKpiSuite(LAST_DASH_HIST);
+  if (suite) {
+    const topRows = [['الأولوية', 'المؤشر', 'القيمة', 'التفصيل']]
+      .concat(suite.top10.map(t => [t.rank, t.title, t.value, t.sub]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(topRows), 'الأولوية العشرة');
+    const centerRows = [['المركز', 'الافتتاحي (ق)', 'الواردات (ق)', 'الصادرات (ق)', 'النهائي (ق)', 'متوسط المخزون (ق)', 'الحصة %', 'إجمالي الحركة (ق)', 'معدل الدوران', 'مدة البقاء (يوم)', 'نسبة الفاقد %', 'مطابقة الجرد %']]
+      .concat(suite.centerRows.map(c => [c.loc.name, Math.round(c.openingQ), Math.round(c.inflowQ), Math.round(c.outflowQ), Math.round(c.closingQ), Math.round(c.avgStockQ), +c.sharePct.toFixed(1), Math.round(c.totalMoveQ), +c.rotation.toFixed(2), c.durationDays != null ? Math.round(c.durationDays) : '', c.lossPct != null ? +c.lossPct.toFixed(2) : '', c.auditPct != null ? +c.auditPct.toFixed(2) : '']));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(centerRows), 'حركة وجودة المخازن');
+  }
+  const fc = LAST_FORECAST || computeSeasonalForecast(LAST_DASH_HIST, readForecastParams());
+  if (fc && fc.centerForecasts.length) {
+    const fcRows = [
+      ['ملخص التوقعات الموسمية', '', '', '', '', ''],
+      ['الاحتياجات التخزينية الإضافية (ق)', Math.round(fc.effectiveNeededStorageQ), 'حجم الاستلامات المتوقع (ق)', Math.round(fc.expectedIntakeQ), 'إجمالي الرحلات المطلوبة', fc.totalTrucks],
+      ['مخازن عند الطاقة القصوى', fc.maxCapCenters.length, 'احتمال الفائض %', fc.surplusProbPct, 'احتمال النقص %', fc.deficitProbPct],
+      [],
+      ['المركز', 'السعة (ق)', 'الكمية الحالية (ق)', 'الاستلام المتوقع (ق)', 'الامتلاء المتوقع %', 'التقييم والاحتمال']
+    ].concat(fc.centerForecasts.map(c => [c.loc.name, c.cap, Math.round(c.cur), Math.round(c.pivotIn), c.projectedPct, `${c.riskLabel} (${c.riskProb}%)`]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(fcRows), 'التوقعات والتخطيط');
+  }
+  const pvStats = calcPivotAreaStats(PIVOTS);
+  if (pvStats.count) {
+    const pvRows = [['الفلاح', 'المحصول', 'المساحة (هكتار)', 'نصف القطر (م)', 'خط العرض', 'خط الطول', 'الهاتف', 'ملاحظات']]
+      .concat([...pvStats.items].sort((a, b) => b.radius_m - a.radius_m).map(p => [p.farmer_name || '', p.crop || '', +p.areaHa.toFixed(2), Math.round(p.radius_m), +p.lat, +p.lng, p.phone || '', p.notes || '']))
+      .concat([['الإجمالي الكلي', `${pvStats.count} محور`, +pvStats.totalHa.toFixed(2), Math.round(pvStats.avgRadiusM), '', '', '', '']]);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pvRows), 'المحاور (هكتار)');
+  }
+  XLSX.writeFile(wb, 'indicators_' + new Date().toISOString().slice(0, 10) + '.xlsx');
 }
 
 // ===== المحاور الدوارة: نقرتان (المركز ثم الحافة) + اسم الفلاح + حفظ الإحداثيات =====
 const pivotLayer = L.layerGroup().addTo(map);
 let PIVOTS = [], pvMode = 0, pvC = null, pvTmp = null, pvDraw = null, pvEdit = null, pvLat = 0, pvLng = 0;
+const pivotHa = r => Math.PI * ((+r || 0) ** 2) / 1e4;
+function updatePvAreaHint() {
+  const el = $('pv-area-ha');
+  if (!el) return;
+  const r = +$('pv-r').value;
+  el.textContent = r > 0 ? `${pivotHa(r).toFixed(2)} هكتار` : '— هكتار';
+}
 async function loadPivots() {
-  if (!PROFILE || !(PROFILE.role === 'admin' || PROFILE.role === 'manager')) return;
+  if (!PROFILE) return;
   const r = await fetch(`${REST}/pivots?select=*&order=id`, { headers: hdr() }); PIVOTS = r.ok ? await r.json() : [];
   pivotLayer.clearLayers();
   PIVOTS.forEach(p => {
     const c = L.circle([p.lat, p.lng], { radius: +p.radius_m, color: '#00E5FF', weight: 2, fillColor: '#00E5FF', fillOpacity: .15 }).addTo(pivotLayer);
-    c.bindTooltip('🌀 ' + esc(p.farmer_name));
+    c.bindTooltip(`🌀 ${esc(p.farmer_name)} — ${pivotHa(p.radius_m).toFixed(2)} هكتار`);
     c.on('click', e => { if (pvMode) return; L.DomEvent.stopPropagation(e); pvPopup(p); });
   });
+  syncDashPivots();
 }
 function pvPopup(p) {
-  const ha = (Math.PI * p.radius_m ** 2 / 1e4).toFixed(1), ll = (+p.lat).toFixed(6) + ', ' + (+p.lng).toFixed(6);
-  L.popup().setLatLng([p.lat, p.lng]).setContent(`<div class="probe"><b>🌀 محور دوّار</b><br>👨‍🌾 يتبع للفلاح: <b>${esc(p.farmer_name)}</b><br>${p.phone ? '📞 ' + esc(p.phone) + '<br>' : ''}${p.crop ? '🌾 ' + esc(p.crop) + '<br>' : ''}📐 نصف القطر ${Math.round(p.radius_m)} م — ${ha} هكتار<span class="ltr">${ll}</span>${p.notes ? '📝 ' + esc(p.notes) + '<br>' : ''}
+  const ha = pivotHa(p.radius_m).toFixed(2), ll = (+p.lat).toFixed(6) + ', ' + (+p.lng).toFixed(6);
+  L.popup().setLatLng([p.lat, p.lng]).setContent(`<div class="probe"><b>🌀 محور دوّار</b><br>👨‍🌾 يتبع للفلاح: <b>${esc(p.farmer_name)}</b><br>${p.phone ? '📞 ' + esc(p.phone) + '<br>' : ''}${p.crop ? '🌾 ' + esc(p.crop) + '<br>' : ''}<div style="background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.35);border-radius:6px;padding:6px 8px;margin:6px 0;text-align:center">📐 المساحة: <b style="color:#00E5FF;font-size:15px">${ha} هكتار</b><div style="font-size:11px;color:#bcd5c0">نصف القطر: ${Math.round(p.radius_m)} م • القطر: ${Math.round(p.radius_m * 2)} م</div></div><span class="ltr">${ll}</span>${p.notes ? '📝 ' + esc(p.notes) + '<br>' : ''}
     <button class="panel-btn gps-btn" style="width:100%" onclick="copyText('${ll}')">📋 نسخ الإحداثيات</button>
     <div class="admin-only" style="display:flex;gap:4px;margin-top:4px"><button class="panel-btn edit-btn" data-id="${p.id}" onclick="pvOpen(+this.dataset.id)">✏️ تعديل</button><button class="panel-btn delete-btn" data-id="${p.id}" onclick="pvDel(+this.dataset.id)">🗑️ حذف</button></div></div>`).openOn(map);
 }
@@ -1503,6 +2992,7 @@ function pvOpen(id, init) {
   const p = id ? PIVOTS.find(x => x.id === id) : init; if (!p) return; pvEdit = id || null;
   $('pv-name').value = p.farmer_name || ''; $('pv-phone').value = p.phone || ''; $('pv-crop').value = p.crop || ''; $('pv-notes').value = p.notes || '';
   $('pv-r').value = Math.round(p.radius_m); pvLat = +p.lat; pvLng = +p.lng; $('pv-ll').textContent = pvLat.toFixed(6) + ', ' + pvLng.toFixed(6);
+  updatePvAreaHint();
   map.closePopup(); $('pv-modal').style.display = 'block';
 }
 function pvClose() { $('pv-modal').style.display = 'none'; pvCancel(); }
@@ -1697,8 +3187,9 @@ async function runDetect() {
     finalCircles.forEach((c, idx) => {
       const ll = map.containerPointToLatLng(L.point(c.cx / scale, c.cy / scale));
       const radiusM = Math.round(c.r * mpp);
+      const ha = pivotHa(radiusM).toFixed(2);
       const layer = L.circle(ll, { radius: radiusM, color: '#FF1744', weight: 2.5, fillColor: '#00E676', fillOpacity: 0.18 }).addTo(detLayer);
-      layer.bindTooltip(`محور #${idx + 1} — نصف القطر: ${radiusM} م`, { direction: 'top' });
+      layer.bindTooltip(`محور #${idx + 1} — ${ha} هكتار (نصف القطر: ${radiusM} م)`, { direction: 'top' });
       layer.on('click', () => detAdd(idx));
       DET.push({ lat: ll.lat, lng: ll.lng, r: radiusM });
     });
@@ -1735,92 +3226,6 @@ async function detSaveAll() {
     console.error(err);
     toast('❌ ' + (err.message || 'حدث خطأ أثناء حفظ المحاور'));
   }
-}
-
-// ===== الدراسات التحليلية للمخزون (5 دراسات) =====
-let ST = { tab: 1, cur: [], pv: {}, d0: '', d1: '', ok: true }, PLANS = {};
-const D = s => new Date(s + 'T00:00:00Z'), iso = d => d.toISOString().slice(0, 10), n0 = v => +v || 0;
-const pc = v => v == null || !isFinite(v) ? '—' : v.toFixed(1) + '%', nz = v => v == null || !isFinite(v) ? '—' : nf(v);
-function initStudies() {
-  const d = document.createElement('div'); d.className = 'dp-card dp-wide'; d.id = 'studies';
-  d.innerHTML = `<h4>📚 الدراسات التحليلية للمخزون</h4><div class="st-bar"><select id="sp-range" onchange="stRun()"><option value="7">آخر 7 أيام</option><option value="30" selected>آخر 30 يومًا</option><option value="90">آخر 90 يومًا</option><option value="365">آخر سنة</option></select>
-  <select id="sp-loc" onchange="stRender()"><option value="">كل المخازن</option>${dashScope().map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('')}</select>
-  <select id="sp-gran" onchange="stRender()"><option value="day">يوميًا</option><option value="week">أسبوعيًا</option><option value="month" selected>شهريًا</option><option value="quarter">فصليًا</option><option value="year">سنويًا</option></select></div>
-  <div class="st-tabs">${['1️⃣ المؤشرات الكمية', '2️⃣ حركة المخزون', '3️⃣ الأداء التخزيني', '4️⃣ الدراسة الزمنية', '5️⃣ المقارنة بين المخازن'].map((t, i) => `<button data-t="${i + 1}" class="${i ? '' : 'on'}" onclick="stTab(${i + 1})">${t}</button>`).join('')}</div><div id="st-body" style="margin-top:12px"></div>`;
-  $('dp-body').appendChild(d); ST.tab = 1; stRun();
-}
-function stTab(t) { ST.tab = t; document.querySelectorAll('.st-tabs button').forEach(b => b.classList.toggle('on', +b.dataset.t === t)); stRender(); }
-async function stRun() {
-  $('st-body').innerHTML = '<div style="padding:20px;text-align:center">⏳ جاري التحليل...</div>';
-  const days = +$('sp-range').value; ST.d1 = iso(new Date()); ST.d0 = iso(new Date(Date.now() - (days - 1) * 864e5));
-  const q = f => fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity,received,issued,loss,damaged&${f}`, { headers: hdr() });
-  const [a, b, pl] = await Promise.all([q(`entry_date=gte.${ST.d0}&order=entry_date.asc&limit=20000`), q(`entry_date=lt.${ST.d0}&order=entry_date.desc&limit=3000`), fetch(`${REST}/app_settings?key=eq.stock_plans&select=value`, { headers: hdr() })]);
-  ST.ok = a.ok; ST.cur = a.ok ? await a.json() : []; ST.pv = {}; (b.ok ? await b.json() : []).forEach(e => { if (!ST.pv[e.location_id]) ST.pv[e.location_id] = e; });
-  PLANS = {}; if (pl.ok) { const j = await pl.json(); if (j[0]) PLANS = j[0].value || {}; }
-  stRender();
-}
-function stStats(l) {
-  const id = String(l.id), E = ST.cur.filter(e => String(e.location_id) === id), pv = ST.pv[id], days = (D(ST.d1) - D(ST.d0)) / 864e5 + 1, f = E[0];
-  const open = pv ? n0(pv.quantity) : f ? n0(f.quantity) - n0(f.received) + n0(f.issued) + n0(f.loss) + n0(f.damaged) : 0;
-  const sum = k => E.reduce((s, e) => s + n0(e[k]), 0), rec = sum('received'), iss = sum('issued'), loss = sum('loss'), dmg = sum('damaged'), act = E.length ? n0(E[E.length - 1].quantity) : open;
-  let pq = open, pd = D(ST.d0), w = 0; E.forEach(e => { const d = D(e.entry_date); w += pq * (d - pd) / 864e5; pq = n0(e.quantity); pd = d; }); w += pq * ((D(ST.d1) - pd) / 864e5 + 1);
-  let cs = 0, cn = 0; E.forEach((e, i) => { const p = i ? n0(E[i - 1].quantity) : pv ? n0(pv.quantity) : null; if (p == null) return; const book = p + n0(e.received) - n0(e.issued) - n0(e.loss) - n0(e.damaged), q = n0(e.quantity); cs += 1 - Math.abs(q - book) / Math.max(q, book, 1); cn++; });
-  const cap = capNum(l), pl = PLANS[id] || {}, since = iso(new Date(D(ST.d1) - 30 * 864e5)), base = open + rec;
-  return { l, days, open, rec, iss, loss, dmg, act, calc: open + rec - iss - loss - dmg, avg: w / days, cap, util: cap ? act / cap * 100 : null, conf: cn ? cs / cn * 100 : null,
-    lossP: base ? loss / base * 100 : null, dmgP: base ? dmg / base * 100 : null, rexec: pl.in ? rec / (pl.in * days / 30) * 100 : null, iexec: pl.out ? iss / (pl.out * days / 30) * 100 : null,
-    stag: act > 0 && !E.some(e => e.entry_date >= since && n0(e.issued) > 0), n: E.length, planned: !!(pl.in || pl.out) };
-}
-function stTotals(S) { const t = { open: 0, rec: 0, iss: 0, loss: 0, dmg: 0, act: 0, calc: 0, avg: 0, cap: 0, stagAct: 0, days: S[0] ? S[0].days : 1 }; S.forEach(s => { ['open', 'rec', 'iss', 'loss', 'dmg', 'act', 'calc', 'avg', 'cap'].forEach(k => t[k] += s[k]); if (s.stag) t.stagAct += s.act; }); return t; }
-function stScore(s) { const c = []; if (s.conf != null) c.push(s.conf); if (s.lossP != null) c.push(100 - Math.min(100, (s.lossP + s.dmgP) * 10)); if (s.rexec != null) c.push(Math.min(100, s.rexec)); if (s.iexec != null) c.push(Math.min(100, s.iexec)); return c.length ? c.reduce((a, b) => a + b) / c.length : null; }
-const stLevel = v => v == null ? '—' : v >= 85 ? '🟢 ممتاز' : v >= 70 ? '🔵 جيد' : v >= 50 ? '🟠 متوسط' : '🔴 ضعيف';
-const stTbl = (h, rows) => `<div style="overflow:auto;max-height:430px"><table class="dp-tbl"><thead><tr>${h.map(x => `<th>${x}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
-function stT1(S, t) {
-  const util = t.cap ? t.act / t.cap * 100 : null, diff = t.act - t.calc;
-  return `<div class="dp-kpis">${KP('📥', 'المخزون الافتتاحي', nf(t.open) + ' ق', 'الكمية بداية الفترة', '#1E88E5')}${KP('➕', 'إجمالي الاستلامات', nf(t.rec) + ' ق', 'مجموع الكميات المستلمة', '#4CAF50')}${KP('➖', 'إجمالي الخرجات', nf(t.iss) + ' ق', 'مجموع الكميات المصروفة', '#EF6C00')}
-  ${KP('🧮', 'المخزون النهائي (محسوب)', nf(t.calc) + ' ق', 'الافتتاحي + الوارد − الصادر − الفاقد − التالف', '#C9A227')}${KP('📦', 'المخزون الفعلي', nf(t.act) + ' ق', 'فرق الجرد: ' + nf(diff) + ' ق', Math.abs(diff) > t.cap * .01 ? '#d32f2f' : '#2E7D32')}${KP('📊', 'الطاقة التخزينية المستغلة', pc(util), 'المخزون الفعلي ÷ الطاقة الإجمالية × 100', fillColor(util || 0))}</div>
-  <div class="dp-card"><h4>نسبة امتلاء المخزن = الكمية المخزنة ÷ السعة × 100</h4>${bars(S.filter(s => s.util != null).sort((a, b) => b.util - a.util).map(s => ({ l: s.l.name, v: s.util, c: fillColor(s.util) })), r => r.v.toFixed(0) + '%', 100)}</div>`;
-}
-function stT2(S, t) {
-  const turn = t.avg > 0 ? t.iss * 365 / t.days / t.avg : null, stagP = t.act ? t.stagAct / t.act * 100 : null;
-  const row = s => { const a = s.avg > 0 ? s.iss * 365 / s.days / s.avg : null; return `<tr><td><b>${esc(s.l.name)}</b></td><td>${a == null ? '—' : a.toFixed(2)}</td><td>${a ? nf(365 / a) + ' يوم' : '—'}</td><td>${nz(s.rec / s.days)}</td><td>${nz(s.iss / s.days)}</td><td>${s.stag ? '🟠 راكد' : '🟢 نشط'}</td></tr>`; };
-  return `<div class="dp-kpis">${KP('🔄', 'معدل دوران المخزون', turn == null ? '—' : turn.toFixed(2) + ' مرة/سنة', 'الصرف السنوي ÷ متوسط المخزون', '#1E88E5')}${KP('⏳', 'متوسط مدة البقاء', turn ? nf(365 / turn) + ' يوم' : '—', '365 ÷ معدل الدوران', '#8E24AA')}
-  ${KP('📥', 'معدل الاستلام', nz(t.rec / t.days) + ' ق/يوم', nz(t.rec / t.days * 30) + ' ق/شهر', '#4CAF50')}${KP('📤', 'معدل الصرف', nz(t.iss / t.days) + ' ق/يوم', nz(t.iss / t.days * 30) + ' ق/شهر', '#EF6C00')}
-  ${KP('🧊', 'نسبة المخزون الراكد', pc(stagP), 'مخزون بلا صرف منذ 30 يومًا', stagP > 30 ? '#d32f2f' : '#2E7D32')}${KP('♻️', 'معدل تجديد المخزون', t.avg > 0 ? (t.rec / t.avg).toFixed(2) + ' مرة' : '—', 'الاستلامات ÷ متوسط المخزون', '#00ACC1')}</div>
-  ${stTbl(['المخزن', 'معدل الدوران', 'مدة البقاء', 'استلام يومي', 'صرف يومي', 'الحالة'], S.map(row).join(''))}`;
-}
-function stT3(S, t) {
-  const row = s => `<tr><td><b>${esc(s.l.name)}</b></td><td>${pc(s.util)}</td><td>${pc(s.conf)}</td><td>${pc(s.lossP)}</td><td>${pc(s.dmgP)}</td><td>${pc(s.rexec)}</td><td>${pc(s.iexec)}</td><td><button class="st-mini admin-only" data-id="${esc(s.l.id)}" onclick="stPlan(this.dataset.id)">🎯 الهدف الشهري</button></td></tr>`;
-  const tl = t.open + t.rec;
-  return stTbl(['المخزن', 'استغلال الطاقة', 'مطابقة الجرد للسجلات', 'نسبة الفاقد', 'نسبة التلف', 'تنفيذ الاستلام', 'تنفيذ التسليم', ''], S.map(row).join('') + `<tr style="font-weight:bold"><td>الإجمالي</td><td>${pc(t.cap ? t.act / t.cap * 100 : null)}</td><td>—</td><td>${pc(tl ? t.loss / tl * 100 : null)}</td><td>${pc(tl ? t.dmg / tl * 100 : null)}</td><td>—</td><td>—</td><td></td></tr>`)
-    + '<div class="st-note">• المطابقة = 1 − |المخزون الفعلي − (مخزون أمس + وارد − صادر − فاقد − تالف)| ÷ المخزون، متوسط أيام الإدخال.<br>• نسبتا الفاقد والتلف = الكمية ÷ (الافتتاحي + المستلم).<br>• نسبتا تنفيذ الاستلام والتسليم تحتاجان هدفًا شهريًا يحدده المدير بزر 🎯 لكل مخزن.</div>';
-}
-function stKey(ds, g) { const d = D(ds); if (g === 'day') return ds; if (g === 'week') return iso(new Date(d - ((d.getUTCDay() + 6) % 7) * 864e5)); if (g === 'month') return ds.slice(0, 7); if (g === 'quarter') return d.getUTCFullYear() + '-Q' + (Math.floor(d.getUTCMonth() / 3) + 1); return ds.slice(0, 4); }
-function stT4(S) {
-  const g = $('sp-gran').value, ids = new Set(S.map(s => String(s.l.id))), E = ST.cur.filter(e => ids.has(String(e.location_id))), G = {}, by = {};
-  E.forEach(e => { const k = stKey(e.entry_date, g), o = G[k] = G[k] || { rec: 0, iss: 0, end: '' }; o.rec += n0(e.received); o.iss += n0(e.issued); if (e.entry_date > o.end) o.end = e.entry_date; (by[e.location_id] = by[e.location_id] || []).push(e); });
-  const keys = Object.keys(G).sort(); if (!keys.length) return '<small>لا توجد إدخالات في الفترة المختارة</small>';
-  const cur = {}, ptr = {}; keys.forEach(k => { let tot = 0; S.forEach(x => { const id = String(x.l.id), a = by[id] || []; ptr[id] = ptr[id] || 0; if (cur[id] === undefined) cur[id] = ST.pv[id] ? n0(ST.pv[id].quantity) : 0; while (ptr[id] < a.length && a[ptr[id]].entry_date <= G[k].end) cur[id] = n0(a[ptr[id]++].quantity); tot += cur[id]; }); G[k].stock = tot; });
-  const mx = Math.max(1, ...keys.map(k => Math.max(G[k].rec, G[k].iss))), peak = keys.reduce((a, k) => G[k].rec > G[a].rec ? k : a, keys[0]), low = keys.reduce((a, k) => G[k].stock < G[a].stock ? k : a, keys[0]), top = S.slice().sort((a, b) => (b.rec + b.iss) - (a.rec + a.iss))[0];
-  return `<div class="dp-kpis">${KP('📈', 'أعلى فترة استلام', peak, nf(G[peak].rec) + ' ق', '#4CAF50')}${KP('📉', 'أدنى مخزون', low, nf(G[low].stock) + ' ق', '#EF6C00')}${KP('🏆', 'الأكثر نشاطًا', esc(top.l.name), nf(top.rec + top.iss) + ' ق حركة', '#C9A227')}</div>`
-    + stTbl(['الفترة', 'الاستلامات', 'الصرف', 'المخزون في نهايتها'], keys.map(k => `<tr><td>${k}</td><td style="min-width:130px">${nf(G[k].rec)}<div class="dp-trk"><i style="width:${G[k].rec / mx * 100}%;background:#4CAF50"></i></div></td><td style="min-width:130px">${nf(G[k].iss)}<div class="dp-trk"><i style="width:${G[k].iss / mx * 100}%;background:#EF6C00"></i></div></td><td>${nf(G[k].stock)}</td></tr>`).join(''));
-}
-function stT5(S, t) {
-  const R = S.map(s => ({ s, sc: stScore(s) })).sort((a, b) => (b.sc ?? -1) - (a.sc ?? -1));
-  return stTbl(['المخزن', 'الطاقة', 'المستلم', 'المصروف', 'المتبقي', 'الاستغلال', 'الفاقد+التالف', 'مستوى الأداء'], R.map(({ s, sc }) => `<tr><td><b>${esc(s.l.name)}</b></td><td>${nf(s.cap)}</td><td>${nf(s.rec)}</td><td>${nf(s.iss)}</td><td>${nf(s.act)}</td><td>${s.util == null ? '—' : `<span class="dp-pill" style="background:${fillColor(s.util)}">${s.util.toFixed(0)}%</span>`}</td><td>${nf(s.loss + s.dmg)}</td><td>${stLevel(sc)}${sc != null ? ' (' + sc.toFixed(0) + ')' : ''}</td></tr>`).join('')
-    + `<tr style="font-weight:bold"><td>الإجمالي</td><td>${nf(t.cap)}</td><td>${nf(t.rec)}</td><td>${nf(t.iss)}</td><td>${nf(t.act)}</td><td>${pc(t.cap ? t.act / t.cap * 100 : null)}</td><td>${nf(t.loss + t.dmg)}</td><td></td></tr>`)
-    + '<div class="st-note">مستوى الأداء = متوسط: مطابقة الجرد، وجودة الحفظ (100 − 10×(الفاقد%+التلف%))، وتنفيذ الاستلام والتسليم (إن حُدد هدف). ممتاز ≥ 85 • جيد ≥ 70 • متوسط ≥ 50 • ضعيف أقل.</div>';
-}
-function stRender() {
-  if (!ST.ok) { $('st-body').innerHTML = '<div class="st-note" style="color:#ffb74d">⚠️ تعذر قراءة حقول الحركة. شغّل ملف supabase_studies.sql في Supabase أولًا.</div>'; return; }
-  const sel = $('sp-loc').value, S = dashScope().filter(l => l.status !== 'inactive' && (!sel || String(l.id) === sel)).map(stStats);
-  if (!S.length) { $('st-body').innerHTML = '<small>لا توجد مخازن</small>'; return; }
-  $('st-body').innerHTML = [stT1, stT2, stT3, stT4, stT5][ST.tab - 1](S, stTotals(S)) + `<div class="st-note">الفترة: ${ST.d0} → ${ST.d1} • تُحسب الدراسات من إدخالات المخازن اليومية (الوارد والصادر والفاقد والتالف).</div>`;
-}
-async function stPlan(id) {
-  const c = PLANS[id] || {}, a = prompt('الهدف الشهري للاستلام (قنطار)', c.in || ''); if (a === null) return; const b = prompt('الهدف الشهري للتسليم/الصرف (قنطار)', c.out || ''); if (b === null) return;
-  PLANS[id] = { in: +a || 0, out: +b || 0 };
-  const r = await fetch(`${REST}/app_settings?on_conflict=key`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ key: 'stock_plans', value: PLANS }) });
-  toast(r.ok ? '✅ حُفظ الهدف الشهري' : '❌ فشل الحفظ'); stRender();
 }
 
 enter();
