@@ -29,7 +29,78 @@ const haFromRadius = (r) => {
 const fmtHa = (v) =>
   Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
 
-export function calcPivotsAreaStats(pivots = [], filters = {}) {
+const fmtDist = (km) => {
+  if (km == null || !Number.isFinite(km)) return '—';
+  if (km < 1) return `${Math.round(km * 1000)} م`;
+  return `${km.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} كم`;
+};
+
+function haversineKm(a, b) {
+  const lat1 = Number(a && a.lat);
+  const lng1 = Number(a && a.lng);
+  const lat2 = Number(b && b.lat);
+  const lng2 = Number(b && b.lng);
+  if (!Number.isFinite(lat1) || !Number.isFinite(lng1) || !Number.isFinite(lat2) || !Number.isFinite(lng2)) {
+    return Infinity;
+  }
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const x =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+function parseLocMeta(loc) {
+  const raw = String((loc && loc.type) || '').trim().toLowerCase();
+  const name = String((loc && loc.name) || '');
+  let storageLabel = 'مخزن مغطا';
+  let hasScale = false;
+  if (raw.includes('|')) {
+    const [st, sc] = raw.split('|');
+    if (st === 'silo' || st === 'صوامع') storageLabel = 'صوامع';
+    else if (st === 'open' || st === 'هواء' || st === 'air') storageLabel = 'في الهواء الطلق';
+    hasScale = sc === 'scale' || sc === '1' || sc === 'true' || sc === 'ميزان';
+  } else {
+    if (/صومع|صوامع|سيلو|silo/i.test(raw) || /صومع|صوامع|سيلو|silo/i.test(name)) storageLabel = 'صوامع';
+    else if (/هواء\s*الطلق|air\s*libre|airlibre|open/i.test(raw) || /هواء\s*الطلق|air\s*libre|airlibre/i.test(name)) storageLabel = 'في الهواء الطلق';
+    hasScale = raw === 'scale' || /ميزان|bascule/i.test(name);
+  }
+  return { storageLabel, hasScale };
+}
+
+export function findNearestLocForPivot(pivot, locations = []) {
+  const list = Array.isArray(locations) ? locations : [];
+  const pLat = Number(pivot && pivot.lat);
+  const pLng = Number(pivot && pivot.lng);
+  if (!Number.isFinite(pLat) || !Number.isFinite(pLng) || !list.length) return null;
+  const active = list.filter((l) => l && l.status !== 'inactive');
+  const pool = active.length ? active : list;
+  let best = null;
+  let bestKm = Infinity;
+  for (let i = 0; i < pool.length; i += 1) {
+    const loc = pool[i];
+    const km = haversineKm({ lat: pLat, lng: pLng }, { lat: loc.lat, lng: loc.lng });
+    if (km < bestKm) {
+      bestKm = km;
+      best = loc;
+    }
+  }
+  if (!best || !Number.isFinite(bestKm)) return null;
+  const meta = parseLocMeta(best);
+  return {
+    loc: best,
+    id: best.id,
+    name: best.name || '—',
+    province: best.province || 'أدرار',
+    storageLabel: meta.storageLabel,
+    hasScale: meta.hasScale,
+    distanceKm: bestKm,
+  };
+}
+
+export function calcPivotsAreaStats(pivots = [], filters = {}, locations = []) {
   const list = Array.isArray(pivots) ? pivots : [];
   const minR = Number(filters.minRadius) || 0;
   const maxR = Number(filters.maxRadius) > 0 ? Number(filters.maxRadius) : Infinity;
@@ -44,12 +115,22 @@ export function calcPivotsAreaStats(pivots = [], filters = {}) {
     if (radius < minR || radius > maxR) continue;
     const crop = (p.crop || 'غير محدد').trim() || 'غير محدد';
     if (cropFilter && cropFilter !== 'all' && crop !== cropFilter) continue;
+    const nearest = findNearestLocForPivot(p, locations);
     items.push({
       id: p.id ?? idx,
+      lat: Number(p.lat),
+      lng: Number(p.lng),
       radius,
       areaHa: haFromRadius(radius),
       farmer: (p.farmer_name || 'غير محدد').trim() || 'غير محدد',
       crop,
+      nearest,
+      nearestId: nearest ? nearest.id : null,
+      nearestName: nearest ? nearest.name : null,
+      nearestProvince: nearest ? nearest.province : null,
+      nearestStorageLabel: nearest ? nearest.storageLabel : null,
+      nearestHasScale: nearest ? nearest.hasScale : false,
+      nearestDistKm: nearest ? nearest.distanceKm : null,
     });
   }
 
@@ -64,6 +145,8 @@ export function calcPivotsAreaStats(pivots = [], filters = {}) {
       avgRadius: 0,
       minRadius: 0,
       maxRadius: 0,
+      avgDistKm: null,
+      maxDistKm: null,
       items,
     };
   }
@@ -74,6 +157,9 @@ export function calcPivotsAreaStats(pivots = [], filters = {}) {
   let maxHa = 0;
   let minRadius = Infinity;
   let maxRadius = 0;
+  let distSum = 0;
+  let distCount = 0;
+  let maxDistKm = 0;
 
   for (let i = 0; i < items.length; i += 1) {
     const it = items[i];
@@ -83,6 +169,11 @@ export function calcPivotsAreaStats(pivots = [], filters = {}) {
     if (it.areaHa > maxHa) maxHa = it.areaHa;
     if (it.radius < minRadius) minRadius = it.radius;
     if (it.radius > maxRadius) maxRadius = it.radius;
+    if (it.nearestDistKm != null && Number.isFinite(it.nearestDistKm)) {
+      distSum += it.nearestDistKm;
+      distCount += 1;
+      if (it.nearestDistKm > maxDistKm) maxDistKm = it.nearestDistKm;
+    }
   }
 
   return {
@@ -95,6 +186,8 @@ export function calcPivotsAreaStats(pivots = [], filters = {}) {
     avgRadius: Math.round(totalRadius / items.length),
     minRadius: Math.round(minRadius),
     maxRadius: Math.round(maxRadius),
+    avgDistKm: distCount ? distSum / distCount : null,
+    maxDistKm: distCount ? maxDistKm : null,
     items,
   };
 }
@@ -134,28 +227,37 @@ function CustomTooltip({ active, payload, mode, totalHa }) {
           <div>عدد المحاور: <b>{d.count}</b></div>
           <div>متوسط مساحة المحور: <b>{fmtHa(d.avgHa)} هكتار</b></div>
         </>
+      ) : mode === 'nearest' ? (
+        <>
+          <div style={{ fontWeight: 'bold', color: '#c9a227', marginBottom: 4 }}>{d.locName}</div>
+          <div>عدد المحاور الأقرب له: <b>{d.count} محور</b></div>
+          <div>إجمالي مساحة المحاور: <b>{fmtHa(d.totalHa)} هكتار</b> ({shareHa.toFixed(1)}%)</div>
+          <div>متوسط المسافة: <b>{fmtDist(d.avgDistKm)}</b> • الأبعد: <b>{fmtDist(d.maxDistKm)}</b></div>
+        </>
       ) : (
         <>
           <div style={{ fontWeight: 'bold', color: '#c9a227', marginBottom: 4 }}>{d.farmer}</div>
           {d.crop ? <div>المحصول: <b>{d.crop}</b></div> : null}
           <div>المساحة: <b>{fmtHa(d.areaHa)} هكتار</b> ({shareHa.toFixed(1)}%)</div>
           <div>نصف القطر: <b>{Math.round(d.radius)} م</b></div>
+          {d.nearestName ? <div>أقرب مخزن: <b>{d.nearestName}</b> ({fmtDist(d.nearestDistKm)})</div> : null}
         </>
       )}
     </div>
   );
 }
 
-function PivotRadiiChart({ pivots = [], onCloseDash, onStatsChange }) {
+function PivotRadiiChart({ pivots = [], locations = [], onCloseDash, onStatsChange, onSelectPivot, onSelectLocation }) {
   const [mode, setMode] = useState('bins');
   const [binMetric, setBinMetric] = useState('ha');
   const [cropFilter, setCropFilter] = useState('all');
   const [minRadiusFilter, setMinRadiusFilter] = useState(0);
+  const [distSort, setDistSort] = useState('asc');
 
-  const allStats = useMemo(() => calcPivotsAreaStats(pivots), [pivots]);
+  const allStats = useMemo(() => calcPivotsAreaStats(pivots, {}, locations), [pivots, locations]);
   const stats = useMemo(
-    () => calcPivotsAreaStats(pivots, { crop: cropFilter, minRadius: minRadiusFilter }),
-    [pivots, cropFilter, minRadiusFilter]
+    () => calcPivotsAreaStats(pivots, { crop: cropFilter, minRadius: minRadiusFilter }, locations),
+    [pivots, cropFilter, minRadiusFilter, locations]
   );
   const parsed = stats.items;
   const isFiltered = cropFilter !== 'all' || minRadiusFilter > 0;
@@ -230,9 +332,57 @@ function PivotRadiiChart({ pivots = [], onCloseDash, onStatsChange }) {
         crop: p.crop,
         radius: Math.round(p.radius),
         areaHa: Number(p.areaHa.toFixed(2)),
+        nearestName: p.nearestName,
+        nearestDistKm: p.nearestDistKm,
         color: p.areaHa >= 50 ? '#C9A227' : p.areaHa >= 25 ? '#4CAF50' : '#00E5FF',
       }));
   }, [parsed]);
+
+  const nearestByLocData = useMemo(() => {
+    const groups = {};
+    parsed.forEach((p) => {
+      const k = p.nearestId != null ? String(p.nearestId) : 'none';
+      if (!groups[k]) {
+        groups[k] = {
+          locId: p.nearestId,
+          locName: p.nearestName || 'غير محدد',
+          count: 0,
+          totalHa: 0,
+          distSum: 0,
+          distCnt: 0,
+          maxDistKm: 0,
+        };
+      }
+      groups[k].count += 1;
+      groups[k].totalHa += p.areaHa;
+      if (p.nearestDistKm != null && Number.isFinite(p.nearestDistKm)) {
+        groups[k].distSum += p.nearestDistKm;
+        groups[k].distCnt += 1;
+        if (p.nearestDistKm > groups[k].maxDistKm) groups[k].maxDistKm = p.nearestDistKm;
+      }
+    });
+    return Object.values(groups)
+      .sort((a, b) => b.totalHa - a.totalHa)
+      .map((g, idx) => ({
+        ...g,
+        name: g.locName.length > 16 ? g.locName.slice(0, 16) + '…' : g.locName,
+        totalHa: Number(g.totalHa.toFixed(2)),
+        avgDistKm: g.distCnt ? g.distSum / g.distCnt : null,
+        color: CROP_PALETTE[idx % CROP_PALETTE.length],
+      }));
+  }, [parsed]);
+
+  const sortedPivotRows = useMemo(() => {
+    const arr = [...parsed];
+    if (distSort === 'asc') {
+      arr.sort((a, b) => (a.nearestDistKm ?? Infinity) - (b.nearestDistKm ?? Infinity));
+    } else if (distSort === 'desc') {
+      arr.sort((a, b) => (b.nearestDistKm ?? -1) - (a.nearestDistKm ?? -1));
+    } else {
+      arr.sort((a, b) => b.areaHa - a.areaHa);
+    }
+    return arr;
+  }, [parsed, distSort]);
 
   if (!allStats.count) {
     return (
@@ -274,6 +424,12 @@ function PivotRadiiChart({ pivots = [], onCloseDash, onStatsChange }) {
           <span>النطاق: <b>{fmtHa(stats.minHa)}–{fmtHa(stats.maxHa)} هكتار</b></span>
           <span aria-hidden="true">·</span>
           <span>متوسط نصف القطر: <b>{stats.avgRadius} م</b></span>
+          {stats.avgDistKm != null ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>متوسط بُعد المخزن: <b style={{ color: '#4CAF50' }}>{fmtDist(stats.avgDistKm)}</b></span>
+            </>
+          ) : null}
         </div>
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
@@ -317,6 +473,13 @@ function PivotRadiiChart({ pivots = [], onCloseDash, onStatsChange }) {
               onClick={() => setMode('items')}
             >
               كل محور ({individualData.length})
+            </button>
+            <button
+              type="button"
+              className={mode === 'nearest' ? 'on' : ''}
+              onClick={() => setMode('nearest')}
+            >
+              🏭 المخزن الأقرب والمسافة
             </button>
           </div>
         </div>
@@ -435,6 +598,35 @@ function PivotRadiiChart({ pivots = [], onCloseDash, onStatsChange }) {
                 ))}
               </Bar>
             </BarChart>
+          ) : mode === 'nearest' ? (
+            <BarChart data={nearestByLocData} margin={{ top: 12, right: 16, left: 4, bottom: 24 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#243a2a" vertical={false} />
+              <XAxis
+                dataKey="name"
+                tick={{ fill: '#bcd5c0', fontSize: 11 }}
+                axisLine={{ stroke: '#27402d' }}
+                tickLine={false}
+                interval={0}
+                angle={nearestByLocData.length > 6 ? -20 : 0}
+                textAnchor={nearestByLocData.length > 6 ? 'end' : 'middle'}
+              />
+              <YAxis
+                tick={{ fill: '#bcd5c0', fontSize: 12 }}
+                axisLine={{ stroke: '#27402d' }}
+                tickLine={false}
+                width={52}
+                unit=" هـ"
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(76, 175, 80, 0.08)' }}
+                content={<CustomTooltip mode="nearest" totalHa={stats.totalHa} />}
+              />
+              <Bar dataKey="totalHa" name="المساحة المرتبطة (هكتار)" radius={[6, 6, 0, 0]} maxBarSize={54}>
+                {nearestByLocData.map((entry, idx) => (
+                  <Cell key={`${entry.locName}-${idx}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
           ) : (
             <BarChart data={individualData} margin={{ top: 12, right: 16, left: 4, bottom: 24 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#243a2a" vertical={false} />
@@ -468,6 +660,94 @@ function PivotRadiiChart({ pivots = [], onCloseDash, onStatsChange }) {
           </ResponsiveContainer>
         </div>
       )}
+
+      {parsed.length && mode === 'nearest' ? (
+        <div style={{ marginTop: 10 }}>
+          <div className="fc-subhdr" style={{ marginBottom: 6 }}>
+            <span>📍 تحليل كل محور دوران وأقرب مخزن والمسافة ({sortedPivotRows.length} محور)</span>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                className="kpi-sort-btn"
+                onClick={() => setDistSort((s) => (s === 'asc' ? 'desc' : s === 'desc' ? 'area' : 'asc'))}
+              >
+                {distSort === 'asc'
+                  ? '📏 الترتيب: الأقرب مسافة ↑'
+                  : distSort === 'desc'
+                    ? '📏 الترتيب: الأبعد مسافة ↓'
+                    : '📐 الترتيب: الأكبر مساحة ↓'}
+              </button>
+            </div>
+          </div>
+          <div style={{ overflow: 'auto', maxHeight: 300 }}>
+            <table className="dp-tbl">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>المحور / الفلاح</th>
+                  <th>المحصول</th>
+                  <th>المساحة (هـ)</th>
+                  <th>نصف القطر</th>
+                  <th>أقرب مخزن</th>
+                  <th>الولاية ونوع المخزن</th>
+                  <th>المسافة</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedPivotRows.map((p, idx) => {
+                  const km = p.nearestDistKm;
+                  const distColor = km == null ? '#9bb7a0' : km <= 15 ? '#81c784' : km <= 40 ? '#ffd54f' : '#ff8a80';
+                  return (
+                    <tr
+                      key={p.id}
+                      onClick={() => {
+                        if (typeof onSelectPivot === 'function') onSelectPivot(p.id);
+                      }}
+                      title="اضغط لعرض المحور وخط المسافة على الخريطة"
+                    >
+                      <td>{idx + 1}</td>
+                      <td><b>{p.farmer}</b></td>
+                      <td>{p.crop}</td>
+                      <td><b>{fmtHa(p.areaHa)} هـ</b></td>
+                      <td>{Math.round(p.radius)} م</td>
+                      <td>
+                        {p.nearestName ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (typeof onSelectLocation === 'function' && p.nearestId != null) {
+                                onSelectLocation(p.nearestId);
+                              }
+                            }}
+                            style={{
+                              background: 'transparent',
+                              border: 0,
+                              padding: 0,
+                              color: '#00E5FF',
+                              font: 'bold 12px Tahoma,Arial',
+                              cursor: 'pointer',
+                              textDecoration: 'underline',
+                            }}
+                          >
+                            {p.nearestName}
+                          </button>
+                        ) : '—'}
+                      </td>
+                      <td>
+                        {p.nearestProvince
+                          ? `${p.nearestProvince} · ${p.nearestStorageLabel}${p.nearestHasScale ? ' ⚖️' : ''}`
+                          : '—'}
+                      </td>
+                      <td><b style={{ color: distColor }}>{fmtDist(km)}</b></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -490,8 +770,11 @@ window.renderPivotRadiiChart = function renderPivotRadiiChart(container, pivots,
   activeRoot.render(
     <PivotRadiiChart
       pivots={pivots}
+      locations={options.locations || []}
       onCloseDash={options.onCloseDash}
       onStatsChange={options.onStatsChange}
+      onSelectPivot={options.onSelectPivot}
+      onSelectLocation={options.onSelectLocation}
     />
   );
 };

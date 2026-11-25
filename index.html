@@ -107,6 +107,13 @@
         .form-group label { display: block; font-size: 12px; color: #ccc; margin-bottom: 4px; }
         .form-group input, .form-group select { width: 95%; padding: 8px; border-radius: 5px; border: 1px solid #555; background: #2b2b2b; color: white; font-size: 13px; }
         .modal-btns { display: flex; gap: 10px; margin-top: 15px; }
+        .st-mode-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+        .st-mode-btn { flex: 1; padding: 8px 6px; border: 1px solid #444; border-radius: 6px; background: #262626; color: #ccc; font: bold 12px Tahoma,Arial; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+        .st-mode-btn.on[data-mode="in"] { background: #1B5E20; border-color: #4CAF50; color: #fff; }
+        .st-mode-btn.on[data-mode="out"] { background: #B71C1C; border-color: #ef5350; color: #fff; }
+        .st-mode-btn.on[data-mode="set"] { background: #1565C0; border-color: #42A5F5; color: #fff; }
+        .st-preview { background: #161616; border: 1px solid #333; border-radius: 6px; padding: 8px 10px; font-size: 12px; line-height: 1.6; margin-top: 6px; font-variant-numeric: tabular-nums; }
+        .loc-meta-tags { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: #9bb7a0; margin-right: 4px; }
         
         .legend { 
             position: fixed; bottom: 20px; right: 365px; z-index: 1000; 
@@ -119,8 +126,8 @@
         .legend-item { display: flex; align-items: center; margin-bottom: 6px; font-size: 11px; }
         .legend-box-icon { width: 16px; height: 16px; border-radius: 50%; display: inline-block; margin-left: 8px; border: 2px solid white; position: relative; }
         .legend-box-icon.legend-pulse { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.8); animation: cclsClusterPulse 1.6s ease-out infinite; }
-        .legend-box-selected { width: 20px; height: 12px; border: 2px solid #ff0000; background: rgba(255,0,0,0.25); margin-left: 10px; }
-        .legend-box-all { width: 20px; height: 12px; border: 2px solid #ff9800; background: rgba(255,152,0,0.15); margin-left: 10px; }
+        .legend-box-selected { width: 20px; height: 12px; border: 2px solid #EF4444; background: rgba(251,191,36,0.36); margin-left: 10px; }
+        .legend-box-all { width: 20px; height: 12px; border: 1.5px solid #EF4444; background: rgba(245,158,11,0.24); margin-left: 10px; }
 
         .marker-dot-wrap { position: relative; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; }
         .marker-dot-core { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 6px rgba(0,0,0,0.8); box-sizing: border-box; position: relative; z-index: 2; display: block; }
@@ -192,8 +199,75 @@
         #toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: #1565C0; color: #fff; padding: 9px 18px; border-radius: 8px; z-index: 9000; font-size: 13px; display: none; box-shadow: 0 6px 20px rgba(0,0,0,.6); }
         .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #1e1e1e; color: #fff; }
         .leaflet-popup-content-wrapper { border: 1px solid #4CAF50; }
-        .probe { direction: rtl; font-size: 12px; line-height: 1.8; min-width: 230px; }
-        .probe .ltr { direction: ltr; font-family: monospace; display: block; color: #81C784; }
+        .probe { direction: rtl; font-size: 12px; line-height: 1.65; min-width: 265px; max-width: 310px; }
+        .probe .ltr { direction: ltr; font-family: monospace; display: block; color: #81C784; font-size: 11px; margin-top: 2px; text-align: center; }
+        .probe-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+        .probe-hdr b { font-size: 13px; color: #E0F7FA; }
+        .probe-meta { display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: #e8f5e9; }
+        .probe-area { background: rgba(0,229,255,0.10); border: 1px solid rgba(0,229,255,0.35); border-radius: 7px; padding: 6px 8px; margin: 7px 0; text-align: center; }
+        .probe-nearest { background: linear-gradient(135deg, rgba(255,179,0,0.14), rgba(255,143,0,0.08)); border: 1px solid rgba(255,179,0,0.45); border-radius: 8px; padding: 8px 9px; margin: 7px 0; }
+        .probe-nearest-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px; }
+        .probe-dist-badge { background: #FFB300; color: #111; font-weight: 700; font-size: 11.5px; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+        .probe-wh-name { font-size: 13px; font-weight: 700; color: #FFF8E1; margin-bottom: 5px; }
+        .probe-wh-badges { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-bottom: 5px; }
+        .probe-storage-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid transparent; }
+        .probe-storage-badge svg { width: 16px; height: 16px; flex-shrink: 0; }
+        .probe-storage-badge.is-silo { background: rgba(0, 229, 255, 0.14); color: #80DEEA; border-color: rgba(0, 229, 255, 0.45); }
+        .probe-storage-badge.is-closed { background: rgba(16, 185, 129, 0.16); color: #6EE7B7; border-color: rgba(16, 185, 129, 0.45); }
+        .probe-storage-badge.is-open { background: rgba(251, 191, 36, 0.16); color: #FDE68A; border-color: rgba(251, 191, 36, 0.45); }
+        .probe-meta-chip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 7px; border-radius: 6px; font-size: 10.5px; font-weight: 600; background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.14); }
+        .probe-meta-chip svg { width: 13px; height: 13px; flex-shrink: 0; }
+        .probe-meta-chip.has-scale { background: rgba(76, 175, 80, 0.16); color: #A5D6A7; border-color: rgba(76, 175, 80, 0.4); }
+        .probe-wh-sub { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; font-size: 11px; color: #d7e8da; }
+        .probe-wh-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .probe-route-btn { flex: 1 1 48%; background: linear-gradient(135deg, #10B981, #059669); color: #fff; font-weight: 700; border: none; border-radius: 6px; padding: 7px 8px; cursor: pointer; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 4px; transition: filter 0.15s, transform 0.1s, background 0.15s; }
+        .probe-route-btn.is-active { background: linear-gradient(135deg, #e11d48, #be123c); box-shadow: 0 0 0 1px rgba(255,255,255,0.22); }
+        .probe-route-btn:hover { filter: brightness(1.1); }
+        .probe-route-btn:active { transform: scale(0.98); }
+        .probe-focus-btn { flex: 1 1 48%; background: rgba(0, 229, 255, 0.14); color: #80DEEA; font-weight: 700; border: 1px solid rgba(0, 229, 255, 0.5); border-radius: 6px; padding: 7px 8px; cursor: pointer; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s, transform 0.1s; }
+        .probe-focus-btn:hover { background: rgba(0, 229, 255, 0.25); color: #fff; }
+        .probe-focus-btn:active { transform: scale(0.98); }
+        .probe-wh-btn { flex: 1 1 48%; background: linear-gradient(135deg, #FFB300, #FB8C00); color: #111; font-weight: 700; border: none; border-radius: 6px; padding: 7px 8px; cursor: pointer; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 4px; transition: filter 0.15s, transform 0.1s; }
+        .probe-wh-btn:hover { filter: brightness(1.08); }
+        .probe-wh-btn:active { transform: scale(0.98); }
+        .probe-share-btn { flex: 1 1 48%; background: rgba(168, 85, 247, 0.2); color: #E9D5FF; font-weight: 700; border: 1px solid rgba(168, 85, 247, 0.55); border-radius: 6px; padding: 7px 8px; cursor: pointer; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s, transform 0.1s; }
+        .probe-share-btn:hover, .probe-share-btn.is-open { background: rgba(168, 85, 247, 0.36); color: #fff; }
+        .probe-share-btn:active { transform: scale(0.98); }
+        .probe-share-drawer { display: none; margin-top: 7px; padding-top: 7px; border-top: 1px dashed rgba(255, 179, 0, 0.35); gap: 5px; flex-wrap: wrap; }
+        .probe-share-drawer.open { display: flex; }
+        .probe-share-item { flex: 1 1 47%; display: inline-flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 7px; border-radius: 5px; font-size: 11px; font-weight: 700; text-decoration: none; cursor: pointer; border: 1px solid rgba(255,255,255,0.16); background: rgba(255,255,255,0.08); color: #f1f5f9; transition: filter 0.15s; }
+        .probe-share-item:hover { filter: brightness(1.15); }
+        .probe-share-item.is-copy { background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.5); color: #A7F3D0; }
+        .probe-share-item.is-wa { background: rgba(37, 211, 102, 0.2); border-color: rgba(37, 211, 102, 0.5); color: #86EFAC; }
+        .probe-share-item.is-tg { background: rgba(56, 189, 248, 0.2); border-color: rgba(56, 189, 248, 0.5); color: #BAE6FD; }
+        .probe-share-item.is-sys { flex: 1 1 100%; background: rgba(255, 255, 255, 0.12); color: #fff; }
+        .probe-qr-card { flex: 1 1 100%; margin-top: 4px; padding: 9px; border-radius: 8px; background: rgba(10, 18, 14, 0.78); border: 1px solid rgba(255, 179, 0, 0.32); display: flex; flex-direction: column; align-items: center; gap: 7px; text-align: center; }
+        .probe-qr-head { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; color: #FFF8E1; font-weight: 700; }
+        .probe-qr-tabs { display: inline-flex; gap: 3px; background: rgba(255, 255, 255, 0.08); padding: 2px; border-radius: 6px; }
+        .probe-qr-tab { border: none; background: transparent; color: #cbd5e1; font: 700 10px Tahoma, Arial, sans-serif; padding: 4px 7px; border-radius: 4px; cursor: pointer; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+        .probe-qr-tab.is-active { background: #FFB300; color: #111; }
+        .probe-qr-box { background: #ffffff; padding: 8px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45); min-width: 148px; min-height: 148px; }
+        .probe-qr-box img, .probe-qr-box canvas { display: block; width: 132px; height: 132px; }
+        .probe-qr-foot { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .probe-qr-url { flex: 1; min-width: 0; font: 10px monospace; color: #94a3b8; direction: ltr; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .probe-qr-dl { background: rgba(0, 229, 255, 0.14); color: #80DEEA; border: 1px solid rgba(0, 229, 255, 0.45); border-radius: 5px; padding: 4px 8px; font: 700 10.5px Tahoma, Arial, sans-serif; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+        .probe-qr-dl:hover { background: rgba(0, 229, 255, 0.28); color: #fff; }
+        .probe-route-pill { background: #0d1710; color: #34D399; border: 1.5px solid #10B981; border-radius: 999px; padding: 2px 9px; font: 700 11px Tahoma, Arial, sans-serif; white-space: nowrap; box-shadow: 0 3px 10px rgba(0,0,0,0.65); }
+        .probe-route-pill.is-road { color: #00E5FF; border-color: #00E5FF; }
+        #pivot-route-hud { display: none; position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%); z-index: 1050; background: rgba(15, 23, 18, 0.94); border: 1px solid rgba(0, 229, 255, 0.45); border-radius: 10px; padding: 9px 13px; color: #e8f5e9; font-size: 12px; direction: rtl; box-shadow: 0 8px 24px rgba(0,0,0,0.65); min-width: 280px; max-width: min(92vw, 460px); }
+        .prh-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; font-weight: 700; color: #FFF8E1; }
+        .prh-close { background: none; border: none; color: #ff8a80; font-size: 18px; cursor: pointer; line-height: 1; padding: 0 4px; }
+        .prh-rows { display: flex; flex-direction: column; gap: 5px; }
+        .prh-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; background: rgba(255,255,255,0.04); padding: 4px 8px; border-radius: 6px; }
+        .prh-swatch { display: inline-block; width: 22px; height: 0; vertical-align: middle; margin-left: 6px; }
+        .prh-swatch.direct { border-top: 3px dashed #10B981; }
+        .prh-swatch.paved { border-top: 3.5px solid #00E5FF; }
+        .prh-swatch.sandy { border-top: 3.5px dashed #F59E0B; }
+        .wh-focus-beacon { position: relative; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle, rgba(16,185,129,0.28) 0%, rgba(16,185,129,0) 70%); pointer-events: none; }
+        .wh-focus-beacon::before, .wh-focus-beacon::after { content: ''; position: absolute; inset: 0; border-radius: 50%; border: 3px solid #10B981; background: rgba(16,185,129,0.16); box-shadow: 0 0 16px rgba(16,185,129,0.9); animation: whFocusPulse 1.35s ease-out infinite; }
+        .wh-focus-beacon::after { animation-delay: 0.65s; border-color: #34D399; box-shadow: 0 0 18px rgba(52,211,153,0.85); }
+        @keyframes whFocusPulse { 0% { transform: scale(0.45); opacity: 1; } 70% { opacity: 0.55; } 100% { transform: scale(1.75); opacity: 0; } }
+        .list-item.wh-focused { background: rgba(16, 185, 129, 0.22) !important; box-shadow: inset 3px 0 0 #10B981; }
         .dash-bar { height: 8px; background: #4CAF50; border-radius: 4px; }
         @media (max-width: 768px) { #coord-hud { display: none; } }
                 .panel-actions { flex-wrap: wrap; } .panel-btn { min-width: 30%; }
@@ -318,6 +392,19 @@
 .fc-route-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;background:#101c14;border:1px solid #243a2a;border-radius:6px;font-size:12px;font-variant-numeric:tabular-nums}
 .fc-route-row small{color:#8fae95;display:block;margin-top:2px;font-size:11px}
 
+/* ===== تحليل كفاءة المسارات والتكلفة اللوجستية ===== */
+.rte-bar-pair{display:flex;flex-direction:column;gap:3px;min-width:120px}
+.rte-bar-trk{height:6px;background:#223426;border-radius:4px;overflow:hidden}
+.rte-bar-trk>i{display:block;height:100%;border-radius:4px}
+.rte-excess-row{background:rgba(211,47,47,0.13)!important;box-shadow:inset 3px 0 0 #ff5252}
+.rte-excess-row:hover{background:rgba(211,47,47,0.22)!important}
+.rte-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:bold;white-space:nowrap}
+.rte-badge.ok{background:rgba(46,125,50,0.25);color:#81C784;border:1px solid rgba(76,175,80,0.45)}
+.rte-badge.excess{background:rgba(211,47,47,0.28);color:#ff8a80;border:1px solid rgba(255,82,82,0.55)}
+.rte-badge.pending{background:rgba(0,229,255,0.12);color:#80DEEA;border:1px solid rgba(0,229,255,0.35)}
+.rte-map-btn{background:#1b3826;color:#80DEEA;border:1px solid #2e5940;border-radius:6px;padding:4px 8px;font:11px Tahoma,Arial;cursor:pointer;white-space:nowrap}
+.rte-map-btn:hover{background:#244d34;color:#fff}
+
 /* ===== منظومة المؤشرات القياسية (7 مجموعات + الأولوية 1-10) ===== */
 .kpi-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px;background:#101c14;border:1px solid #243a2a;border-radius:8px}
 .kpi-tab{background:transparent;color:#a9c4ae;border:0;border-radius:6px;padding:6px 10px;font:12px Tahoma,Arial;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s}
@@ -345,10 +432,39 @@
 /* شريط التنقل لا يغطي زر العودة للرؤية الشاملة */
 body.admin .ui-controls{left:290px}
 @media(max-width:768px){body.admin .ui-controls{left:12px;top:56px}}
+
+/* ===== خريطة GIS التفاعلية (المرافق والطرق والقطع) ===== */
+#gis-modal{width:min(95vw,840px);max-width:840px;max-height:88vh;overflow:auto;direction:rtl}
+.gis-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.gis-head h4{margin:0;color:#FFD54F}
+.gis-tabs{display:flex;flex-wrap:wrap;gap:6px;background:#111a13;border:1px solid #2b4430;border-radius:8px;padding:4px;margin-bottom:10px}
+.gis-tab{flex:1;min-width:140px;background:transparent;color:#a9c4ae;border:0;border-radius:6px;padding:7px 10px;font:12px Tahoma,Arial;cursor:pointer;font-weight:700;transition:background .15s,color .15s}
+.gis-tab.on{background:#2E7D32;color:#fff}
+.gis-toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#121f15;border:1px solid #28422e;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:12px}
+.gis-toolbar select,.gis-toolbar input[type=text]{background:#1b2b1e;color:#e8efe8;border:1px solid #35543c;border-radius:6px;padding:5px 8px;font:12px Tahoma,Arial;flex:1;min-width:150px}
+.gis-btn{background:#2E7D32;color:#fff;border:0;border-radius:6px;padding:6px 12px;font:12px Tahoma,Arial;font-weight:700;cursor:pointer;white-space:nowrap}
+.gis-btn.sec{background:#00695C}.gis-btn.warn{background:#5D4037}.gis-btn.ghost{background:#253328;border:1px solid #3c5441}
+.gis-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px;margin-bottom:10px}
+.gis-kpi{background:#121f15;border:1px solid #27402d;border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.gis-kpi span{font-size:11px;color:#9bb7a0}.gis-kpi b{font-size:17px;color:#e8efe8}
+.gis-list{max-height:310px;overflow:auto;border:1px solid #263d2b;border-radius:8px;background:#101912}
+.gis-tbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.gis-tbl th{background:#192d1e;color:#FFD54F;position:sticky;top:0;padding:7px 8px;text-align:right;white-space:nowrap}
+.gis-tbl td{padding:6px 8px;border-bottom:1px solid #1f3324;text-align:right;vertical-align:middle}
+.gis-tbl tbody tr:hover{background:rgba(46,125,50,0.14)}
+.gis-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:999px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.gis-badge.match{background:rgba(46,125,50,0.28);color:#81C784;border:1px solid rgba(76,175,80,0.5)}
+.gis-badge.warn{background:rgba(245,158,11,0.22);color:#FCD34D;border:1px solid rgba(245,158,11,0.5)}
+.gis-mini-btn{background:#1e3524;color:#80DEEA;border:1px solid #2e5539;border-radius:5px;padding:3px 7px;font:10.5px Tahoma,Arial;cursor:pointer;white-space:nowrap}
+.gis-mini-btn:hover{background:#294931;color:#fff}
+.gis-note{font-size:11px;color:#9bb7a0;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.22);border-radius:7px;padding:7px 10px;margin-bottom:9px;line-height:1.5}
+.probe-gis-btn{flex:1 1 100%;background:rgba(0,105,92,0.28);color:#80CBC4;font-weight:700;border:1px solid rgba(0,150,136,0.55);border-radius:6px;padding:6px 8px;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;gap:5px;transition:background .15s}
+.probe-gis-btn:hover{background:rgba(0,137,123,0.42);color:#fff}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="/dist/pivot-chart.js"></script>
+<script src="/vendor/qrcode.js"></script>
 </head>
 <body>
 
@@ -372,8 +488,6 @@ body.admin .ui-controls{left:290px}
                 <button class="filter-btn" onclick="setCropFilter('بذور', this)">بذور</button>
                 <button class="filter-btn" onclick="setCropFilter('شعير', this)">شعير</button>
                 <button class="filter-btn" onclick="setCropFilter('بقوليات', this)">بقوليات</button>
-                <button class="filter-btn" onclick="setCropFilter('أعلاف', this)">أعلاف</button>
-                <button class="filter-btn" onclick="setCropFilter('خضروات', this)">خضروات</button>
                 <button class="filter-btn" onclick="setCropFilter('أسمدة', this)">أسمدة</button>
             </div>
 
@@ -402,10 +516,11 @@ body.admin .ui-controls{left:290px}
             <div class="action-buttons">
                 <button class="action-btn btn-d" onclick="openDash()">📈 المؤشرات</button>
                 <button class="action-btn btn-g" onclick="exportGeoJSON()">🗺️ GeoJSON</button>
-                <button class="action-btn btn-i" onclick="$('imp').click()" title="عرض ملف GeoJSON على الخريطة">📂 استيراد</button>
-                <input type="file" id="imp" accept=".geojson,.json" hidden onchange="importGeo(this)">
+                <button class="action-btn btn-i" onclick="$('imp').click()" title="عرض ملف GeoJSON أو KML على الخريطة">📂 استيراد GIS</button>
+                <input type="file" id="imp" accept=".geojson,.json,.kml" hidden onchange="importGeo(this)">
             </div>
             <div class="action-buttons">
+                <button class="action-btn" style="background:#00695C" onclick="openGisModal()" title="استعراض المرافق والطرق المحيطة وحدود القطع (GIS)">🛰️ الخريطة الجغرافية (GIS)</button>
                 <button class="action-btn btn-g" onclick="toggleFS()">⛶ ملء الشاشة</button>
             </div>
         </div>
@@ -434,21 +549,27 @@ body.admin .ui-controls{left:290px}
             <div class="legend-item"><span class="legend-box-icon legend-pulse" style="background:#d32f2f;"></span> <span><b>خارج الخدمة</b></span></div>
             <div class="legend-item"><span style="display:inline-flex;width:18px;justify-content:center;margin-left:8px;"><svg viewBox="0 0 24 24" width="15" height="15"><path d="M12 2L1 21h22L12 2z" fill="#FFB300" stroke="#111" stroke-width="1.6"/><path d="M12 9v5m0 3v.5" stroke="#111" stroke-width="2.2" stroke-linecap="round"/></svg></span> <span><b>رياح شديدة (&gt; 40 كم/س)</b></span></div>
             <div class="legend-item"><div class="legend-box-selected"></div> <span><b>حدود المركز المحدد</b></span></div>
-            <div class="legend-item"><div class="legend-box-all"></div> <span><b>حدود باقي المراكز</b></span></div>
+            <div class="legend-item"><div class="legend-box-all"></div> <span><b>حدود المراكز والمباني والقطع</b></span></div>
         </div>
+        <div id="pivot-route-hud"></div>
     </div>
 
     <div id="login-modal" class="custom-modal"><h4>🔐 تسجيل الدخول</h4>
         <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="lg-email" dir="ltr"></div>
         <div class="form-group"><label>كلمة المرور</label><input type="password" id="lg-pass" dir="ltr" onkeydown="if(event.key==='Enter')doLogin()"></div>
         <div class="modal-btns"><button onclick="doLogin()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">دخول</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
-    <div id="stock-modal" class="custom-modal"><h4>📦 إدخال الكمية اليومية</h4>
-        <div class="form-group"><label>المخزن</label><select id="st-loc" onchange="stockHint()"></select></div>
-        <div class="form-group"><label>التاريخ</label><input type="date" id="st-date"></div>
-        <div class="form-group"><label>الكمية الحالية في المخزن (قنطار)</label><input type="number" id="st-qty" min="0" oninput="stockHint()"></div>
-        <div class="form-group"><label>ملاحظة (اختياري)</label><input type="text" id="st-note"></div>
-        <div id="st-info" style="font-size:13px;margin-top:6px"></div>
-        <div class="modal-btns"><button onclick="saveStock()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 حفظ</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
+    <div id="stock-modal" class="custom-modal"><h4>📦 الحركة اليومية للمخزون (إدخال / إخراج)</h4>
+        <div class="form-group"><label>المخزن</label><select id="st-loc" onchange="loadStockBase()"></select></div>
+        <div class="form-group"><label>التاريخ</label><input type="date" id="st-date" onchange="loadStockBase()"></div>
+        <div class="st-mode-bar">
+            <button type="button" class="st-mode-btn on" data-mode="in" onclick="setStockMode('in')">📥 إدخال للمخزون (+)</button>
+            <button type="button" class="st-mode-btn" data-mode="out" onclick="setStockMode('out')">📤 إخراج من المخزون (-)</button>
+            <button type="button" class="st-mode-btn" data-mode="set" onclick="setStockMode('set')">📊 ضبط الرصيد (=)</button>
+        </div>
+        <div class="form-group"><label id="st-qty-lbl">الكمية المُدخلة (قنطار)</label><input type="number" id="st-qty" min="0" step="0.1" oninput="stockHint()"></div>
+        <div class="form-group"><label>ملاحظة (اختياري)</label><input type="text" id="st-note" placeholder="مثال: استلام من الفلاحين / تحويل لمطحنة"></div>
+        <div id="st-info" class="st-preview"></div>
+        <div class="modal-btns"><button id="st-save-btn" onclick="saveStock()" style="flex:1;padding:9px;background:#2E7D32;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">💾 تسجيل العملية</button><button onclick="this.closest('.custom-modal').style.display='none'" style="padding:9px 15px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div></div>
     <div id="users-modal" class="custom-modal" style="max-width:460px;max-height:88vh;overflow:auto"><h4>👥 إدارة المستخدمين</h4>
         <div id="u-list" style="margin-bottom:10px"></div>
         <div class="form-group"><input type="text" id="u-name" placeholder="الاسم الكامل"></div>
@@ -506,6 +627,21 @@ body.admin .ui-controls{left:290px}
         <div class="modal-btns"><button onclick="this.closest('.custom-modal').style.display='none'" style="flex:1;padding:9px;background:#555;color:white;border:none;border-radius:5px;cursor:pointer;">إغلاق</button></div>
     </div>
 
+    <div id="gis-modal" class="custom-modal">
+        <div class="gis-head">
+            <h4>🛰️ الخريطة الجغرافية التفاعلية (GIS)</h4>
+        </div>
+        <div class="gis-tabs">
+            <button type="button" class="gis-tab on" data-gtab="surround" onclick="setGisTab('surround')">🏥 المرافق والطرق المحيطة</button>
+            <button type="button" class="gis-tab" data-gtab="parcels" onclick="setGisTab('parcels')">📐 حدود القطع والمباني</button>
+        </div>
+        <div id="gis-modal-body"></div>
+        <div class="modal-btns" style="margin-top:10px">
+            <button type="button" onclick="clearGisLayers()" style="padding:8px 12px;background:#6D4C41;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px;">🧹 مسح طبقات GIS</button>
+            <button type="button" onclick="$('gis-modal').style.display='none'" style="flex:1;padding:8px 14px;background:#555;color:#fff;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">إغلاق</button>
+        </div>
+    </div>
+
     <div id="excel-modal" class="custom-modal">
         <h4>📊 خيارات تصدير ملف Excel</h4>
         <div class="form-group">
@@ -517,14 +653,12 @@ body.admin .ui-controls{left:290px}
                 <option value="seeds">مخازن البذور فقط</option>
                 <option value="chaar">الشعير فقط</option>
                 <option value="bougholiat">محلات بيع البقوليات فقط</option>
-                <option value="أعلاف">الأعلاف فقط</option>
-                <option value="خضروات">الخضروات فقط</option>
                 <option value="asmida">الأسمدة فقط</option>
             </select>
         </div>
         <div class="modal-btns">
             <button onclick="confirmExportExcel()" style="flex:1; padding:9px; background:#2E7D32; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">📥 تحميل ملف Excel</button>
-            <button onclick="document.getElementById('excel-modal').style.display='none'" style="padding:9px 15px; background:#555; color:white; border:none; border-radius:5px; cursor:pointer;">إلغاء</button>
+            <button onclick="document.getElementById('excel-modal').style.display='none'" style="padding:9px 15px; background:#555; color:white; border:none; border-radius:5px; cursor:pointer;">إغلاق</button>
         </div>
     </div>
 
@@ -553,10 +687,25 @@ body.admin .ui-controls{left:290px}
                 <option value="حبوب">حبوب</option>
                 <option value="محلات بيع البقوليات">محلات بيع البقوليات</option>
                 <option value="الشعير">الشعير</option>
-                <option value="أعلاف">أعلاف</option>
-                <option value="خضروات">خضروات</option>
                 <option value="الأسمدة">الأسمدة</option>
             </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="form-group">
+                <label>نوع المخزن:</label>
+                <select id="edit-storage-type">
+                    <option value="closed">🏠 مخزن مغطا</option>
+                    <option value="silo">🗼 صوامع</option>
+                    <option value="open">☀️ في الهواء الطلق</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>توفر الميزان:</label>
+                <select id="edit-scale">
+                    <option value="1">⚖️ يحتوي على ميزان</option>
+                    <option value="0">بدون ميزان</option>
+                </select>
+            </div>
         </div>
         <div class="form-group">
             <label>السعة التخزينية (بالقنطار أو الكمية):</label>
@@ -629,11 +778,17 @@ body.admin .ui-controls{left:290px}
         const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, attribution: '© CARTO' });
         const ndvi = L.tileLayer('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_NDVI_8Day/default/default/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png', { maxNativeZoom: 9, maxZoom: 20, opacity: 0.7, attribution: 'NASA GIBS' });
         const heatLayer = L.heatLayer([], { radius: 30, blur: 22, maxZoom: 9 });
+        const gisParcelsLayer = L.layerGroup().addTo(map);
+        const gisRoadsLayer = L.layerGroup().addTo(map);
+        const gisFacilitiesLayer = L.layerGroup().addTo(map);
         L.control.layers({
             "🛰️ أقمار صناعية (Google)": googleHybrid, "🛰️ أقمار صناعية (Esri)": esriSat,
             "🗺️ الطرق": osmRoads, "⛰️ طبوغرافية": topo, "🌑 داكنة": dark
         }, {
             "📍 المراكز": markersLayer, "🟧 حدود المراكز": allPolygonsLayer,
+            "📐 القطع والأقسام المسحية": gisParcelsLayer,
+            "🛣️ الطرق المحيطة (GIS)": gisRoadsLayer,
+            "🏥 المرافق الحيوية المحيطة": gisFacilitiesLayer,
             "🔥 كثافة السعة": heatLayer, "🌱 NDVI الغطاء النباتي (ناسا)": ndvi
         }, { position: 'topleft' }).addTo(map);
         L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
@@ -674,11 +829,43 @@ body.admin .ui-controls{left:290px}
             
             document.getElementById('edit-name').value = "";
             document.getElementById('edit-province').value = "تيميمون";
+            document.getElementById('edit-storage-type').value = "closed";
+            document.getElementById('edit-scale').value = "1";
             document.getElementById('edit-cap').value = "50,000 ق";
             document.getElementById('edit-status').value = "active";
             
             document.getElementById('center-modal').style.display = 'block';
         });
+
+        const STORAGE_TYPES = {
+            silo: { label: 'صوامع', icon: '🗼' },
+            closed: { label: 'مخزن مغطا', icon: '🏠' },
+            open: { label: 'في الهواء الطلق', icon: '☀️' }
+        };
+        function getWarehouseMeta(loc) {
+            const raw = String((loc && loc.type) || '').trim().toLowerCase();
+            const name = String((loc && loc.name) || '');
+            let storageType = 'closed';
+            let hasScale = false;
+            if (raw.includes('|')) {
+                const [st, sc] = raw.split('|');
+                if (st === 'silo' || st === 'صوامع') storageType = 'silo';
+                else if (st === 'open' || st === 'هواء' || st === 'air') storageType = 'open';
+                else storageType = 'closed';
+                hasScale = sc === 'scale' || sc === '1' || sc === 'true' || sc === 'ميزان';
+            } else {
+                if (/صومع|صوامع|سيلو|silo/i.test(raw) || /صومع|صوامع|سيلو|silo/i.test(name)) storageType = 'silo';
+                else if (/هواء\s*الطلق|air\s*libre|airlibre|open/i.test(raw) || /هواء\s*الطلق|air\s*libre|airlibre/i.test(name)) storageType = 'open';
+                else storageType = 'closed';
+                hasScale = raw === 'scale' || /ميزان|bascule/i.test(name);
+            }
+            const info = STORAGE_TYPES[storageType] || STORAGE_TYPES.closed;
+            return { storageType, label: info.label, icon: info.icon, hasScale };
+        }
+        function encodeWarehouseType(storageType, hasScale) {
+            const st = STORAGE_TYPES[storageType] ? storageType : 'closed';
+            return `${st}|${hasScale ? 'scale' : 'none'}`;
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             if (window.innerWidth < 768) toggleSidebar();
@@ -700,10 +887,12 @@ body.admin .ui-controls{left:290px}
         }
         function formatLocTooltip(loc) {
             const prov = loc.province || 'أدرار';
+            const wm = getWarehouseMeta(loc);
+            const metaText = ` • ${wm.label}${wm.hasScale ? ' + ميزان' : ''}`;
             const badgeText = (loc.status === 'inactive') ? ' ⚠️ (خارج الخدمة)' : '';
             const w = getWindInfo(loc);
             const windText = (w && w.wind > WIND_WARN_KMH) ? ` — ⚠️ رياح شديدة ${Math.round(w.wind)} كم/س` : '';
-            return `${esc(loc.name)} (${esc(prov)})${badgeText}${windText}`;
+            return `${esc(loc.name)} (${esc(prov)})${metaText}${badgeText}${windText}`;
         }
         function formatWxHtml(w) {
             if (!w || !Number.isFinite(w.temp) || !Number.isFinite(w.wind)) return '—';
@@ -782,7 +971,7 @@ body.admin .ui-controls{left:290px}
 
                 if (loc.geojson) {
                     L.geoJSON(loc.geojson, {
-                        style: { color: "#ff9800", weight: 2, fillOpacity: 0.15 }
+                        style: { color: "#EF4444", weight: 1.75, opacity: 0.92, fillColor: "#F59E0B", fillOpacity: 0.26 }
                     }).addTo(allPolygonsLayer);
                 }
 
@@ -800,11 +989,13 @@ body.admin .ui-controls{left:290px}
 
                 const item = document.createElement('div');
                 item.className = 'list-item';
+                const wm = getWarehouseMeta(loc);
                 item.setAttribute('data-crop', loc.area || '');
                 item.setAttribute('data-cap', parseInt(String(loc.cap).replace(/[^0-9]/g, '')) || 0);
+                item.setAttribute('data-search', normalizeAr(`${loc.name} ${prov} ${loc.area || ''} ${wm.label} ${wm.hasScale ? 'ميزان' : 'بدون ميزان'}`));
                 let statusBadge = (loc.status === 'inactive') ? `<span class="badge-out">خارج الخدمة</span>` : '';
                 let windBadge = highWind ? `<span class="badge-wind" title="رياح شديدة تتجاوز 40 كم/س">⚠️ ${Math.round(w.wind)} كم/س</span>` : `<span class="badge-wind" style="display:none"></span>`;
-                item.innerHTML = `<span>🏠⚖️ <b>${esc(loc.name)}</b> <span class="province-tag">(${esc(prov)})</span></span> <span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0">${windBadge}${statusBadge}${pctBadge(loc)}</span>`;
+                item.innerHTML = `<span>${wm.icon}${wm.hasScale ? '⚖️' : ''} <b>${esc(loc.name)}</b> <span class="province-tag">(${esc(prov)})</span> <span class="loc-meta-tags">· ${wm.label}</span></span> <span style="display:inline-flex;align-items:center;gap:4px;flex-shrink:0">${windBadge}${statusBadge}${pctBadge(loc)}</span>`;
                 item.onclick = () => {
                     showDetails(loc);
                     if (window.innerWidth < 768) toggleSidebar();
@@ -822,6 +1013,7 @@ body.admin .ui-controls{left:290px}
             updateAlertBadge();
             if (!window._dl) { window._dl = 1; openFromHash(); }
             if (locations.length && Date.now() - _wxLastTs > 60000) refreshAllWinds();
+            if (typeof renderPivotLayer === 'function' && Array.isArray(PIVOTS) && PIVOTS.length) renderPivotLayer();
         }
 
         function showDetails(loc, extraNote = "") {
@@ -830,18 +1022,20 @@ body.admin .ui-controls{left:290px}
             CURRENT_LOC_ID = String(loc.id);
             map.flyTo([lat, lng], 16);
             setTimeout(() => loadWx(lat, lng, loc.id), 0);
-            history.replaceState(null, "", "#c=" + encodeURIComponent(loc.id));
+            const pvKeep = window._pendingDeepPivotId ? `&pv=${encodeURIComponent(window._pendingDeepPivotId)}` : '';
+            history.replaceState(null, "", "#c=" + encodeURIComponent(loc.id) + pvKeep);
             document.getElementById('ui-home').style.display = 'block';
             
             if (currentGeoLayer) map.removeLayer(currentGeoLayer);
             if (loc.geojson) {
                 currentGeoLayer = L.geoJSON(loc.geojson, {
-                    style: { color: (loc.status === 'inactive' ? "#777" : "#ff0000"), weight: 3, fillOpacity: 0.28, fillColor: (loc.status === 'inactive' ? "#777" : "#ff0000") }
+                    style: { color: (loc.status === 'inactive' ? "#777" : "#EF4444"), weight: 2.5, opacity: 1, fillOpacity: 0.36, fillColor: (loc.status === 'inactive' ? "#777" : "#FBBF24") }
                 }).addTo(map);
             }
 
             let statusText = (loc.status === 'inactive') ? '<span style="color:#ff4d4d">خارج الخدمة ⚠️</span>' : '<span style="color:#4CAF50">نشط (يعمل) ✅</span>';
             let prov = loc.province || 'أدرار';
+            const wm = getWarehouseMeta(loc);
 
             const panel = document.getElementById('info-panel');
             panel.style.display = 'block';
@@ -850,6 +1044,8 @@ body.admin .ui-controls{left:290px}
                 ${extraNote ? `<div style="background:#1565C0; padding:6px; border-radius:5px; margin-bottom:10px; font-size:12px; text-align:center;">${extraNote}</div>` : ''}
                 <div class="info-detail"><span>🏛️ الولاية:</span> <b>${esc(prov)}</b></div>
                 <div class="info-detail"><span>📌 الحالة:</span> <b>${statusText}</b></div>
+                <div class="info-detail"><span>${wm.icon} نوع المخزن:</span> <b>${wm.label}</b></div>
+                <div class="info-detail"><span>⚖️ الميزان:</span> <b>${wm.hasScale ? '<span style="color:#4CAF50">يحتوي على ميزان ✅</span>' : '<span style="color:#aaa">لا يحتوي على ميزان ❌</span>'}</b></div>
                 <div class="info-detail"><span>🌾 نوع النشاط:</span> <b>${esc(loc.area)}</b></div>
                 <div class="info-detail"><span>📦 السعة / الكمية:</span> <b>${esc(loc.cap)}</b></div>
                 <div class="info-detail"><span>📍 الإحداثيات:</span> <b>${lat.toFixed(5)}, ${lng.toFixed(5)}</b></div>
@@ -857,7 +1053,9 @@ body.admin .ui-controls{left:290px}
                 <div class="info-detail"><span>🌡️ الطقس الآن:</span> <b id="wx">…</b></div>
                 <div class="panel-actions">
                     <button data-lat="${lat}" data-lng="${lng}" onclick="routeTo(+this.dataset.lat,+this.dataset.lng)" class="panel-btn" style="background:#1565C0">🧭 مسار</button>
+                    <button data-id="${esc(loc.id)}" onclick="openStock(this.dataset.id)" class="panel-btn mgr-only" style="background:#2E7D32">📦 إدخال/إخراج</button>
                     <button data-id="${esc(loc.id)}" onclick="openMaintRoute(this.dataset.id)" class="panel-btn admin-only" style="background:#00838F">🛠️ مسار صيانة</button>
+                    <button data-id="${esc(loc.id)}" onclick="openGisModal({targetType:'loc',targetId:this.dataset.id,autoScan:true})" class="panel-btn" style="background:#00695C">🛰️ المحيط GIS</button>
                     <button onclick="copyText(location.href)" class="panel-btn" style="background:#6A1B9A">🔗 رابط</button>
                     <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="panel-btn gps-btn">🚗 GPS</a>
                     <button data-id="${esc(loc.id)}" onclick="openEditById(this.dataset.id)" class="panel-btn edit-btn">✏️ تعديل</button>
@@ -883,6 +1081,9 @@ body.admin .ui-controls{left:290px}
                 areaSel.appendChild(opt);
             }
             areaSel.value = loc.area || 'قمح إستهلاكي';
+            const wm = getWarehouseMeta(loc);
+            document.getElementById('edit-storage-type').value = wm.storageType;
+            document.getElementById('edit-scale').value = wm.hasScale ? '1' : '0';
             document.getElementById('edit-cap').value = loc.cap;
             document.getElementById('edit-status').value = loc.status || 'active';
             
@@ -899,6 +1100,8 @@ body.admin .ui-controls{left:290px}
             let name = document.getElementById('edit-name').value.trim();
             let province = document.getElementById('edit-province').value.trim() || 'أدرار';
             let area = document.getElementById('edit-area').value;
+            let storageType = document.getElementById('edit-storage-type').value;
+            let hasScale = document.getElementById('edit-scale').value === '1';
             let cap = document.getElementById('edit-cap').value.trim();
             let status = document.getElementById('edit-status').value;
             let lat = parseFloat(document.getElementById('edit-lat').value);
@@ -920,7 +1123,7 @@ body.admin .ui-controls{left:290px}
                 province: province,
                 lat: lat,
                 lng: lng,
-                type: "both",
+                type: encodeWarehouseType(storageType, hasScale),
                 area: area,
                 cap: cap,
                 status: status,
@@ -992,7 +1195,7 @@ body.admin .ui-controls{left:290px}
                 if (type === 'bougholiat') return matchesCropCategory(loc.area, 'بقوليات');
                 if (type === 'chaar') return matchesCropCategory(loc.area, 'شعير');
                 if (type === 'asmida') return matchesCropCategory(loc.area, 'أسمدة');
-                if (type === 'حبوب' || type === 'أعلاف' || type === 'خضروات') return matchesCropCategory(loc.area, type);
+                if (type === 'حبوب') return matchesCropCategory(loc.area, type);
                 return true;
             });
 
@@ -1001,11 +1204,12 @@ body.admin .ui-controls{left:290px}
                 return;
             }
 
-            let csvContent = "\uFEFFالاسم/المحل;الولاية;الحالة;نوع النشاط;السعة/الكمية;الإحداثيات\n";
+            let csvContent = "\uFEFFالاسم/المحل;الولاية;نوع المخزن;الميزان;الحالة;نوع النشاط;السعة/الكمية;الإحداثيات\n";
             filtered.forEach(loc => {
                 let stLabel = (loc.status === 'inactive') ? 'خارج الخدمة' : 'نشط';
                 let prov = loc.province || 'أدرار';
-                csvContent += `"${loc.name}";"${prov}";"${stLabel}";"${loc.area}";"${loc.cap}";"${loc.lat}, ${loc.lng}"\n`;
+                const wm = getWarehouseMeta(loc);
+                csvContent += `"${loc.name}";"${prov}";"${wm.label}";"${wm.hasScale ? 'نعم' : 'لا'}";"${stLabel}";"${loc.area}";"${loc.cap}";"${loc.lat}, ${loc.lng}"\n`;
             });
 
             let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1046,6 +1250,10 @@ body.admin .ui-controls{left:290px}
             if (currentGeoLayer) map.removeLayer(currentGeoLayer);
             if (nearestLineLayer) map.removeLayer(nearestLineLayer);
             if (maintRouteLayer) maintRouteLayer.clearLayers();
+            if (typeof pivotLinkLayer !== 'undefined' && pivotLinkLayer) pivotLinkLayer.clearLayers();
+            if (typeof pivotDirectRouteLayer !== 'undefined' && pivotDirectRouteLayer) pivotDirectRouteLayer.clearLayers();
+            if (typeof clearPivotRouteHud === 'function') clearPivotRouteHud();
+            if (typeof clearWarehouseFocus === 'function') clearWarehouseFocus();
         }
 
         function normalizeAr(s) {
@@ -1057,8 +1265,6 @@ body.admin .ui-controls{left:290px}
         }
         const CROP_CATEGORY_SYNONYMS = {
             'حبوب': ['حبوب', 'قمح', 'شعير', 'ذره', 'ارز', 'شوفان', 'فرينه', 'سميد'],
-            'اعلاف': ['اعلاف', 'علف', 'شعير', 'ذره', 'برسيم', 'قرط', 'تبان', 'نخاله'],
-            'خضروات': ['خضروات', 'خضر', 'بطاطا', 'طماطم', 'بصل', 'ثوم', 'فلفل', 'خس', 'جزر'],
             'استهلاكي': ['استهلاكي', 'قمح استهلاكي'],
             'بذور': ['بذور', 'بذره', 'تقاوي'],
             'بقوليات': ['بقوليات', 'عدس', 'حمص', 'فاصوليا', 'لوبيا', 'فول'],
@@ -1087,7 +1293,7 @@ body.admin .ui-controls{left:290px}
             let items = document.getElementsByClassName('list-item');
             let visibleCount = 0, visibleCap = 0;
             for (let i = 0; i < items.length; i++) {
-                let itemText = normalizeAr(items[i].innerText);
+                let itemText = items[i].getAttribute('data-search') || normalizeAr(items[i].innerText);
                 let itemCrop = items[i].getAttribute('data-crop') || '';
                 let matchesSearch = itemText.includes(searchText);
                 let matchesCrop = matchesCropCategory(itemCrop, currentCropFilter);
@@ -1115,10 +1321,36 @@ body.admin .ui-controls{left:290px}
         let watchId = null, meMarker = null, meCircle = null; const inside = new Set();
 
         function toast(m) { const t = $('toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3500); }
-        function copyText(t) { (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => toast('📋 تم النسخ'), () => toast('تعذر النسخ')); }
+        function copyText(t, msg = '📋 تم النسخ') {
+            const ok = () => toast(msg);
+            const fallback = () => {
+                try {
+                    const ta = document.createElement('textarea');
+                    ta.value = t; ta.setAttribute('readonly', '');
+                    ta.style.cssText = 'position:fixed;opacity:0;top:-999px;left:-999px';
+                    document.body.appendChild(ta); ta.select();
+                    const copied = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    if (copied) ok(); else toast('تعذر النسخ');
+                } catch (_) { toast('تعذر النسخ'); }
+            };
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                navigator.clipboard.writeText(t).then(ok, fallback);
+            } else { fallback(); }
+        }
         function updateHeat() { const mx = Math.max(1, ...locations.map(capNum)); heatLayer.setLatLngs(locations.filter(l => !isNaN(+l.lat) && !isNaN(+l.lng)).map(l => [+l.lat, +l.lng, Math.max(.15, capNum(l) / mx)])); }
         function openEditById(id) { const l = locations.find(x => String(x.id) === String(id)); if (l) openEditModal(l); }
-        function openFromHash() { const m = location.hash.match(/^#c=(.+)$/); if (!m) return; const l = locations.find(x => String(x.id) === decodeURIComponent(m[1])); if (l) showDetails(l); }
+        function openFromHash() {
+            const rawHash = (location.hash || '').replace(/^#/, '');
+            const hp = rawHash.includes('=') ? new URLSearchParams(rawHash) : null;
+            const sp = new URLSearchParams(location.search);
+            const targetId = (hp && hp.get('c')) || sp.get('wh') || '';
+            const pvId = (hp && hp.get('pv')) || sp.get('pv') || '';
+            window._pendingDeepPivotId = pvId || null;
+            if (!targetId) return;
+            const l = locations.find(x => String(x.id) === String(targetId));
+            if (l) showDetails(l);
+        }
 
         // WGS84 -> UTM
         function toUTM(lat, lon) {
@@ -1509,19 +1741,371 @@ body.admin .ui-controls{left:290px}
             }
         }
         let impLayer = null;
+        const GIS_STATE = {
+            tab: 'surround',
+            targetKey: 'map',
+            radiusKm: 5,
+            loading: false,
+            error: '',
+            lastScan: null,
+            roads: [],
+            facilities: [],
+            osmParcels: [],
+            parcels: []
+        };
+
+        function geodesicRingAreaM2(latLngRing) {
+            if (!Array.isArray(latLngRing) || latLngRing.length < 3) return 0;
+            const R = 6378137;
+            let area = 0;
+            for (let i = 0; i < latLngRing.length; i++) {
+                const p1 = latLngRing[i], p2 = latLngRing[(i + 1) % latLngRing.length];
+                const la1 = (p1[0] * Math.PI) / 180, ln1 = (p1[1] * Math.PI) / 180;
+                const la2 = (p2[0] * Math.PI) / 180, ln2 = (p2[1] * Math.PI) / 180;
+                area += (ln2 - ln1) * (2 + Math.sin(la1) + Math.sin(la2));
+            }
+            return Math.abs((area * R * R) / 2);
+        }
+
+        function ringCentroidLatLng(ring) {
+            if (!Array.isArray(ring) || !ring.length) return [0, 0];
+            let sLat = 0, sLng = 0;
+            ring.forEach(pt => { sLat += pt[0]; sLng += pt[1]; });
+            return [sLat / ring.length, sLng / ring.length];
+        }
+
+        function pointInRing(pt, ring) {
+            const x = pt[1], y = pt[0];
+            let inside = false;
+            for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+                const xi = ring[i][1], yi = ring[i][0];
+                const xj = ring[j][1], yj = ring[j][0];
+                const hit = (yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-12) + xi;
+                if (hit) inside = !inside;
+            }
+            return inside;
+        }
+
+        function distPointToRingM(pt, ring) {
+            if (!Array.isArray(ring) || ring.length < 2) return Infinity;
+            const refLat = pt[0];
+            const mLat = 111320, mLng = Math.max(1000, 111320 * Math.cos((refLat * Math.PI) / 180));
+            const px = pt[1] * mLng, py = pt[0] * mLat;
+            let best = Infinity;
+            for (let i = 0; i < ring.length; i++) {
+                const a = ring[i], b = ring[(i + 1) % ring.length];
+                const ax = a[1] * mLng, ay = a[0] * mLat;
+                const bx = b[1] * mLng, by = b[0] * mLat;
+                const dx = bx - ax, dy = by - ay;
+                const lenSq = dx * dx + dy * dy;
+                const t = lenSq > 1e-6 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq)) : 0;
+                const d = Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+                if (d < best) best = d;
+            }
+            return best;
+        }
+
+        function parseKmlToGeoJson(xmlText) {
+            const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+            const pms = Array.from(doc.getElementsByTagName('Placemark'));
+            const features = [];
+            const parseCoords = (str) => String(str || '').trim().split(/\s+/).map(tok => {
+                const parts = tok.split(',').map(Number);
+                return Number.isFinite(parts[0]) && Number.isFinite(parts[1]) ? [parts[0], parts[1]] : null;
+            }).filter(Boolean);
+
+            pms.forEach((pm, idx) => {
+                const props = {};
+                const nameEl = pm.getElementsByTagName('name')[0];
+                const descEl = pm.getElementsByTagName('description')[0];
+                props.name = nameEl && nameEl.textContent ? nameEl.textContent.trim() : `قطعة #${idx + 1}`;
+                if (descEl && descEl.textContent) props.description = descEl.textContent.trim();
+                Array.from(pm.getElementsByTagName('SimpleData')).concat(Array.from(pm.getElementsByTagName('Data'))).forEach(d => {
+                    const k = d.getAttribute('name');
+                    const vEl = d.tagName === 'Data' ? d.getElementsByTagName('value')[0] : d;
+                    if (k && vEl && vEl.textContent) props[k] = vEl.textContent.trim();
+                });
+                const polys = Array.from(pm.getElementsByTagName('Polygon'));
+                if (polys.length) {
+                    polys.forEach(poly => {
+                        const cEl = poly.getElementsByTagName('coordinates')[0];
+                        const ring = parseCoords(cEl && cEl.textContent);
+                        if (ring.length >= 3) features.push({ type: 'Feature', properties: { ...props }, geometry: { type: 'Polygon', coordinates: [ring] } });
+                    });
+                    return;
+                }
+                const lines = Array.from(pm.getElementsByTagName('LineString'));
+                if (lines.length) {
+                    lines.forEach(ln => {
+                        const ring = parseCoords(ln.getElementsByTagName('coordinates')[0]?.textContent);
+                        if (ring.length >= 2) features.push({ type: 'Feature', properties: { ...props }, geometry: { type: 'LineString', coordinates: ring } });
+                    });
+                    return;
+                }
+                const ptEl = pm.getElementsByTagName('Point')[0]?.getElementsByTagName('coordinates')[0];
+                const pts = parseCoords(ptEl && ptEl.textContent);
+                if (pts.length) features.push({ type: 'Feature', properties: { ...props }, geometry: { type: 'Point', coordinates: pts[0] } });
+            });
+            return { type: 'FeatureCollection', features };
+        }
+
+        function extractPolygonRings(geojson) {
+            const rings = [];
+            const visit = (geom, props = {}) => {
+                if (!geom) return;
+                if (geom.type === 'FeatureCollection' && Array.isArray(geom.features)) geom.features.forEach(f => visit(f, f.properties || {}));
+                else if (geom.type === 'Feature') visit(geom.geometry, geom.properties || props);
+                else if (geom.type === 'GeometryCollection' && Array.isArray(geom.geometries)) geom.geometries.forEach(g => visit(g, props));
+                else if (geom.type === 'Polygon' && Array.isArray(geom.coordinates) && geom.coordinates[0]) {
+                    const r = geom.coordinates[0].map(c => [Number(c[1]), Number(c[0])]).filter(c => Number.isFinite(c[0]) && Number.isFinite(c[1]));
+                    if (r.length >= 3) rings.push({ ring: r, props, geom });
+                } else if (geom.type === 'MultiPolygon' && Array.isArray(geom.coordinates)) {
+                    geom.coordinates.forEach(poly => {
+                        if (poly && poly[0]) {
+                            const r = poly[0].map(c => [Number(c[1]), Number(c[0])]).filter(c => Number.isFinite(c[0]) && Number.isFinite(c[1]));
+                            if (r.length >= 3) rings.push({ ring: r, props, geom: { type: 'Polygon', coordinates: poly } });
+                        }
+                    });
+                }
+            };
+            visit(geojson, {});
+            return rings;
+        }
+
+        function renderGisParcelsLayer() {
+            gisParcelsLayer.clearLayers();
+            GIS_STATE.osmParcels.forEach(op => {
+                if (!op.geojson) return;
+                const isBld = op.kind === 'building' || op.kind === 'warehouse';
+                L.geoJSON(op.geojson, {
+                    style: isBld
+                        ? { color: '#DC2626', weight: 1.4, opacity: 0.94, fillColor: '#FBBF24', fillOpacity: 0.34 }
+                        : { color: '#EF4444', weight: 1.75, opacity: 0.9, fillColor: '#F59E0B', fillOpacity: 0.22 }
+                }).bindPopup(`<div style="direction:rtl;font-size:12px"><b>📐 ${esc(op.name)}</b><br>النوع: ${esc(op.kind === 'building' ? 'مبنى' : op.kind === 'warehouse' ? 'مخزن' : (op.kind || 'قطعة'))}<br>المساحة التقريبية: <b>${(op.areaHa || 0).toFixed(3)} هكتار</b> (${Math.round((op.areaHa || 0) * 10000).toLocaleString()} م²)</div>`)
+                  .addTo(gisParcelsLayer);
+            });
+            GIS_STATE.parcels.forEach((p, idx) => {
+                const poly = L.polygon(p.ring, { color: '#EF4444', weight: 1.8, opacity: 0.95, fillColor: '#FBBF24', fillOpacity: 0.28 }).addTo(gisParcelsLayer);
+                const utm = toUTM(p.centroid[0], p.centroid[1]);
+                poly.bindTooltip(`📐 ${esc(p.name)} (${p.areaHa.toFixed(2)} هـ)`, { sticky: true });
+                poly.bindPopup(`<div style="direction:rtl;font-size:12px"><b>📐 ${esc(p.name)}</b><br>المساحة: <b>${p.areaHa.toFixed(2)} هكتار</b> (${Math.round(p.areaM2).toLocaleString()} م²)<br>UTM: <span style="direction:ltr;display:inline-block">${utm.zone}${utm.band} ${utm.e} ${utm.n}</span></div>`);
+                poly.on('click', () => { GIS_STATE.selectedParcelIdx = idx; });
+            });
+        }
+
+        function registerGisParcelsGeoJson(geojson, sourceName = 'ملف GIS') {
+            const extracted = extractPolygonRings(geojson);
+            const newParcels = extracted.map((item, i) => {
+                const areaM2 = geodesicRingAreaM2(item.ring);
+                const areaHa = areaM2 / 10000;
+                const centroid = ringCentroidLatLng(item.ring);
+                const pr = item.props || {};
+                const name = pr.name || pr.Name || pr.parcel || `${sourceName} #${i + 1}`;
+                return { id: `imp_${Date.now()}_${i}`, name: String(name), ring: item.ring, areaM2, areaHa, centroid, source: sourceName };
+            });
+            GIS_STATE.parcels = GIS_STATE.parcels.concat(newParcels);
+            renderGisParcelsLayer();
+            if ($('gis-modal')?.style.display === 'block') renderGisModalBody();
+            return newParcels;
+        }
+
         function importGeo(inp) {
             const f = inp.files[0]; if (!f) return; const r = new FileReader();
             r.onload = () => {
                 try {
+                    const isKml = /\.kml$/i.test(f.name) || /^\s*</.test(String(r.result || ''));
+                    const gj = isKml ? parseKmlToGeoJson(String(r.result)) : JSON.parse(String(r.result));
                     if (impLayer) map.removeLayer(impLayer);
-                    impLayer = L.geoJSON(JSON.parse(r.result), {
-                        pointToLayer: (ft, ll) => L.circleMarker(ll, { radius: 6, color: '#fff', fillColor: '#E040FB', fillOpacity: 1 }),
+                    impLayer = L.geoJSON(gj, {
+                        pointToLayer: (ft, ll) => L.circleMarker(ll, { radius: 6, color: '#EF4444', fillColor: '#FBBF24', fillOpacity: 0.95 }),
+                        style: { color: '#EF4444', weight: 1.8, opacity: 0.95, fillColor: '#FBBF24', fillOpacity: 0.28 },
                         onEachFeature: (ft, l) => { const q = ft.properties || {}; l.bindPopup(esc(q.name || q.Name || 'عنصر مستورد')); }
                     }).addTo(map);
-                    map.fitBounds(impLayer.getBounds()); toast('📂 تم العرض (للعرض فقط، لا يُحفظ في السحاب)');
-                } catch (e) { toast('ملف GeoJSON غير صالح'); }
+                    const parcels = registerGisParcelsGeoJson(gj, f.name.replace(/\.[^.]+$/, ''));
+                    if (impLayer.getBounds && impLayer.getBounds().isValid()) map.fitBounds(impLayer.getBounds(), { padding: [50, 50] });
+                    toast(`📂 تم استيراد ${parcels.length} قطعة (${isKml ? 'KML' : 'GeoJSON'})`);
+                } catch (e) { toast('ملف GeoJSON / KML غير صالح'); }
             };
             r.readAsText(f); inp.value = '';
+        }
+
+        function getGisTargetPoint(key = GIS_STATE.targetKey) {
+            if (key && key.startsWith('loc:')) {
+                const id = key.slice(4);
+                const l = locations.find(x => String(x.id) === id);
+                if (l) return { lat: +l.lat, lng: +l.lng, label: `🏭 ${l.name}`, type: 'loc', loc: l };
+            } else if (key && key.startsWith('pv:')) {
+                const id = key.slice(3);
+                const p = (typeof PIVOTS !== 'undefined' ? PIVOTS : []).find(x => String(x.id) === id);
+                if (p) return { lat: +p.lat, lng: +p.lng, label: `🌀 محور ${p.farmer_name || ''}`, type: 'pivot', pivot: p };
+            }
+            const c = map.getCenter();
+            return { lat: c.lat, lng: c.lng, label: '📍 مركز الخريطة الحالي', type: 'map' };
+        }
+
+        async function scanGisSurroundings() {
+            const tgt = getGisTargetPoint();
+            GIS_STATE.loading = true;
+            GIS_STATE.error = '';
+            renderGisModalBody();
+            try {
+                const res = await fetch(`/api/gis/nearby?lat=${tgt.lat}&lng=${tgt.lng}&radiusKm=${GIS_STATE.radiusKm}`);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                GIS_STATE.lastScan = { ...data, target: tgt };
+                GIS_STATE.roads = data.roads || [];
+                GIS_STATE.facilities = data.facilities || [];
+                GIS_STATE.osmParcels = data.osmParcels || [];
+
+                gisRoadsLayer.clearLayers();
+                GIS_STATE.roads.forEach(rd => {
+                    if (Array.isArray(rd.coords) && rd.coords.length >= 2) {
+                        L.polyline(rd.coords, rd.paved
+                            ? { color: '#00E5FF', weight: 4, opacity: 0.88 }
+                            : { color: '#F59E0B', weight: 3.5, opacity: 0.9, dashArray: '6,5' }
+                        ).bindTooltip(`${rd.paved ? '🛣️' : '🏜️'} ${esc(rd.name)} (${rd.distKm.toFixed(2)} كم)`).addTo(gisRoadsLayer);
+                    } else if (Number.isFinite(rd.lat) && Number.isFinite(rd.lng)) {
+                        L.circleMarker([rd.lat, rd.lng], { radius: 5, color: '#0d1710', weight: 2, fillColor: rd.paved ? '#00E5FF' : '#F59E0B', fillOpacity: 0.95 })
+                          .bindTooltip(`${rd.paved ? '🛣️' : '🏜️'} نقطة طريق: ${esc(rd.name)} (${rd.distKm.toFixed(2)} كم)`).addTo(gisRoadsLayer);
+                    }
+                });
+
+                gisFacilitiesLayer.clearLayers();
+                GIS_STATE.facilities.forEach((f, idx) => {
+                    const iconEmoji = (f.categoryLabel || '📍').split(' ')[0];
+                    const marker = L.marker([f.lat, f.lng], {
+                        icon: L.divIcon({
+                            className: '',
+                            html: `<div style="background:#0d1710;border:2px solid #00E5FF;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.7)">${iconEmoji}</div>`,
+                            iconSize: [26, 26], iconAnchor: [13, 13]
+                        })
+                    }).addTo(gisFacilitiesLayer);
+                    const roadTxt = f.roadKm != null ? `<br>🛣️ عبر الطريق: <b>${f.roadKm.toFixed(1)} كم</b> (~${f.durMin} د)` : '';
+                    marker.bindPopup(`<div style="direction:rtl;font-size:12px"><b>${esc(f.name)}</b><br>${esc(f.categoryLabel)}<br>📏 مباشر: <b>${f.directKm.toFixed(2)} كم</b>${roadTxt}<br><button type="button" onclick="routeToGisFacility(${idx})" style="margin-top:6px;width:100%;padding:5px;border:0;border-radius:5px;background:#10B981;color:#fff;font-weight:bold;cursor:pointer">🧭 رسم مسار الوصول</button></div>`);
+                });
+
+                renderGisParcelsLayer();
+                L.circle([tgt.lat, tgt.lng], { radius: GIS_STATE.radiusKm * 1000, color: '#00E5FF', weight: 1.5, dashArray: '6,6', fillOpacity: 0.03 }).addTo(gisFacilitiesLayer);
+                map.flyTo([tgt.lat, tgt.lng], Math.max(map.getZoom(), 13), { duration: 0.6 });
+                toast(`🛰️ تم مسح المحيط: ${GIS_STATE.facilities.length} مرفق و ${GIS_STATE.roads.length} طريق`);
+            } catch (err) {
+                GIS_STATE.error = 'تعذر إتمام مسح المحيط الآن، تحقق من الاتصال وحاول مجدداً.';
+            }
+            GIS_STATE.loading = false;
+            renderGisModalBody();
+        }
+
+        function setGisTab(tab) {
+            GIS_STATE.tab = tab === 'parcels' ? 'parcels' : 'surround';
+            document.querySelectorAll('#gis-modal .gis-tab').forEach(b => b.classList.toggle('on', b.dataset.gtab === GIS_STATE.tab));
+            renderGisModalBody();
+        }
+        function clearGisLayers() {
+            gisParcelsLayer.clearLayers(); gisRoadsLayer.clearLayers(); gisFacilitiesLayer.clearLayers();
+            GIS_STATE.roads = []; GIS_STATE.facilities = []; GIS_STATE.osmParcels = []; GIS_STATE.parcels = []; GIS_STATE.lastScan = null;
+            if (impLayer) { map.removeLayer(impLayer); impLayer = null; }
+            renderGisModalBody();
+            toast('🧹 تم مسح طبقات GIS');
+        }
+        function routeToGisFacility(idx) {
+            const f = GIS_STATE.facilities[idx];
+            const tgt = GIS_STATE.lastScan ? GIS_STATE.lastScan.target : getGisTargetPoint();
+            if (!f || !tgt) return;
+            $('gis-modal').style.display = 'none';
+            drawDualRouteOnMap({ lat: tgt.lat, lng: tgt.lng, name: tgt.label }, { lat: f.lat, lng: f.lng, name: f.name }, null, { originPivotId: tgt.pivot ? tgt.pivot.id : null });
+        }
+        function focusGisParcel(idx) {
+            const p = GIS_STATE.parcels[idx];
+            if (!p) return;
+            $('gis-modal').style.display = 'none';
+            map.fitBounds(L.latLngBounds(p.ring), { padding: [60, 60], maxZoom: 17 });
+        }
+
+        function renderGisModalBody() {
+            const box = $('gis-modal-body');
+            if (!box) return;
+            const locOpts = locations.map(l => `<option value="loc:${esc(l.id)}" ${GIS_STATE.targetKey === 'loc:' + l.id ? 'selected' : ''}>🏭 ${esc(l.name)}</option>`).join('');
+            const pvOpts = (typeof PIVOTS !== 'undefined' ? PIVOTS : []).map(p => `<option value="pv:${esc(p.id)}" ${GIS_STATE.targetKey === 'pv:' + p.id ? 'selected' : ''}>🌀 محور ${esc(p.farmer_name || '')}</option>`).join('');
+
+            if (GIS_STATE.tab === 'parcels') {
+                const rowsHtml = GIS_STATE.parcels.map((p, idx) => {
+                    const u = toUTM(p.centroid[0], p.centroid[1]);
+                    return `<tr>
+                        <td><b>${esc(p.name)}</b><br><small style="color:#8fae95">${esc(p.source)}</small></td>
+                        <td style="color:#FFD54F;font-weight:bold">${p.areaHa.toFixed(2)} هـ<br><small style="color:#8fae95">${Math.round(p.areaM2).toLocaleString()} م²</small></td>
+                        <td style="direction:ltr;font-family:monospace;font-size:11px">${u.zone}${u.band} ${u.e} ${u.n}</td>
+                        <td><button type="button" class="gis-mini-btn" onclick="focusGisParcel(${idx})">🎯 معاينة</button></td>
+                    </tr>`;
+                }).join('');
+                box.innerHTML = `<div class="gis-note">📂 يمكنك استيراد ملفات الحدود بصيغة <b>GeoJSON</b> أو <b>KML</b> لعرض القطع والمباني وحساب مساحتها بالهكتار على الخريطة.</div>
+                <div class="gis-toolbar">
+                    <button type="button" class="gis-btn" onclick="$('imp').click()">📂 استيراد حدود (GeoJSON / KML)</button>
+                </div>
+                <div class="gis-kpis">
+                    <div class="gis-kpi"><span>القطع المستوردة</span><b>${GIS_STATE.parcels.length}</b></div>
+                    <div class="gis-kpi"><span>إجمالي المساحة</span><b>${GIS_STATE.parcels.reduce((s, p) => s + p.areaHa, 0).toFixed(2)} هـ</b></div>
+                    <div class="gis-kpi"><span>حدود مخازن محفوظة</span><b>${locations.filter(l => l.geojson).length}</b></div>
+                </div>
+                <div class="gis-list">
+                    <table class="gis-tbl">
+                        <thead><tr><th>القطعة / المصدر</th><th>المساحة</th><th>إحداثيات UTM</th><th>عرض</th></tr></thead>
+                        <tbody>${rowsHtml || '<tr><td colspan="4" style="text-align:center;color:#8fae95;padding:16px">لم يتم استيراد ملفات حدود بعد.</td></tr>'}</tbody>
+                    </table>
+                </div>`;
+                return;
+            }
+
+            const src = GIS_STATE.lastScan && GIS_STATE.lastScan.sources;
+            const place = GIS_STATE.lastScan && GIS_STATE.lastScan.center ? GIS_STATE.lastScan.center.placeName : '';
+            const bldCount = GIS_STATE.osmParcels.filter(op => op.kind === 'building' || op.kind === 'warehouse').length;
+            const facRows = GIS_STATE.facilities.map((f, idx) => `<tr>
+                <td><b>${esc(f.name)}</b><br><small style="color:#8fae95">${esc(f.categoryLabel)}</small></td>
+                <td style="color:#6EE7B7;font-weight:bold">${f.directKm.toFixed(2)} كم</td>
+                <td>${f.roadKm != null ? `<b style="color:#00E5FF">${f.roadKm.toFixed(1)} كم</b> <small style="color:#9bb7a0">(~${f.durMin} د)</small>` : '<span style="color:#8fae95">—</span>'}</td>
+                <td><button type="button" class="gis-mini-btn" onclick="routeToGisFacility(${idx})">🧭 المسار</button></td>
+            </tr>`).join('');
+            const roadRows = GIS_STATE.roads.slice(0, 15).map(rd => `<tr>
+                <td><b>${esc(rd.name)}</b></td>
+                <td><span class="gis-badge ${rd.paved ? 'match' : 'warn'}">${rd.paved ? '🛣️ معبدة' : '🏜️ مسلك/رملي'}</span></td>
+                <td>${rd.distKm.toFixed(2)} كم</td>
+                <td><button type="button" class="gis-mini-btn" onclick="map.flyTo([${rd.lat},${rd.lng}],15)">🎯 موقع</button></td>
+            </tr>`).join('');
+            box.innerHTML = `<div class="gis-toolbar">
+                <select onchange="GIS_STATE.targetKey=this.value">
+                    <option value="map" ${GIS_STATE.targetKey === 'map' ? 'selected' : ''}>📍 مركز الخريطة الحالي</option>
+                    ${locOpts}${pvOpts}
+                </select>
+                <select style="max-width:110px" onchange="GIS_STATE.radiusKm=+this.value">
+                    ${[3, 5, 10, 15, 25].map(r => `<option value="${r}" ${GIS_STATE.radiusKm === r ? 'selected' : ''}>نطاق ${r} كم</option>`).join('')}
+                </select>
+                <button type="button" class="gis-btn" onclick="scanGisSurroundings()" ${GIS_STATE.loading ? 'disabled' : ''}>${GIS_STATE.loading ? '⏳ جاري المسح...' : '🔍 مسح المحيط GIS'}</button>
+            </div>
+            ${place ? `<div class="gis-note">📌 <b>الموقع الجغرافي:</b> ${esc(place)}${src ? ` · <small>المصادر: ${src.nominatimOk ? 'OSM ✅' : ''} ${src.osrmOk ? 'OSRM ✅' : ''} ${src.overpassOk ? 'Overpass ✅' : ''}</small>` : ''}</div>` : ''}
+            ${GIS_STATE.error ? `<div class="gis-note" style="border-color:#ff5252;color:#ff8a80">${esc(GIS_STATE.error)}</div>` : ''}
+            <div class="gis-kpis">
+                <div class="gis-kpi"><span>المرافق المرصودة</span><b>${GIS_STATE.facilities.length}</b></div>
+                <div class="gis-kpi"><span>الطرق ونقاط الوصول</span><b>${GIS_STATE.roads.length}</b></div>
+                <div class="gis-kpi"><span>مباني وقطع محيطة</span><b>${GIS_STATE.osmParcels.length}${bldCount ? ` <small style="font-size:11px;color:#FCD34D">(${bldCount} مبنى)</small>` : ''}</b></div>
+                <div class="gis-kpi"><span>أقرب مرفق</span><b>${GIS_STATE.facilities[0] ? (GIS_STATE.facilities[0].roadKm != null ? GIS_STATE.facilities[0].roadKm.toFixed(1) + ' كم' : GIS_STATE.facilities[0].directKm.toFixed(2) + ' كم') : '—'}</b></div>
+            </div>
+            <div class="gis-list" style="margin-bottom:8px">
+                <table class="gis-tbl">
+                    <thead><tr><th>المرفق الحيوي</th><th>المباشر</th><th>الوصول عبر الطريق</th><th>إجراء</th></tr></thead>
+                    <tbody>${facRows || '<tr><td colspan="4" style="text-align:center;color:#8fae95;padding:14px">اضغط "🔍 مسح المحيط GIS" لاستكشاف المرافق والطرق والمباني المحيطة وحساب مسافات الوصول.</td></tr>'}</tbody>
+                </table>
+            </div>
+            ${roadRows ? `<div class="gis-list" style="max-height:175px"><table class="gis-tbl"><thead><tr><th>الطريق / المحور</th><th>النوع</th><th>البعد عن الهدف</th><th>عرض</th></tr></thead><tbody>${roadRows}</tbody></table></div>` : ''}`;
+        }
+
+        function openGisModal(opts = {}, evt) {
+            if (evt && evt.stopPropagation) evt.stopPropagation();
+            if (opts.targetType === 'loc' && opts.targetId) GIS_STATE.targetKey = 'loc:' + opts.targetId;
+            else if (opts.targetType === 'pivot' && opts.targetId) GIS_STATE.targetKey = 'pv:' + opts.targetId;
+            if (opts.tab) GIS_STATE.tab = opts.tab === 'parcels' ? 'parcels' : 'surround';
+            $('gis-modal').style.display = 'block';
+            document.querySelectorAll('#gis-modal .gis-tab').forEach(b => b.classList.toggle('on', b.dataset.gtab === GIS_STATE.tab));
+            renderGisModalBody();
+            if (opts.autoScan) scanGisSurroundings();
         }
         function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); }
         map.on(L.Draw.Event.CREATED, e => { try { toast('📐 المساحة: ' + (L.GeometryUtil.geodesicArea(e.layer.getLatLngs()[0]) / 10000).toFixed(2) + ' هكتار'); } catch (_) {} });
@@ -1571,23 +2155,103 @@ body.admin .ui-controls{left:290px}
             if (r.ok) (await r.json()).forEach(e => { if (!STOCK[e.location_id]) STOCK[e.location_id] = e; });
             STOCK_READY = r.ok;
         }
-        function openStock() {
+        let ST_MODE = 'in', ST_BASE = 0, ST_BASE_DATE = null;
+        function setStockMode(mode) {
+            ST_MODE = (mode === 'out' || mode === 'set') ? mode : 'in';
+            document.querySelectorAll('#stock-modal .st-mode-btn').forEach(b => b.classList.toggle('on', b.dataset.mode === ST_MODE));
+            const lbl = $('st-qty-lbl');
+            if (lbl) lbl.textContent = ST_MODE === 'in' ? 'الكمية المُدخلة (قنطار)' : (ST_MODE === 'out' ? 'الكمية المُخرجة (قنطار)' : 'الرصيد الإجمالي الحالي (قنطار)');
+            const btn = $('st-save-btn');
+            if (btn) {
+                btn.style.background = ST_MODE === 'out' ? '#c62828' : (ST_MODE === 'set' ? '#1565C0' : '#2E7D32');
+                btn.textContent = ST_MODE === 'in' ? '📥 تسجيل الإدخال' : (ST_MODE === 'out' ? '📤 تسجيل الإخراج' : '💾 حفظ الرصيد');
+            }
+            stockHint();
+        }
+        async function loadStockBase() {
+            const id = $('st-loc')?.value;
+            const dateStr = $('st-date')?.value || new Date().toISOString().slice(0, 10);
+            const cur = id && STOCK[id] ? STOCK[id] : null;
+            ST_BASE = cur ? (+cur.quantity || 0) : 0;
+            ST_BASE_DATE = cur ? cur.entry_date : null;
+            if (id && PROFILE) {
+                try {
+                    const r = await fetch(`${REST}/stock_entries?select=entry_date,quantity&location_id=eq.${encodeURIComponent(id)}&entry_date=lte.${dateStr}&order=entry_date.desc&limit=1`, { headers: hdr() });
+                    if (r.ok) {
+                        const rows = await r.json();
+                        if (rows && rows.length) {
+                            ST_BASE = +rows[0].quantity || 0;
+                            ST_BASE_DATE = rows[0].entry_date;
+                        } else {
+                            ST_BASE = 0;
+                            ST_BASE_DATE = null;
+                        }
+                    }
+                } catch (_) {}
+            }
+            stockHint();
+        }
+        function openStock(preLocId) {
             const mine = PROFILE.role === 'admin' ? locations : locations.filter(l => String(l.id) === String(PROFILE.location_id));
             if (!mine.length) return toast('لم يُسند إليك أي مخزن');
             $('st-loc').innerHTML = mine.map(l => `<option value="${esc(l.id)}">${esc(l.name)}</option>`).join('');
+            if (preLocId && mine.some(l => String(l.id) === String(preLocId))) $('st-loc').value = String(preLocId);
             $('st-date').value = new Date().toISOString().slice(0, 10); $('st-qty').value = ''; $('st-note').value = '';
-            stockHint(); $('stock-modal').style.display = 'block';
+            setStockMode('in');
+            $('stock-modal').style.display = 'block';
+            loadStockBase();
+        }
+        function stockCalcResult() {
+            const raw = $('st-qty')?.value;
+            const val = raw !== '' && raw != null ? parseFloat(raw) : NaN;
+            let nextQty = ST_BASE;
+            if (!isNaN(val)) {
+                if (ST_MODE === 'in') nextQty = ST_BASE + val;
+                else if (ST_MODE === 'out') nextQty = ST_BASE - val;
+                else nextQty = val;
+            }
+            return { val, nextQty };
         }
         function stockHint() {
             const l = locations.find(x => String(x.id) === $('st-loc').value); if (!l) return;
-            const c = capNum(l), q = parseFloat($('st-qty').value), p = q >= 0 && c ? Math.round(q / c * 100) : null;
-            $('st-info').innerHTML = `السعة: <b>${c.toLocaleString()}</b> ق` + (p != null ? ` — الامتلاء: <b style="color:${fillColor(p)}">${p}%</b>` : '');
+            const c = capNum(l);
+            const { val, nextQty } = stockCalcResult();
+            const hasVal = !isNaN(val) && val >= 0;
+            const displayQty = hasVal ? nextQty : ST_BASE;
+            const p = displayQty >= 0 && c ? Math.round(displayQty / c * 100) : null;
+            const baseTxt = `الرصيد الحالي${ST_BASE_DATE ? ' (' + ST_BASE_DATE + ')' : ''}: <b>${ST_BASE.toLocaleString()}</b> ق • السعة: <b>${c.toLocaleString()}</b> ق`;
+            let opTxt = '';
+            if (hasVal) {
+                if (ST_MODE === 'out' && nextQty < 0) {
+                    opTxt = `<div style="color:#ff8a80;margin-top:4px">❌ الكمية المُخرجة (${val.toLocaleString()} ق) تتجاوز الرصيد المتاح (${ST_BASE.toLocaleString()} ق)</div>`;
+                } else {
+                    const opLabel = ST_MODE === 'in' ? `+${val.toLocaleString()} ق إدخال` : (ST_MODE === 'out' ? `-${val.toLocaleString()} ق إخراج` : `تعديل إلى ${nextQty.toLocaleString()} ق`);
+                    const overWarn = c && nextQty > c ? ` <span style="color:#ffb74d">(يتجاوز السعة)</span>` : '';
+                    opTxt = `<div style="margin-top:4px">${opLabel} ➔ الرصيد الجديد: <b style="color:#00E5FF">${nextQty.toLocaleString()}</b> ق${p != null ? ` — الامتلاء: <b style="color:${fillColor(p)}">${p}%</b>` : ''}${overWarn}</div>`;
+                }
+            } else if (p != null) {
+                opTxt = `<div style="margin-top:4px">الامتلاء الحالي: <b style="color:${fillColor(p)}">${p}%</b></div>`;
+            }
+            $('st-info').innerHTML = baseTxt + opTxt;
         }
         async function saveStock() {
-            const q = parseFloat($('st-qty').value); if (isNaN(q) || q < 0) return toast('أدخل كمية صحيحة');
-            const r = await fetch(`${REST}/stock_entries?on_conflict=location_id,entry_date`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ location_id: $('st-loc').value, entry_date: $('st-date').value, quantity: q, note: $('st-note').value.trim() }) });
+            const locId = $('st-loc').value, entryDate = $('st-date').value;
+            const { val, nextQty } = stockCalcResult();
+            if (isNaN(val) || (ST_MODE === 'set' ? val < 0 : val <= 0)) return toast(ST_MODE === 'set' ? 'أدخل رصيداً صحيحاً (0 أو أكثر)' : 'أدخل كمية أكبر من صفر');
+            if (nextQty < 0) return toast('❌ الرصيد المتاح لا يكفي للإخراج المطلوب');
+            const userNote = $('st-note').value.trim();
+            const opTag = ST_MODE === 'in' ? `[إدخال +${val} ق]` : (ST_MODE === 'out' ? `[إخراج -${val} ق]` : `[ضبط رصيد ${nextQty} ق]`);
+            const fullNote = userNote ? `${opTag} ${userNote}` : opTag;
+            const r = await fetch(`${REST}/stock_entries?on_conflict=location_id,entry_date`, { method: 'POST', headers: hdr({ Prefer: 'resolution=merge-duplicates,return=minimal' }), body: JSON.stringify({ location_id: locId, entry_date: entryDate, quantity: nextQty, note: fullNote }) });
             if (!r.ok) return toast('❌ فشل الحفظ (تحقق من الصلاحيات)');
-            $('stock-modal').style.display = 'none'; toast('✅ تم تسجيل الكمية'); await loadStock(); renderMapAndList();
+            $('stock-modal').style.display = 'none';
+            toast(ST_MODE === 'in' ? `📥 تم تسجيل إدخال +${val.toLocaleString()} ق` : (ST_MODE === 'out' ? `📤 تم تسجيل إخراج -${val.toLocaleString()} ق` : '✅ تم تحديث الرصيد'));
+            await loadStock();
+            renderMapAndList();
+            if (CURRENT_LOC_ID === String(locId)) {
+                const curLoc = locations.find(x => String(x.id) === String(locId));
+                if (curLoc) showDetails(curLoc);
+            }
         }
         function fillSection() {
             if (!PROFILE) return '';
@@ -2381,6 +3045,296 @@ function updateForecastView() {
   LAST_KPI_SUITE = computeKpiSuite(LAST_DASH_HIST);
   const kw = $('dp-kpi-suite');
   if (kw && KPI_ACTIVE_TAB === 'predictive') kw.innerHTML = renderKpiSuiteCard(LAST_KPI_SUITE);
+  if (typeof renderRouteEfficiencyCard === 'function') {
+    const rw = $('dp-route-eff-body');
+    if (rw) { rw.innerHTML = renderRouteEfficiencyCard(); runRouteEfficiencyScan(); }
+  }
+}
+
+// ===== أداة تحليل كفاءة المسارات (المسار المباشر مقابل الطرق المعبدة + التكلفة اللوجستية) =====
+const OSRM_LEG_CACHE = {};
+const RTE_STATE = { scope: 'auto', onlyExcess: false, costPerKm: 180, maxCostPerQ: 120, maxDetour: 1.45, scanSeq: 0, scanning: false };
+let LAST_ROUTE_EFF = [];
+
+function routePairKey(aLat, aLng, bLat, bLng) {
+  return `${(+aLat).toFixed(4)},${(+aLng).toFixed(4)}->${(+bLat).toFixed(4)},${(+bLng).toFixed(4)}`;
+}
+function readRouteEfficiencyParams() {
+  const cEl = $('rte-cost-km'), mEl = $('rte-max-q'), dEl = $('rte-max-detour');
+  if (cEl) RTE_STATE.costPerKm = Math.max(20, Math.min(2000, +cEl.value || 180));
+  if (mEl) RTE_STATE.maxCostPerQ = Math.max(10, Math.min(2000, +mEl.value || 120));
+  if (dEl) RTE_STATE.maxDetour = Math.max(1.05, Math.min(4, +dEl.value || 1.45));
+  return { costPerKm: RTE_STATE.costPerKm, maxCostPerQ: RTE_STATE.maxCostPerQ, maxDetour: RTE_STATE.maxDetour };
+}
+function collectRouteEfficiencyLegs(fc = LAST_FORECAST, scope = RTE_STATE.scope) {
+  const transferLegs = ((fc && fc.transferLegs) || []).map((t, i) => ({
+    uid: `tr_${i}_${t.from.id}_${t.to.id}`,
+    kind: 'transfer',
+    kindLabel: '🔄 تحويل مخازن',
+    from: { id: t.from.id, name: t.from.name, lat: +t.from.lat, lng: +t.from.lng },
+    to: { id: t.to.id, name: t.to.name, lat: +t.to.lat, lng: +t.to.lng, loc: t.to },
+    qtyQ: Math.max(1, +t.qtyQ || 0),
+    trucks: Math.max(1, +t.trucks || 1),
+    windWarn: !!t.windWarn
+  }));
+  const yld = (fc && fc.params && fc.params.yieldQPerHa) || 35;
+  const intakePct = (fc && fc.params && fc.params.intakeRatePct) || 75;
+  const truckCap = (fc && fc.params && fc.params.truckCapQ) || 250;
+  const pivotLegs = (Array.isArray(PIVOTS) ? PIVOTS : []).map((p, i) => {
+    const nw = typeof findNearestWarehouse === 'function' ? findNearestWarehouse(p) : null;
+    if (!nw || !nw.loc) return null;
+    const ha = typeof pivotHa === 'function' ? pivotHa(p.radius_m) : 0;
+    const qtyQ = Math.max(Math.round(ha * yld * (intakePct / 100)), 50);
+    return {
+      uid: `pv_${p.id || i}_${nw.id}`,
+      kind: 'pivot',
+      kindLabel: '🌀 نقل محصول',
+      from: { id: 'pv_' + (p.id || i), name: `محور: ${p.farmer_name || 'غير محدد'}`, lat: +p.lat, lng: +p.lng },
+      to: { id: nw.id, name: nw.name, lat: +nw.loc.lat, lng: +nw.loc.lng, loc: nw.loc },
+      qtyQ,
+      trucks: Math.max(1, Math.ceil(qtyQ / truckCap)),
+      windWarn: isHighWind(nw.loc)
+    };
+  }).filter(Boolean);
+
+  const effectiveScope = scope === 'auto' ? (transferLegs.length ? 'transfers' : 'all') : scope;
+  const legs = effectiveScope === 'transfers' ? transferLegs
+    : (effectiveScope === 'pivots' ? pivotLegs : transferLegs.concat(pivotLegs));
+  return { legs, transferCount: transferLegs.length, pivotCount: pivotLegs.length, effectiveScope };
+}
+function computeRouteEfficiencyAnalysis(fc = LAST_FORECAST, opts = {}) {
+  const cfg = opts.cfg || readRouteEfficiencyParams();
+  const { legs, transferCount, pivotCount, effectiveScope } = collectRouteEfficiencyLegs(fc, opts.scope || RTE_STATE.scope);
+  const rows = legs.map(leg => {
+    const directKm = haversineKm({ lat: leg.from.lat, lng: leg.from.lng }, { lat: leg.to.lat, lng: leg.to.lng });
+    const key = routePairKey(leg.from.lat, leg.from.lng, leg.to.lat, leg.to.lng);
+    const cached = OSRM_LEG_CACHE[key];
+    const roadKm = cached && cached.ok ? cached.roadKm : null;
+    const pavedKm = cached && cached.ok ? cached.pavedKm : null;
+    const sandyKm = cached && cached.ok ? cached.sandyKm : null;
+    const durMin = cached && cached.ok ? cached.durMin : null;
+    const detourRatio = roadKm != null && directKm > 0.05 ? roadKm / directKm : null;
+    const directCostDzd = Math.round(leg.trucks * directKm * 2 * cfg.costPerKm);
+    const activeKm = roadKm != null ? roadKm : directKm;
+    const roadCostDzd = roadKm != null ? Math.round(leg.trucks * roadKm * 2 * cfg.costPerKm) : null;
+    const estCostDzd = Math.round(leg.trucks * activeKm * 2 * cfg.costPerKm);
+    const extraDetourCostDzd = roadCostDzd != null ? Math.max(0, roadCostDzd - directCostDzd) : null;
+    const costPerQ = leg.qtyQ > 0 ? estCostDzd / leg.qtyQ : 0;
+    const exceedCost = costPerQ > cfg.maxCostPerQ;
+    const exceedDetour = detourRatio != null && detourRatio > cfg.maxDetour;
+    const isExcessive = exceedCost || exceedDetour;
+    const reasons = [];
+    if (exceedCost) reasons.push(`تكلفة عالية (${Math.round(costPerQ)} > ${cfg.maxCostPerQ} دج/ق)`);
+    if (exceedDetour) reasons.push(`التفاف حاد (${detourRatio.toFixed(2)}× > ${cfg.maxDetour}×)`);
+    return {
+      ...leg,
+      key,
+      directKm,
+      roadKm,
+      pavedKm,
+      sandyKm,
+      durMin,
+      detourRatio,
+      directCostDzd,
+      roadCostDzd,
+      estCostDzd,
+      extraDetourCostDzd,
+      costPerQ,
+      exceedCost,
+      exceedDetour,
+      isExcessive,
+      reasons,
+      status: cached ? (cached.ok ? 'ok' : 'err') : 'pending'
+    };
+  });
+
+  rows.sort((a, b) => (b.isExcessive - a.isExcessive) || ((b.costPerQ || 0) - (a.costPerQ || 0)));
+  const measured = rows.filter(r => r.roadKm != null);
+  const totalDirectKm = sumBy(rows, r => r.directKm);
+  const totalRoadKm = sumBy(measured, r => r.roadKm);
+  const measuredDirectKm = sumBy(measured, r => r.directKm);
+  const avgDetour = measuredDirectKm > 0 ? totalRoadKm / measuredDirectKm : null;
+  const totalDirectCostDzd = sumBy(rows, r => r.directCostDzd);
+  const totalRoadCostDzd = sumBy(rows, r => r.estCostDzd);
+  const totalExtraCostDzd = Math.max(0, totalRoadCostDzd - totalDirectCostDzd);
+  const excessiveCount = rows.filter(r => r.isExcessive).length;
+  LAST_ROUTE_EFF = rows;
+  return {
+    rows, transferCount, pivotCount, effectiveScope,
+    measuredCount: measured.length,
+    totalDirectKm, totalRoadKm, measuredDirectKm, avgDetour,
+    totalDirectCostDzd, totalRoadCostDzd, totalExtraCostDzd,
+    excessiveCount, cfg
+  };
+}
+function renderRouteEfficiencyCard() {
+  const st = computeRouteEfficiencyAnalysis(LAST_FORECAST);
+  const visible = RTE_STATE.onlyExcess ? st.rows.filter(r => r.isExcessive) : st.rows;
+  const maxBarKm = Math.max(1, ...st.rows.map(r => Math.max(r.directKm || 0, r.roadKm || 0)));
+  const pctInc = st.measuredDirectKm > 0 ? Math.round(((st.totalRoadKm - st.measuredDirectKm) / st.measuredDirectKm) * 100) : null;
+
+  const rowsHtml = visible.map((r, idx) => {
+    const dW = Math.min(100, Math.max(3, (r.directKm / maxBarKm) * 100));
+    const rW = r.roadKm != null ? Math.min(100, Math.max(3, (r.roadKm / maxBarKm) * 100)) : 0;
+    const roadCell = r.roadKm != null
+      ? `<b>${r.roadKm.toFixed(1)} كم</b> <small style="color:#8fae95">(~${r.durMin} د)</small>
+         <div class="rte-bar-pair"><div class="rte-bar-trk" title="مباشر ${r.directKm.toFixed(1)} كم"><i style="width:${dW}%;background:#10B981"></i></div><div class="rte-bar-trk" title="معبد/رملي ${r.roadKm.toFixed(1)} كم"><i style="width:${rW}%;background:${r.isExcessive ? '#ff5252' : '#00E5FF'}"></i></div></div>`
+      : (r.status === 'err' ? '<span style="color:#ffb74d">تعذر القياس</span>' : '<span class="rte-badge pending">⏳ جاري القياس</span>');
+    const detourCell = r.detourRatio != null
+      ? `<b style="color:${r.exceedDetour ? '#ff8a80' : (r.detourRatio > 1.3 ? '#ffd54f' : '#81C784')}">${r.detourRatio.toFixed(2)}×</b><br><small style="color:#8fae95">+${(r.roadKm - r.directKm).toFixed(1)} كم</small>`
+      : '—';
+    const costCell = `<b>${nf(r.estCostDzd)} دج</b>${r.extraDetourCostDzd > 0 ? `<br><small style="color:#ffb74d">+${nf(r.extraDetourCostDzd)} دج التفاف</small>` : ''}`;
+    const evalBadge = r.isExcessive
+      ? `<span class="rte-badge excess" title="${esc(r.reasons.join(' | '))}">🚨 تجاوز الحد</span><div style="font-size:10.5px;color:#ff8a80;margin-top:2px">${esc(r.reasons[0] || '')}</div>`
+      : (r.status === 'pending'
+          ? '<span class="rte-badge pending">قيد التحليل</span>'
+          : '<span class="rte-badge ok">✅ ضمن المعقول</span>');
+    return `<tr class="${r.isExcessive ? 'rte-excess-row' : ''}">
+      <td>${idx + 1}</td>
+      <td><div style="font-weight:bold">${esc(r.from.name)} ← ${esc(r.to.name)}</div><small style="color:#8fae95">${r.kindLabel}${r.windWarn ? ' · ⚠️ رياح' : ''}</small></td>
+      <td>${nf(r.qtyQ)} ق<br><small style="color:#8fae95">${r.trucks} شاحنة</small></td>
+      <td style="color:#6EE7B7;font-weight:bold">${r.directKm.toFixed(1)} كم</td>
+      <td>${roadCell}</td>
+      <td>${detourCell}</td>
+      <td>${costCell}</td>
+      <td style="font-weight:bold;color:${r.exceedCost ? '#ff8a80' : '#e8efe8'}">${Math.round(r.costPerQ)} دج/ق</td>
+      <td>${evalBadge}</td>
+      <td><button type="button" class="rte-map-btn" data-uid="${esc(r.uid)}" onclick="openTransferEfficiencyOnMap(this.dataset.uid)">🗺️ المسارين</button></td>
+    </tr>`;
+  }).join('');
+
+  return `<div class="fc-kpis" style="margin-bottom:12px">
+    <div class="fc-box" style="border-top:3px solid #10B981">
+      <span>1. المباشر مقابل الطرق المعبدة</span>
+      <b>${st.totalRoadKm > 0 ? `${st.totalRoadKm.toFixed(0)} كم معبّد` : `${st.totalDirectKm.toFixed(0)} كم مباشر`}</b>
+      <small>المسار المباشر الكلي ${st.totalDirectKm.toFixed(1)} كم${pctInc != null ? ` · زيادة المسافة +${pctInc}%` : ''}</small>
+    </div>
+    <div class="fc-box" style="border-top:3px solid #00ACC1">
+      <span>2. متوسط معامل الالتفاف</span>
+      <b>${st.avgDetour != null ? st.avgDetour.toFixed(2) + '×' : '—'}</b>
+      <small>نسبة الطريق الفعلي ÷ المسار المباشر (${st.measuredCount}/${st.rows.length} مقاس)</small>
+    </div>
+    <div class="fc-box" style="border-top:3px solid #C9A227">
+      <span>3. التكلفة اللوجستية المقدّرة</span>
+      <b>${nf(st.totalRoadCostDzd)} دج</b>
+      <small>تكلفة المباشر ${nf(st.totalDirectCostDzd)} دج · عبء الالتفاف +${nf(st.totalExtraCostDzd)} دج</small>
+    </div>
+    <div class="fc-box" style="border-top:3px solid ${st.excessiveCount ? '#ff5252' : '#2E7D32'}">
+      <span>4. مسارات تتجاوز الحد المعقول</span>
+      <b style="color:${st.excessiveCount ? '#ff8a80' : '#81C784'}">${st.excessiveCount} من ${st.rows.length}</b>
+      <small>${st.excessiveCount ? `تتجاوز ${st.cfg.maxCostPerQ} دج/ق أو التفاف > ${st.cfg.maxDetour}×` : 'جميع المسارات ضمن التكلفة المعقولة'}</small>
+    </div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="pv-seg">
+      <button type="button" class="${st.effectiveScope === 'transfers' ? 'on' : ''}" onclick="setRouteEfficiencyScope('transfers')">🔄 تحويلات المخازن (${st.transferCount})</button>
+      <button type="button" class="${st.effectiveScope === 'pivots' ? 'on' : ''}" onclick="setRouteEfficiencyScope('pivots')">🌀 استلامات المحاور (${st.pivotCount})</button>
+      <button type="button" class="${st.effectiveScope === 'all' ? 'on' : ''}" onclick="setRouteEfficiencyScope('all')">📦 الكل (${st.transferCount + st.pivotCount})</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;cursor:pointer;color:${RTE_STATE.onlyExcess ? '#ff8a80' : '#bcd5c0'}">
+        <input type="checkbox" ${RTE_STATE.onlyExcess ? 'checked' : ''} onchange="toggleRouteExcessFilter(this.checked)"> 🚨 عرض المسارات المتجاوزة فقط (${st.excessiveCount})
+      </label>
+      <button type="button" class="kpi-sort-btn" onclick="runRouteEfficiencyScan(true)">${RTE_STATE.scanning ? '⏳ جاري الفحص...' : '🔄 قياس المسارات عبر الطرق'}</button>
+    </div>
+  </div>
+  <div style="overflow:auto;max-height:360px">
+    <table class="dp-tbl">
+      <thead><tr><th>#</th><th>المسار المقترح</th><th>الحمولة</th><th>المسار المباشر</th><th>الطريق المعبدة / الرملية</th><th>معامل الالتفاف</th><th>التكلفة اللوجستية</th><th>التكلفة / ق</th><th>حالة الكفاءة</th><th>عرض</th></tr></thead>
+      <tbody>${rowsHtml || `<tr><td colspan="10" style="text-align:center;color:#9bb7a0;padding:18px">${RTE_STATE.onlyExcess ? '✅ لا توجد مسارات تتجاوز الحد المعقول حالياً.' : 'لا توجد تحويلات مقترحة في النطاق المختار.'}</td></tr>`}</tbody>
+    </table>
+  </div>`;
+}
+function setRouteEfficiencyScope(sc) {
+  RTE_STATE.scope = sc;
+  const el = $('dp-route-eff-body');
+  if (el) { el.innerHTML = renderRouteEfficiencyCard(); runRouteEfficiencyScan(); }
+}
+function toggleRouteExcessFilter(v) {
+  RTE_STATE.onlyExcess = !!v;
+  const el = $('dp-route-eff-body');
+  if (el) el.innerHTML = renderRouteEfficiencyCard();
+}
+function updateRouteEfficiencyParams() {
+  readRouteEfficiencyParams();
+  const el = $('dp-route-eff-body');
+  if (el) el.innerHTML = renderRouteEfficiencyCard();
+}
+async function fetchOsrmPairMetrics(lat1, lng1, lat2, lng2) {
+  const key = routePairKey(lat1, lng1, lat2, lng2);
+  if (OSRM_LEG_CACHE[key]) return OSRM_LEG_CACHE[key];
+  try {
+    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${lng1},${lat1};${lng2},${lat2}?overview=false&steps=true`);
+    const j = await res.json();
+    const rt = j && j.code === 'Ok' && j.routes && j.routes[0];
+    if (!rt) { OSRM_LEG_CACHE[key] = { ok: false }; return OSRM_LEG_CACHE[key]; }
+    let pavedKm = 0, sandyKm = 0, offroadKm = 0;
+    const steps = (rt.legs && rt.legs[0] && rt.legs[0].steps) || [];
+    steps.forEach(st => {
+      const stepKm = (st.distance || 0) / 1000;
+      const spd = st.duration > 0 ? stepKm / (st.duration / 3600) : 40;
+      const isSandy = (!st.name && !st.ref && st.maneuver && st.maneuver.type !== 'arrive') || spd < 32;
+      if (isSandy) sandyKm += stepKm; else pavedKm += stepKm;
+    });
+    const wps = j.waypoints || [];
+    const pvs = typeof PIVOTS !== 'undefined' && Array.isArray(PIVOTS) ? PIVOTS : [];
+    if (wps[0] && Array.isArray(wps[0].location)) {
+      const g0 = haversineKm({ lat: lat1, lng: lng1 }, { lat: wps[0].location[1], lng: wps[0].location[0] });
+      if (g0 >= 0.03) {
+        const seg0 = typeof buildPivotAvoidingPath === 'function'
+          ? buildPivotAvoidingPath([lat1, lng1], [wps[0].location[1], wps[0].location[0]], pvs, { bufferM: 35 })
+          : { totalKm: g0 };
+        offroadKm += seg0.totalKm;
+      }
+    }
+    if (wps[1] && Array.isArray(wps[1].location)) {
+      const g1 = haversineKm({ lat: wps[1].location[1], lng: wps[1].location[0] }, { lat: lat2, lng: lng2 });
+      if (g1 >= 0.03) {
+        const seg1 = typeof buildPivotAvoidingPath === 'function'
+          ? buildPivotAvoidingPath([wps[1].location[1], wps[1].location[0]], [lat2, lng2], pvs, { bufferM: 35 })
+          : { totalKm: g1 };
+        offroadKm += seg1.totalKm;
+      }
+    }
+    sandyKm += offroadKm;
+    const roadKm = (rt.distance || 0) / 1000 + offroadKm;
+    const durMin = Math.max(1, Math.round((rt.duration || 0) / 60 + (offroadKm / 25) * 60));
+    OSRM_LEG_CACHE[key] = { ok: true, roadKm, pavedKm, sandyKm, durMin };
+  } catch (_) {
+    OSRM_LEG_CACHE[key] = { ok: false };
+  }
+  return OSRM_LEG_CACHE[key];
+}
+async function runRouteEfficiencyScan(forceRefresh = false) {
+  const el = $('dp-route-eff-body');
+  if (!el) return;
+  const seq = ++RTE_STATE.scanSeq;
+  const { legs } = collectRouteEfficiencyLegs(LAST_FORECAST, RTE_STATE.scope);
+  const pending = legs.filter(l => {
+    const k = routePairKey(l.from.lat, l.from.lng, l.to.lat, l.to.lng);
+    if (forceRefresh) delete OSRM_LEG_CACHE[k];
+    return !OSRM_LEG_CACHE[k];
+  });
+  if (!pending.length) { el.innerHTML = renderRouteEfficiencyCard(); return; }
+  RTE_STATE.scanning = true;
+  el.innerHTML = renderRouteEfficiencyCard();
+  for (let i = 0; i < pending.length; i += 3) {
+    if (seq !== RTE_STATE.scanSeq) return;
+    await Promise.all(pending.slice(i, i + 3).map(l => fetchOsrmPairMetrics(l.from.lat, l.from.lng, l.to.lat, l.to.lng)));
+    if (seq !== RTE_STATE.scanSeq) return;
+    const curEl = $('dp-route-eff-body');
+    if (curEl) curEl.innerHTML = renderRouteEfficiencyCard();
+  }
+  RTE_STATE.scanning = false;
+  const finalEl = $('dp-route-eff-body');
+  if (finalEl && seq === RTE_STATE.scanSeq) finalEl.innerHTML = renderRouteEfficiencyCard();
+}
+function openTransferEfficiencyOnMap(uid) {
+  const row = LAST_ROUTE_EFF.find(r => r.uid === uid);
+  if (!row) return;
+  closeDash();
+  if ($('dash-modal')) $('dash-modal').style.display = 'none';
+  drawDualRouteOnMap(row.from, row.to, row.to.loc);
 }
 let LAST_KPI_SUITE = null, KPI_ACTIVE_TAB = 'top10', KPI_SORT_DIR = 'desc', OPS_METRICS = {};
 const OPS_STORE_KEY = 'ccls_ops_metrics_v1';
@@ -2846,8 +3800,8 @@ function buildDash(hist) {
     KP('🌀', 'مساحة المحاور', formatPivotHa(pvStats.totalHa, 1) + ' هكتار', pvStats.count ? `${pvStats.count} محور مسجّل • متوسط نق ${Math.round(pvStats.avgRadiusM)} م (${formatPivotHa(pvStats.avgHa, 1)} هـ)` : 'لا توجد محاور مسجّلة', '#00ACC1', 'dp-kpi-pivots')];
   if (PROFILE.role === 'admin' && workers.length) kp.push(KP('🪪', 'العمال', workers.length, 'مسجّلون في البطاقات', '#00ACC1'));
   const tbl = rows.map(({ l, s, p }) => { const d = s ? Math.floor((Date.now() - new Date(s.entry_date + 'T00:00:00')) / 864e5) : null;
-    const w = getWindInfo(l), hw = isHighWind(l);
-    return `<tr data-id="${esc(l.id)}" onclick="goAlert(this.dataset.id)"><td><b>${esc(l.name)}</b>${hw ? ` <span class="badge-wind" title="رياح شديدة">⚠️ ${Math.round(w.wind)} كم/س</span>` : ''}</td><td>${esc(l.area || '—')}</td><td>${esc(l.province || 'أدرار')}</td><td>${nf(capNum(l))}</td><td>${s ? nf(s.quantity) : '—'}</td><td>${p == null ? '—' : `<span class="dp-pill" style="background:${fillColor(p)}">${p}%</span>`}</td><td>${s ? esc(s.entry_date) : '—'}${d != null && d > ALERT_DAYS ? ' ⏰' : ''}</td><td>${l.status === 'inactive' ? '🔴 خارج الخدمة' : '🟢 نشط'}</td></tr>`; }).join('');
+    const w = getWindInfo(l), hw = isHighWind(l), wm = getWarehouseMeta(l);
+    return `<tr data-id="${esc(l.id)}" onclick="goAlert(this.dataset.id)"><td><b>${esc(l.name)}</b>${hw ? ` <span class="badge-wind" title="رياح شديدة">⚠️ ${Math.round(w.wind)} كم/س</span>` : ''}</td><td>${wm.icon} ${wm.label}</td><td>${wm.hasScale ? '⚖️ نعم' : '—'}</td><td>${esc(l.area || '—')}</td><td>${esc(l.province || 'أدرار')}</td><td>${nf(capNum(l))}</td><td>${s ? nf(s.quantity) : '—'}</td><td>${p == null ? '—' : `<span class="dp-pill" style="background:${fillColor(p)}">${p}%</span>`}</td><td>${s ? esc(s.entry_date) : '—'}${d != null && d > ALERT_DAYS ? ' ⏰' : ''}</td><td>${l.status === 'inactive' ? '🔴 خارج الخدمة' : '🟢 نشط'}</td></tr>`; }).join('');
   LAST_DASH_HIST = Array.isArray(hist) ? hist : [];
   LAST_FORECAST = computeSeasonalForecast(LAST_DASH_HIST, { yieldQPerHa: 35, intakeRatePct: 75, horizonDays: 60, truckCapQ: 250 });
   LAST_KPI_SUITE = computeKpiSuite(LAST_DASH_HIST);
@@ -2887,19 +3841,34 @@ function buildDash(hist) {
     </div>
     <div id="dp-forecast-body">${renderForecastBody(LAST_FORECAST)}</div>
   </div></div>
+  <div class="dp-grid"><div class="dp-card dp-wide" id="dp-route-eff-card">
+    <div class="fc-head">
+      <h4>🛣️ تحليل كفاءة المسارات والتكلفة اللوجستية</h4>
+      <small style="color:#8fae95;font-size:11px">مقارنة المسار المباشر بالمسار عبر الطرق المعبدة/الرملية ورصد المسارات عالية التكلفة</small>
+    </div>
+    <div class="fc-ctrl-bar">
+      <label class="fc-ctrl"><span>⛽ سعر الشاحنة (دج/كم):</span><input id="rte-cost-km" type="number" min="20" max="2000" value="${RTE_STATE.costPerKm}" oninput="updateRouteEfficiencyParams()"></label>
+      <label class="fc-ctrl"><span>🚨 الحد المعقول (دج/قنطار):</span><input id="rte-max-q" type="number" min="10" max="2000" value="${RTE_STATE.maxCostPerQ}" oninput="updateRouteEfficiencyParams()"></label>
+      <label class="fc-ctrl"><span>📐 حد معامل الالتفاف (×):</span><input id="rte-max-detour" type="number" min="1.05" max="4" step="0.05" value="${RTE_STATE.maxDetour}" oninput="updateRouteEfficiencyParams()"></label>
+    </div>
+    <div id="dp-route-eff-body">${renderRouteEfficiencyCard()}</div>
+  </div></div>
   <div class="dp-grid"><div class="dp-card dp-span2"><h4>📈 تطور الكمية المخزنة (آخر 30 يومًا)</h4>${trend(hist, act)}</div>
   <div class="dp-card"><h4>🥧 توزيع السعة حسب النشاط</h4>${donut(grp(act, l => l.area))}</div></div>
   <div class="dp-grid"><div class="dp-card"><h4>🏭 امتلاء المخازن</h4>${bars(rows.filter(r => r.p != null).map(r => ({ l: r.l.name, v: r.p, c: fillColor(r.p) })), r => r.v + '%', 100)}</div>
   <div class="dp-card"><h4>🗺️ السعة حسب الولاية</h4>${bars(grp(act, l => l.province || 'أدرار'), r => nf(r.v) + ' ق')}</div></div>
   <div class="dp-grid"><div class="dp-card dp-wide"><h4>🌀 دراسة المحاور الدوارة حسب المساحة (هكتار)</h4><div id="pivot-radii-chart-root"></div></div></div>
-  <div class="dp-card dp-wide"><h4>📋 جدول المراكز التفصيلي</h4><div style="overflow:auto;max-height:420px"><table class="dp-tbl"><thead><tr><th>المركز</th><th>النشاط</th><th>الولاية</th><th>السعة</th><th>الكمية</th><th>الامتلاء</th><th>آخر تحديث</th><th>الحالة</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
+  <div class="dp-card dp-wide"><h4>📋 جدول المراكز التفصيلي</h4><div style="overflow:auto;max-height:420px"><table class="dp-tbl"><thead><tr><th>المركز</th><th>نوع المخزن</th><th>الميزان</th><th>النشاط</th><th>الولاية</th><th>السعة</th><th>الكمية</th><th>الامتلاء</th><th>آخر تحديث</th><th>الحالة</th></tr></thead><tbody>${tbl}</tbody></table></div></div>`;
 }
 function mountPivotRadiiChart() {
   const el = $('pivot-radii-chart-root');
   if (el && typeof window.renderPivotRadiiChart === 'function') {
     window.renderPivotRadiiChart(el, PIVOTS, {
+      locations,
       onCloseDash: closeDash,
-      onStatsChange: updateDashPivotKpi
+      onStatsChange: updateDashPivotKpi,
+      onSelectPivot: focusPivotById,
+      onSelectLocation: goAlert
     });
   }
 }
@@ -2912,12 +3881,13 @@ async function openDash() {
   const r = await fetch(`${REST}/stock_entries?select=location_id,entry_date,quantity&entry_date=gte.${d60}&order=entry_date.asc&limit=5000`, { headers: hdr() });
   $('dp-body').innerHTML = buildDash(r.ok ? await r.json() : []); $('dp-date').textContent = new Date().toLocaleString('ar-DZ');
   mountPivotRadiiChart();
+  runRouteEfficiencyScan();
 }
 function closeDash() { if (typeof window.unmountPivotRadiiChart === 'function') window.unmountPivotRadiiChart(); $('dash-page').style.display = 'none'; }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('ops-modal')?.style.display === 'block') closeOpsModal(); else closeDash(); } });
 function goAlert(id) { const l = locations.find(x => String(x.id) === String(id)); if (!l) return; closeDash(); $('dash-modal').style.display = 'none'; showView('map'); showDetails(l); }
 function exportDashXlsx() {
-  const rows = [['المركز', 'النشاط', 'الولاية', 'السعة', 'الكمية', 'الامتلاء %', 'آخر تحديث', 'الحالة']].concat(dashScope().map(l => { const s = STOCK[l.id], p = fillPct(l); return [l.name, l.area || '', l.province || 'أدرار', capNum(l), s ? +s.quantity : '', p == null ? '' : p, s ? s.entry_date : '', l.status === 'inactive' ? 'خارج الخدمة' : 'نشط']; }));
+  const rows = [['المركز', 'نوع المخزن', 'الميزان', 'النشاط', 'الولاية', 'السعة', 'الكمية', 'الامتلاء %', 'آخر تحديث', 'الحالة']].concat(dashScope().map(l => { const s = STOCK[l.id], p = fillPct(l), wm = getWarehouseMeta(l); return [l.name, wm.label, wm.hasScale ? 'نعم' : 'لا', l.area || '', l.province || 'أدرار', capNum(l), s ? +s.quantity : '', p == null ? '' : p, s ? s.entry_date : '', l.status === 'inactive' ? 'خارج الخدمة' : 'نشط']; }));
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'المؤشرات');
   const suite = LAST_KPI_SUITE || computeKpiSuite(LAST_DASH_HIST);
   if (suite) {
@@ -2941,40 +3911,757 @@ function exportDashXlsx() {
   }
   const pvStats = calcPivotAreaStats(PIVOTS);
   if (pvStats.count) {
-    const pvRows = [['الفلاح', 'المحصول', 'المساحة (هكتار)', 'نصف القطر (م)', 'خط العرض', 'خط الطول', 'الهاتف', 'ملاحظات']]
-      .concat([...pvStats.items].sort((a, b) => b.radius_m - a.radius_m).map(p => [p.farmer_name || '', p.crop || '', +p.areaHa.toFixed(2), Math.round(p.radius_m), +p.lat, +p.lng, p.phone || '', p.notes || '']))
-      .concat([['الإجمالي الكلي', `${pvStats.count} محور`, +pvStats.totalHa.toFixed(2), Math.round(pvStats.avgRadiusM), '', '', '', '']]);
+    const sortedPvs = [...pvStats.items].sort((a, b) => b.radius_m - a.radius_m);
+    let distSum = 0, distCnt = 0;
+    const pvRows = [['الفلاح', 'المحصول', 'المساحة (هكتار)', 'نصف القطر (م)', 'أقرب مخزن', 'الولاية', 'نوع المخزن', 'الميزان', 'المسافة (كم)', 'خط العرض', 'خط الطول', 'الهاتف', 'ملاحظات']]
+      .concat(sortedPvs.map(p => {
+        const nw = findNearestWarehouse(p);
+        if (nw && Number.isFinite(nw.distanceKm)) { distSum += nw.distanceKm; distCnt++; }
+        return [
+          p.farmer_name || '',
+          p.crop || '',
+          +p.areaHa.toFixed(2),
+          Math.round(p.radius_m),
+          nw ? nw.name : '—',
+          nw ? nw.province : '',
+          nw ? nw.meta.label : '',
+          nw ? (nw.meta.hasScale ? 'نعم' : 'لا') : '',
+          nw ? +nw.distanceKm.toFixed(2) : '',
+          +p.lat,
+          +p.lng,
+          p.phone || '',
+          p.notes || ''
+        ];
+      }))
+      .concat([['الإجمالي الكلي', `${pvStats.count} محور`, +pvStats.totalHa.toFixed(2), Math.round(pvStats.avgRadiusM), '', '', 'متوسط المسافة', '', distCnt ? +(distSum / distCnt).toFixed(2) : '', '', '', '', '']]);
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pvRows), 'المحاور (هكتار)');
+  }
+  const rte = computeRouteEfficiencyAnalysis(fc);
+  if (rte && rte.rows.length) {
+    const rteRows = [['النوع', 'من', 'إلى', 'الكمية (ق)', 'الشاحنات', 'المسار المباشر (كم)', 'الطريق المعبدة/الرملية (كم)', 'معامل الالتفاف', 'التكلفة اللوجستية (دج)', 'التكلفة/قنطار (دج)', 'حالة الكفاءة']]
+      .concat(rte.rows.map(r => [r.kindLabel, r.from.name, r.to.name, r.qtyQ, r.trucks, +r.directKm.toFixed(2), r.roadKm != null ? +r.roadKm.toFixed(2) : '', r.detourRatio != null ? +r.detourRatio.toFixed(2) : '', r.estCostDzd, Math.round(r.costPerQ), r.isExcessive ? `تجاوز الحد: ${r.reasons.join(' / ')}` : 'ضمن الحد المعقول']));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rteRows), 'كفاءة المسارات');
   }
   XLSX.writeFile(wb, 'indicators_' + new Date().toISOString().slice(0, 10) + '.xlsx');
 }
 
 // ===== المحاور الدوارة: نقرتان (المركز ثم الحافة) + اسم الفلاح + حفظ الإحداثيات =====
 const pivotLayer = L.layerGroup().addTo(map);
-let PIVOTS = [], pvMode = 0, pvC = null, pvTmp = null, pvDraw = null, pvEdit = null, pvLat = 0, pvLng = 0;
+const pivotLinkLayer = L.layerGroup().addTo(map);
+const pivotDirectRouteLayer = L.layerGroup().addTo(map);
+const whFocusLayer = L.layerGroup().addTo(map);
+let PIVOTS = [], pvMode = 0, pvC = null, pvTmp = null, pvDraw = null, pvEdit = null, pvLat = 0, pvLng = 0, activePivotPopup = null, _whFocusTimer = null, _pivotRouteSeq = 0;
 const pivotHa = r => Math.PI * ((+r || 0) ** 2) / 1e4;
+function fmtPivotDist(km) {
+  if (km == null || !Number.isFinite(km)) return '—';
+  return km < 1 ? `${Math.round(km * 1000)} م` : `${km.toFixed(1)} كم`;
+}
+function clearWarehouseFocus() {
+  if (_whFocusTimer) { clearTimeout(_whFocusTimer); _whFocusTimer = null; }
+  whFocusLayer.clearLayers();
+  document.querySelectorAll('.list-item.wh-focused').forEach(el => el.classList.remove('wh-focused'));
+}
+function highlightNearestWarehouse(loc, labelText) {
+  clearWarehouseFocus();
+  if (!loc) return;
+  const lat = parseFloat(loc.lat), lng = parseFloat(loc.lng);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+  const beaconIcon = L.divIcon({ className: '', html: '<div class="wh-focus-beacon"></div>', iconSize: [44, 44], iconAnchor: [22, 22] });
+  const beacon = L.marker([lat, lng], { icon: beaconIcon, interactive: false, zIndexOffset: 1500 }).addTo(whFocusLayer);
+  if (labelText) beacon.bindTooltip(labelText, { permanent: true, direction: 'top', offset: [0, -20], className: 'label-style' }).openTooltip();
+  const ui = LOC_UI[String(loc.id)];
+  if (ui) {
+    if (ui.marker && typeof markersLayer !== 'undefined' && markersLayer && typeof markersLayer.zoomToShowLayer === 'function') {
+      try { markersLayer.zoomToShowLayer(ui.marker, () => {}); } catch (_) {}
+    }
+    if (ui.item) {
+      ui.item.classList.add('wh-focused');
+      try { ui.item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) {}
+    }
+  }
+  _whFocusTimer = setTimeout(clearWarehouseFocus, 9000);
+}
+function findNearestWarehouse(pivot, locs = locations) {
+  const list = Array.isArray(locs) ? locs : [];
+  const pLat = Number(pivot && pivot.lat), pLng = Number(pivot && pivot.lng);
+  if (!Number.isFinite(pLat) || !Number.isFinite(pLng) || !list.length) return null;
+  const active = list.filter(l => l && l.status !== 'inactive');
+  const pool = active.length ? active : list;
+  let best = null, bestKm = Infinity;
+  for (let i = 0; i < pool.length; i++) {
+    const l = pool[i];
+    const lLat = Number(l && l.lat), lLng = Number(l && l.lng);
+    if (!Number.isFinite(lLat) || !Number.isFinite(lLng)) continue;
+    const km = haversineKm({ lat: pLat, lng: pLng }, { lat: lLat, lng: lLng });
+    if (km < bestKm) { bestKm = km; best = l; }
+  }
+  if (!best || !Number.isFinite(bestKm)) return null;
+  const meta = getWarehouseMeta(best);
+  return {
+    loc: best,
+    id: best.id,
+    name: best.name || '—',
+    province: best.province || 'أدرار',
+    distanceKm: bestKm,
+    distLabel: fmtPivotDist(bestKm),
+    meta,
+    pct: typeof fillPct === 'function' ? fillPct(best) : null
+  };
+}
+function drawPivotNearestLink(p, nw) {
+  pivotLinkLayer.clearLayers();
+  if (!p || !nw || !nw.loc) return;
+  const pLL = [+p.lat, +p.lng], lLL = [+nw.loc.lat, +nw.loc.lng];
+  L.polyline([pLL, lLL], { color: '#FFB300', weight: 3, dashArray: '7,7', opacity: 0.9 }).addTo(pivotLinkLayer);
+  L.circleMarker(lLL, { radius: 8, color: '#FFB300', weight: 2, fillColor: '#FFB300', fillOpacity: 0.25 })
+    .bindTooltip(`🏭 ${esc(nw.name)} (${nw.distLabel})`, { permanent: false, direction: 'top' })
+    .addTo(pivotLinkLayer);
+}
+function openWarehouseFromPivot(id, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const l = locations.find(x => String(x.id) === String(id));
+  if (!l) { toast('⚠️ تعذر العثور على المخزن'); return; }
+  activePivotPopup = null;
+  pivotLinkLayer.clearLayers();
+  map.closePopup();
+  closeDash();
+  if ($('dash-modal')) $('dash-modal').style.display = 'none';
+  if (typeof showView === 'function') showView('map');
+  showDetails(l);
+  highlightNearestWarehouse(l, `🏭 ${esc(l.name)}`);
+}
+function focusNearestWarehouseOnMap(id, pivotId, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const l = locations.find(x => String(x.id) === String(id));
+  if (!l) { toast('⚠️ تعذر العثور على المخزن'); return; }
+  const p = PIVOTS.find(x => String(x.id) === String(pivotId));
+  const distKm = p ? haversineKm({ lat: +p.lat, lng: +p.lng }, { lat: +l.lat, lng: +l.lng }) : null;
+  const distTxt = distKm != null && Number.isFinite(distKm) ? ` (${fmtPivotDist(distKm)})` : '';
+  if (typeof showView === 'function') showView('map');
+  if (p) {
+    drawPivotNearestLink(p, { loc: l, name: l.name, distLabel: fmtPivotDist(distKm) });
+  }
+  const lat = parseFloat(l.lat), lng = parseFloat(l.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) {
+    map.flyTo([lat, lng], Math.max(map.getZoom(), 14), { duration: 0.7 });
+  }
+  highlightNearestWarehouse(l, `🎯 ${esc(l.name)}${distTxt}`);
+  if (document.getElementById('ui-home')) document.getElementById('ui-home').style.display = 'block';
+}
+function clearPivotRouteHud() {
+  const hud = $('pivot-route-hud');
+  if (hud) { hud.style.display = 'none'; hud.innerHTML = ''; }
+}
+let _activePivotRouteKey = null;
+function syncProbeRouteButtons() {
+  document.querySelectorAll('.probe-route-btn').forEach(btn => {
+    const key = 'pv:' + String(btn.dataset.pv || '') + ':' + String(btn.dataset.loc || '');
+    const active = !!_activePivotRouteKey && _activePivotRouteKey === key;
+    btn.classList.toggle('is-active', active);
+    btn.textContent = active ? '🧭 إخفاء المسار' : '🧭 عرض المسار';
+  });
+}
+function clearPivotRoutes(opts = {}) {
+  _pivotRouteSeq++;
+  _activePivotRouteKey = null;
+  pivotDirectRouteLayer.clearLayers();
+  clearPivotRouteHud();
+  if (!opts.keepFocus) clearWarehouseFocus();
+  syncProbeRouteButtons();
+}
+function polylineKm(latLngs) {
+  if (!Array.isArray(latLngs) || latLngs.length < 2) return 0;
+  let total = 0;
+  for (let i = 1; i < latLngs.length; i++) {
+    total += haversineKm({ lat: latLngs[i - 1][0], lng: latLngs[i - 1][1] }, { lat: latLngs[i][0], lng: latLngs[i][1] });
+  }
+  return total;
+}
+function buildPivotAvoidingPath(startLL, endLL, pivots = PIVOTS, opts = {}) {
+  const sLat = +startLL[0], sLng = +startLL[1], eLat = +endLL[0], eLng = +endLL[1];
+  const fallback = { latLngs: [[sLat, sLng], [eLat, eLng]], totalKm: haversineKm({ lat: sLat, lng: sLng }, { lat: eLat, lng: eLng }), avoidedIds: [] };
+  if (!Number.isFinite(sLat) || !Number.isFinite(sLng) || !Number.isFinite(eLat) || !Number.isFinite(eLng)) return fallback;
+  const list = Array.isArray(pivots) ? pivots : [];
+  if (!list.length) return fallback;
+
+  const refLat = (sLat + eLat) / 2;
+  const refLng = (sLng + eLng) / 2;
+  const mPerLat = 111320;
+  const mPerLng = Math.max(1000, 111320 * Math.cos((refLat * Math.PI) / 180));
+  const toXY = (lat, lng) => ({ x: (lng - refLng) * mPerLng, y: (lat - refLat) * mPerLat });
+  const toLL = (p) => [refLat + p.y / mPerLat, refLng + p.x / mPerLng];
+  const dist2D = (a, b) => Math.hypot(b.x - a.x, b.y - a.y);
+
+  const A = toXY(sLat, sLng);
+  const B = toXY(eLat, eLng);
+  if (dist2D(A, B) < 5) return fallback;
+
+  const bufferM = opts.bufferM != null ? +opts.bufferM : 35;
+  const excl = new Set((opts.excludeIds || []).filter(v => v != null).map(String));
+  const obstacles = [];
+  for (let i = 0; i < list.length; i++) {
+    const pv = list[i];
+    if (!pv || excl.has(String(pv.id))) continue;
+    const pLat = +pv.lat, pLng = +pv.lng, r = +pv.radius_m;
+    if (!Number.isFinite(pLat) || !Number.isFinite(pLng) || !Number.isFinite(r) || r <= 0) continue;
+    const C = toXY(pLat, pLng);
+    const obsR = r + bufferM;
+    if (dist2D(A, C) <= obsR + 2 || dist2D(B, C) <= obsR + 2) continue;
+    obstacles.push({ id: pv.id != null ? String(pv.id) : `pv_${i}`, x: C.x, y: C.y, r: obsR });
+  }
+  if (!obstacles.length) return fallback;
+
+  function segHitsCircle(P, Q, C) {
+    const dx = Q.x - P.x, dy = Q.y - P.y;
+    const lenSq = dx * dx + dy * dy;
+    if (lenSq < 1e-6) return null;
+    const t = Math.max(0, Math.min(1, ((C.x - P.x) * dx + (C.y - P.y) * dy) / lenSq));
+    if (t <= 0.001 || t >= 0.999) {
+      const cx = P.x + t * dx, cy = P.y + t * dy;
+      if (Math.hypot(cx - C.x, cy - C.y) >= C.r - 1.5) return null;
+    }
+    const px = P.x + t * dx, py = P.y + t * dy;
+    const d = Math.hypot(px - C.x, py - C.y);
+    return d < C.r - 1.5 ? t : null;
+  }
+
+  function makeDetourArc(P, Q, C) {
+    const arcR = C.r + 4;
+    const dP = dist2D(P, C), dQ = dist2D(Q, C);
+    if (dP <= arcR || dQ <= arcR) return null;
+    const phiP = Math.atan2(P.y - C.y, P.x - C.x);
+    const phiQ = Math.atan2(Q.y - C.y, Q.x - C.x);
+    const alphaP = Math.acos(Math.max(-1, Math.min(1, arcR / dP)));
+    const alphaQ = Math.acos(Math.max(-1, Math.min(1, arcR / dQ)));
+
+    function buildArc(dir) {
+      const aStart = dir > 0 ? phiP + alphaP : phiP - alphaP;
+      const aEnd = dir > 0 ? phiQ - alphaQ : phiQ + alphaQ;
+      let delta = aEnd - aStart;
+      if (dir > 0) {
+        while (delta < 0) delta += 2 * Math.PI;
+        while (delta >= 2 * Math.PI) delta -= 2 * Math.PI;
+      } else {
+        while (delta > 0) delta -= 2 * Math.PI;
+        while (delta <= -2 * Math.PI) delta += 2 * Math.PI;
+      }
+      const steps = Math.max(4, Math.ceil(Math.abs(delta) / (Math.PI / 15)));
+      const arcPts = [];
+      for (let k = 0; k <= steps; k++) {
+        const ang = aStart + (delta * k) / steps;
+        arcPts.push({ x: C.x + arcR * Math.cos(ang), y: C.y + arcR * Math.sin(ang) });
+      }
+      const len = dist2D(P, arcPts[0]) + arcR * Math.abs(delta) + dist2D(arcPts[arcPts.length - 1], Q);
+      return { pts: arcPts, len };
+    }
+
+    const candPlus = buildArc(1);
+    const candMinus = buildArc(-1);
+    return candPlus.len <= candMinus.len ? candPlus.pts : candMinus.pts;
+  }
+
+  let pts = [A, B];
+  const avoidedSet = new Set();
+  const hitCounts = {};
+  for (let iter = 0; iter < 30; iter++) {
+    let bestSeg = -1, bestT = Infinity, bestObs = null;
+    for (let i = 0; i < pts.length - 1; i++) {
+      for (let j = 0; j < obstacles.length; j++) {
+        const obs = obstacles[j];
+        if ((hitCounts[`${i}:${obs.id}`] || 0) >= 2) continue;
+        const t = segHitsCircle(pts[i], pts[i + 1], obs);
+        if (t != null && (bestSeg === -1 || i < bestSeg || (i === bestSeg && t < bestT))) {
+          bestSeg = i; bestT = t; bestObs = obs;
+        }
+      }
+      if (bestSeg !== -1) break;
+    }
+    if (bestSeg === -1 || !bestObs) break;
+    hitCounts[`${bestSeg}:${bestObs.id}`] = (hitCounts[`${bestSeg}:${bestObs.id}`] || 0) + 1;
+    const arc = makeDetourArc(pts[bestSeg], pts[bestSeg + 1], bestObs);
+    if (!arc || !arc.length) break;
+    avoidedSet.add(bestObs.id);
+    pts = pts.slice(0, bestSeg + 1).concat(arc, pts.slice(bestSeg + 1));
+  }
+
+  const latLngs = pts.map(toLL);
+  return { latLngs, totalKm: polylineKm(latLngs), avoidedIds: Array.from(avoidedSet) };
+}
+function buildPivotAvoidingPolyline(latLngs, pivots = PIVOTS, opts = {}) {
+  if (!Array.isArray(latLngs) || latLngs.length < 2) return { latLngs: latLngs || [], avoidedIds: [] };
+  const out = [latLngs[0]];
+  const avoided = new Set();
+  for (let i = 0; i < latLngs.length - 1; i++) {
+    const seg = buildPivotAvoidingPath(latLngs[i], latLngs[i + 1], pivots, opts);
+    for (let k = 1; k < seg.latLngs.length; k++) out.push(seg.latLngs[k]);
+    seg.avoidedIds.forEach(id => avoided.add(id));
+  }
+  return { latLngs: out, avoidedIds: Array.from(avoided) };
+}
+function renderPivotRouteHud(title, directLabel, roadState, extra = {}) {
+  const hud = $('pivot-route-hud');
+  if (!hud) return;
+  let roadRow = '';
+  if (roadState.loading) {
+    roadRow = `<div class="prh-row"><span><i class="prh-swatch paved"></i>طريق معبدة / رملية</span><span style="color:#80DEEA">⏳ جاري التحميل...</span></div>`;
+  } else if (roadState.error) {
+    roadRow = `<div class="prh-row"><span><i class="prh-swatch paved"></i>طريق معبدة / رملية</span><span style="color:#ffb74d">غير متوفر لهذا الموقع</span></div>`;
+  } else {
+    const parts = [];
+    if (roadState.pavedKm > 0.05) parts.push(`معبّد ${fmtPivotDist(roadState.pavedKm)}`);
+    if (roadState.sandyKm > 0.03) parts.push(`رملي ${fmtPivotDist(roadState.sandyKm)}`);
+    const detail = parts.length ? ` <small style="color:#bcd5c0">(${parts.join(' + ')})</small>` : '';
+    roadRow = `<div class="prh-row"><span><i class="prh-swatch paved"></i>طريق معبدة / <i class="prh-swatch sandy"></i>رملية${detail}</span><b style="color:#00E5FF">${roadState.totalLabel} • ~${roadState.durMin} د</b></div>`;
+  }
+  const avoidedCnt = extra.avoidedCount || 0;
+  const directTitle = avoidedCnt > 0
+    ? `مسار مباشر يلتف حول ${avoidedCnt} محور`
+    : 'مسار مستقيم مباشر (خط جوي)';
+  hud.innerHTML = `<div class="prh-head"><span>🧭 ${esc(title)}</span><button type="button" class="prh-close" onclick="clearPivotRoutes()" title="إخفاء المسارات">×</button></div>
+    <div class="prh-rows">
+      <div class="prh-row"><span><i class="prh-swatch direct"></i>${directTitle}</span><b style="color:#34D399">${directLabel}</b></div>
+      ${roadRow}
+    </div>`;
+  hud.style.display = 'block';
+}
+async function drawDualRouteOnMap(fromPt, toPt, targetLoc, opts = {}) {
+  const pLL = [parseFloat(fromPt.lat), parseFloat(fromPt.lng)];
+  const lLL = [parseFloat(toPt.lat), parseFloat(toPt.lng)];
+  if (!Number.isFinite(pLL[0]) || !Number.isFinite(pLL[1]) || !Number.isFinite(lLL[0]) || !Number.isFinite(lLL[1])) return;
+
+  const seq = ++_pivotRouteSeq;
+  _activePivotRouteKey = opts.routeKey || ('pair:' + routePairKey(pLL[0], pLL[1], lLL[0], lLL[1]));
+  const pvs = typeof PIVOTS !== 'undefined' && Array.isArray(PIVOTS) ? PIVOTS : [];
+  const avoidOpts = { excludeIds: opts.originPivotId != null ? [opts.originPivotId] : [], bufferM: 35 };
+  const directPath = buildPivotAvoidingPath(pLL, lLL, pvs, avoidOpts);
+  const directLatLngs = directPath.latLngs;
+  const km = directPath.totalKm;
+  const distLabel = fmtPivotDist(km);
+  const avoidedDirectCnt = directPath.avoidedIds.length;
+  const routeTitle = `${fromPt.name || 'البداية'} ⟵ ${toPt.name || 'الوجهة'}`;
+
+  if (typeof showView === 'function') showView('map');
+  if (!opts.keepPopup) {
+    activePivotPopup = null;
+    map.closePopup();
+  }
+  pivotLinkLayer.clearLayers();
+  pivotDirectRouteLayer.clearLayers();
+
+  const directTip = avoidedDirectCnt > 0
+    ? `🧭 مسار مباشر (يلتف حول ${avoidedDirectCnt} محور): ${distLabel}`
+    : `📏 مسار مستقيم مباشر: ${distLabel}`;
+  L.polyline(directLatLngs, { color: '#0d1710', weight: 6.5, opacity: 0.78 }).addTo(pivotDirectRouteLayer);
+  L.polyline(directLatLngs, { color: '#10B981', weight: 3.5, opacity: 0.98, dashArray: '9, 7' })
+    .bindTooltip(directTip, { sticky: true })
+    .addTo(pivotDirectRouteLayer);
+  L.circleMarker(pLL, { radius: 7, color: '#00E5FF', weight: 2, fillColor: '#00E5FF', fillOpacity: 0.9 })
+    .bindTooltip(`📍 ${esc(fromPt.name || 'نقطة الانطلاق')}`, { direction: 'top' })
+    .addTo(pivotDirectRouteLayer);
+  L.circleMarker(lLL, { radius: 8, color: '#10B981', weight: 2.5, fillColor: '#34D399', fillOpacity: 0.9 })
+    .bindTooltip(`🏭 ${esc(toPt.name || 'الوجهة')} (${distLabel})`, { direction: 'top' })
+    .addTo(pivotDirectRouteLayer);
+  const midDirectLL = directLatLngs[Math.floor(directLatLngs.length / 2)] || [(pLL[0] + lLL[0]) / 2, (pLL[1] + lLL[1]) / 2];
+  L.marker(midDirectLL, {
+    icon: L.divIcon({ className: '', html: `<div class="probe-route-pill">${avoidedDirectCnt > 0 ? '↪️ التفاف' : '📏 مباشر'}: ${distLabel}</div>`, iconSize: [122, 24], iconAnchor: [61, 12] }),
+    interactive: false,
+    zIndexOffset: 1600
+  }).addTo(pivotDirectRouteLayer);
+
+  const directBounds = L.latLngBounds(directLatLngs);
+  map.fitBounds(directBounds, { padding: [70, 70], maxZoom: 14 });
+  if (targetLoc) highlightNearestWarehouse(targetLoc, `🏭 ${esc(targetLoc.name)} (${distLabel})`);
+  if (document.getElementById('ui-home')) document.getElementById('ui-home').style.display = 'block';
+  syncProbeRouteButtons();
+  renderPivotRouteHud(routeTitle, distLabel, { loading: true }, { avoidedCount: avoidedDirectCnt });
+
+  try {
+    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${pLL[1]},${pLL[0]};${lLL[1]},${lLL[0]}?overview=full&geometries=geojson&steps=true`);
+    const j = await res.json();
+    if (seq !== _pivotRouteSeq) return;
+    const rt = j && j.code === 'Ok' && j.routes && j.routes[0];
+    if (!rt || !rt.geometry) throw new Error('no-route');
+
+    const rawRoadLL = (rt.geometry.coordinates || []).map(c => [c[1], c[0]]);
+    const safeRoad = buildPivotAvoidingPolyline(rawRoadLL, pvs, { excludeIds: avoidOpts.excludeIds, bufferM: 25 });
+    const roadLayer = L.polyline(safeRoad.latLngs.length ? safeRoad.latLngs : rawRoadLL, { color: '#0d1710', weight: 8, opacity: 0.78 }).addTo(pivotDirectRouteLayer);
+    const steps = (rt.legs && rt.legs[0] && rt.legs[0].steps) || [];
+    let pavedKm = 0, sandyKm = 0;
+    const avoidedRoadSet = new Set([...directPath.avoidedIds, ...safeRoad.avoidedIds]);
+
+    if (steps.length) {
+      steps.forEach(st => {
+        if (!st || !st.geometry || !Array.isArray(st.geometry.coordinates) || st.geometry.coordinates.length < 2) return;
+        const stepRawLL = st.geometry.coordinates.map(c => [c[1], c[0]]);
+        const stepSafe = buildPivotAvoidingPolyline(stepRawLL, pvs, { excludeIds: avoidOpts.excludeIds, bufferM: 25 });
+        stepSafe.avoidedIds.forEach(id => avoidedRoadSet.add(id));
+        const stepKm = stepSafe.avoidedIds.length ? polylineKm(stepSafe.latLngs) : (st.distance || 0) / 1000;
+        const speedKmh = st.duration > 0 ? stepKm / (st.duration / 3600) : 40;
+        const isSandy = (!st.name && !st.ref && st.maneuver && st.maneuver.type !== 'arrive') || speedKmh < 32;
+        if (isSandy) sandyKm += stepKm; else pavedKm += stepKm;
+        L.polyline(stepSafe.latLngs, isSandy
+          ? { color: '#F59E0B', weight: 4.5, opacity: 0.96, dashArray: '6, 5' }
+          : { color: '#00E5FF', weight: 4.5, opacity: 0.96 }
+        ).bindTooltip(isSandy ? `🏜️ طريق رملية / مسلك (${fmtPivotDist(stepKm)})` : `🛣️ ${esc(st.ref || st.name || 'طريق معبدة')} (${fmtPivotDist(stepKm)})`, { sticky: true })
+          .addTo(pivotDirectRouteLayer);
+      });
+    } else {
+      pavedKm = polylineKm(safeRoad.latLngs) || (rt.distance || 0) / 1000;
+      L.polyline(safeRoad.latLngs, { color: '#00E5FF', weight: 4.5, opacity: 0.96 }).addTo(pivotDirectRouteLayer);
+    }
+
+    const wps = j.waypoints || [];
+    let offroadKm = 0;
+    if (wps[0] && Array.isArray(wps[0].location)) {
+      const wp0 = [wps[0].location[1], wps[0].location[0]];
+      const gap0 = haversineKm({ lat: pLL[0], lng: pLL[1] }, { lat: wp0[0], lng: wp0[1] });
+      if (gap0 >= 0.03) {
+        const seg0 = buildPivotAvoidingPath(pLL, wp0, pvs, avoidOpts);
+        seg0.avoidedIds.forEach(id => avoidedRoadSet.add(id));
+        offroadKm += seg0.totalKm;
+        L.polyline(seg0.latLngs, { color: '#0d1710', weight: 6.5, opacity: 0.75 }).addTo(pivotDirectRouteLayer);
+        L.polyline(seg0.latLngs, { color: '#F59E0B', weight: 4, opacity: 0.96, dashArray: '4, 6' })
+          .bindTooltip(`🏜️ مسلك رملي للوصول إلى الطريق (${fmtPivotDist(seg0.totalKm)})`, { sticky: true })
+          .addTo(pivotDirectRouteLayer);
+      }
+    }
+    if (wps[1] && Array.isArray(wps[1].location)) {
+      const wp1 = [wps[1].location[1], wps[1].location[0]];
+      const gap1 = haversineKm({ lat: wp1[0], lng: wp1[1] }, { lat: lLL[0], lng: lLL[1] });
+      if (gap1 >= 0.03) {
+        const seg1 = buildPivotAvoidingPath(wp1, lLL, pvs, avoidOpts);
+        seg1.avoidedIds.forEach(id => avoidedRoadSet.add(id));
+        offroadKm += seg1.totalKm;
+        L.polyline(seg1.latLngs, { color: '#0d1710', weight: 6.5, opacity: 0.75 }).addTo(pivotDirectRouteLayer);
+        L.polyline(seg1.latLngs, { color: '#F59E0B', weight: 4, opacity: 0.96, dashArray: '4, 6' })
+          .bindTooltip(`🏜️ مدخل المخزن (${fmtPivotDist(seg1.totalKm)})`, { sticky: true })
+          .addTo(pivotDirectRouteLayer);
+      }
+    }
+    sandyKm += offroadKm;
+
+    const totalRoadKm = pavedKm + sandyKm;
+    const totalLabel = fmtPivotDist(totalRoadKm);
+    const durMin = Math.max(1, Math.round((rt.duration || 0) / 60 + (offroadKm / 25) * 60));
+    OSRM_LEG_CACHE[routePairKey(pLL[0], pLL[1], lLL[0], lLL[1])] = { ok: true, roadKm: totalRoadKm, pavedKm, sandyKm, durMin };
+    const roadPts = safeRoad.latLngs.length ? safeRoad.latLngs : rawRoadLL;
+    if (roadPts.length) {
+      const midPt = roadPts[Math.floor(roadPts.length / 2)];
+      L.marker([midPt[0], midPt[1]], {
+        icon: L.divIcon({ className: '', html: `<div class="probe-route-pill is-road">🛣️ الطريق: ${totalLabel} (~${durMin} د)</div>`, iconSize: [148, 24], iconAnchor: [74, 12] }),
+        interactive: false,
+        zIndexOffset: 1650
+      }).addTo(pivotDirectRouteLayer);
+    }
+
+    const fullBounds = roadLayer.getBounds().extend(directBounds);
+    map.fitBounds(fullBounds, { padding: [75, 75], maxZoom: 14 });
+    renderPivotRouteHud(routeTitle, distLabel, { pavedKm, sandyKm, totalLabel, durMin }, { avoidedCount: avoidedDirectCnt });
+    const avoidMsg = avoidedRoadSet.size ? ` (مع الالتفاف حول ${avoidedRoadSet.size} محور)` : '';
+    toast(`🧭 المسار المباشر: ${distLabel} • مسار الطرق: ${totalLabel} (~${durMin} د)${avoidMsg}`);
+  } catch (_) {
+    if (seq !== _pivotRouteSeq) return;
+    renderPivotRouteHud(routeTitle, distLabel, { error: true }, { avoidedCount: avoidedDirectCnt });
+    toast(`📏 المسار المباشر: ${distLabel} (تعذر تحميل مسار الطرق)`);
+  }
+}
+async function showPivotWarehouseRoute(pivotId, locId, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const p = PIVOTS.find(x => String(x.id) === String(pivotId));
+  if (!p) { toast('⚠️ تعذر تحديد موقع المحور'); return; }
+  const nw = findNearestWarehouse(p);
+  const l = (locId ? locations.find(x => String(x.id) === String(locId)) : null) || (nw && nw.loc);
+  if (!l) { toast('⚠️ لا يوجد مخزن متاح لرسم المسار'); return; }
+  const routeKey = `pv:${p.id}:${l.id}`;
+  if (_activePivotRouteKey === routeKey && pivotDirectRouteLayer.getLayers().length > 0) {
+    clearPivotRoutes();
+    toast('🧭 تم إخفاء المسار');
+    return;
+  }
+  await drawDualRouteOnMap(
+    { lat: p.lat, lng: p.lng, name: `محور ${p.farmer_name || 'غير محدد'}` },
+    { lat: l.lat, lng: l.lng, name: l.name },
+    l,
+    { keepPopup: true, routeKey, originPivotId: p.id }
+  );
+}
+function focusPivotById(pivotId) {
+  const p = PIVOTS.find(x => String(x.id) === String(pivotId));
+  if (!p) return;
+  closeDash();
+  if ($('dash-modal')) $('dash-modal').style.display = 'none';
+  if (typeof showView === 'function') showView('map');
+  if (!map.hasLayer(pivotLayer)) pivotLayer.addTo(map);
+  const nw = findNearestWarehouse(p);
+  if (nw && nw.loc) {
+    const b = L.latLngBounds([[+p.lat, +p.lng], [+nw.loc.lat, +nw.loc.lng]]);
+    map.fitBounds(b, { padding: [70, 70], maxZoom: 13 });
+  } else {
+    map.flyTo([+p.lat, +p.lng], 13);
+  }
+  pvPopup(p);
+}
+map.on('popupclose', e => {
+  if (!activePivotPopup || !e || e.popup === activePivotPopup) {
+    activePivotPopup = null;
+    pivotLinkLayer.clearLayers();
+  }
+});
 function updatePvAreaHint() {
   const el = $('pv-area-ha');
   if (!el) return;
   const r = +$('pv-r').value;
   el.textContent = r > 0 ? `${pivotHa(r).toFixed(2)} هكتار` : '— هكتار';
 }
+function renderPivotLayer() {
+  pivotLayer.clearLayers();
+  PIVOTS.forEach(p => {
+    const nw = findNearestWarehouse(p);
+    const c = L.circle([p.lat, p.lng], { radius: +p.radius_m, color: '#00E5FF', weight: 2, fillColor: '#00E5FF', fillOpacity: .15 }).addTo(pivotLayer);
+    c.bindTooltip(`🌀 ${esc(p.farmer_name)} — ${pivotHa(p.radius_m).toFixed(2)} هكتار${nw ? ` • أقرب مخزن: ${esc(nw.name)} (${nw.distLabel})` : ''}`);
+    c.on('click', e => { if (pvMode) return; L.DomEvent.stopPropagation(e); pvPopup(p); });
+  });
+}
 async function loadPivots() {
   if (!PROFILE) return;
   const r = await fetch(`${REST}/pivots?select=*&order=id`, { headers: hdr() }); PIVOTS = r.ok ? await r.json() : [];
-  pivotLayer.clearLayers();
-  PIVOTS.forEach(p => {
-    const c = L.circle([p.lat, p.lng], { radius: +p.radius_m, color: '#00E5FF', weight: 2, fillColor: '#00E5FF', fillOpacity: .15 }).addTo(pivotLayer);
-    c.bindTooltip(`🌀 ${esc(p.farmer_name)} — ${pivotHa(p.radius_m).toFixed(2)} هكتار`);
-    c.on('click', e => { if (pvMode) return; L.DomEvent.stopPropagation(e); pvPopup(p); });
-  });
+  renderPivotLayer();
   syncDashPivots();
+  if (window._pendingDeepPivotId) {
+    const pvId = window._pendingDeepPivotId;
+    window._pendingDeepPivotId = null;
+    const targetPv = PIVOTS.find(x => String(x.id) === String(pvId));
+    if (targetPv) {
+      if (!map.hasLayer(pivotLayer)) pivotLayer.addTo(map);
+      const nw = findNearestWarehouse(targetPv);
+      if (nw && nw.loc) {
+        const b = L.latLngBounds([[+targetPv.lat, +targetPv.lng], [+nw.loc.lat, +nw.loc.lng]]);
+        map.fitBounds(b.pad(0.28), { maxZoom: 15 });
+      } else {
+        map.setView([+targetPv.lat, +targetPv.lng], 15);
+      }
+      pvPopup(targetPv);
+    }
+  }
+}
+function getProbeStorageSvg(storageType) {
+  if (storageType === 'silo') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V8c0-2 2-3.5 4.5-3.5S14 6 14 8v12"/><path d="M14 10c0-1.5 1.5-2.5 3.5-2.5S21 8.5 21 10v10"/><path d="M3 20h19"/><path d="M5 11h9M5 15h9M14 14h7"/></svg>';
+  }
+  if (storageType === 'open') {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7" r="3.2"/><path d="M12 2v1M12 11v1M7 7H6M18 7h-1M8.5 3.5l.7.7M14.8 9.8l.7.7M15.5 3.5l-.7.7M9.2 9.8l-.7.7"/><path d="M3 20l4.5-5.5a2 2 0 0 1 3 0L13 17.5l2-2a2 2 0 0 1 2.8 0L21 20z"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 11L12 5l10 6v9H2z"/><path d="M2 11h20"/><path d="M9 20v-6.5h6V20"/><path d="M5 14h2M17 14h2"/></svg>';
+}
+function renderProbeStorageBadges(nw) {
+  if (!nw || !nw.meta) return '';
+  const st = nw.meta.storageType === 'silo' ? 'is-silo' : (nw.meta.storageType === 'open' ? 'is-open' : 'is-closed');
+  const scaleSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 7h14M7 7l-3 6h6l-3-6zm10 0l-3 6h6l-3-6zM8 21h8"/></svg>';
+  const scaleBadge = nw.meta.hasScale
+    ? `<span class="probe-meta-chip has-scale" title="المخزن يحتوي على ميزان">${scaleSvg} بميزان</span>`
+    : `<span class="probe-meta-chip" title="بدون ميزان">بدون ميزان</span>`;
+  const activeBadge = nw.loc && nw.loc.status === 'inactive'
+    ? '<span class="probe-meta-chip" style="background:rgba(211,47,47,0.2);color:#ff8a80;border-color:rgba(211,47,47,0.5)">⚠️ خارج الخدمة</span>'
+    : '<span class="probe-meta-chip" style="background:rgba(46,125,50,0.22);color:#81C784;border-color:rgba(76,175,80,0.45)">● نشط</span>';
+  return `<div class="probe-wh-badges">
+    <span class="probe-storage-badge ${st}" title="تصنيف المخزن: ${esc(nw.meta.label)}">${getProbeStorageSvg(nw.meta.storageType)}<span>${esc(nw.meta.label)}</span></span>
+    ${scaleBadge}
+    ${activeBadge}
+  </div>`;
+}
+function buildWarehouseDirectUrl(locId, pivotId) {
+  const base = (typeof location !== 'undefined' && location.origin && location.origin !== 'null')
+    ? (location.origin + location.pathname)
+    : String(typeof location !== 'undefined' ? location.href : '').split('#')[0];
+  const pvPart = (pivotId !== undefined && pivotId !== null && String(pivotId) !== '')
+    ? `&pv=${encodeURIComponent(pivotId)}`
+    : '';
+  return `${base}#c=${encodeURIComponent(locId)}${pvPart}`;
+}
+function getNearestSharePayload(locId, pivotId) {
+  const l = locations.find(x => String(x.id) === String(locId));
+  if (!l) return null;
+  const p = typeof PIVOTS !== 'undefined' && Array.isArray(PIVOTS) ? PIVOTS.find(x => String(x.id) === String(pivotId)) : null;
+  const lat = parseFloat(l.lat), lng = parseFloat(l.lng);
+  const appUrl = buildWarehouseDirectUrl(l.id, pivotId);
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  const wm = getWarehouseMeta(l);
+  const distKm = p && Number.isFinite(lat) && Number.isFinite(lng) ? haversineKm({ lat: +p.lat, lng: +p.lng }, { lat, lng }) : null;
+  const distLine = distKm != null ? `\n📏 المسافة من المحور: ${fmtPivotDist(distKm)}` : '';
+  const farmerLine = p && p.farmer_name ? `\n🌀 المحور: ${p.farmer_name}` : '';
+  const text = `🏭 ${l.name || 'مخزن'} (${wm.label})\n📍 الولاية: ${l.province || 'أدرار'}${farmerLine}${distLine}\n🔗 رابط المحور والمخزن الأقرب:\n${appUrl}\n🗺️ خرائط جوجل:\n${mapsUrl}`;
+  return { loc: l, appUrl, mapsUrl, text, title: `رابط المحور والمخزن الأقرب: ${l.name || ''}` };
+}
+function renderProbeShareQr(drawer, mode) {
+  if (!drawer) return;
+  const qrBox = drawer.querySelector('.probe-qr-box');
+  const urlEl = drawer.querySelector('.probe-qr-url');
+  if (!qrBox) return;
+  const locId = drawer.dataset.loc;
+  const pivotId = drawer.dataset.pv;
+  const payload = getNearestSharePayload(locId, pivotId);
+  if (!payload) return;
+  const activeMode = mode === 'maps' ? 'maps' : 'app';
+  drawer.dataset.qrMode = activeMode;
+  drawer.querySelectorAll('.probe-qr-tab').forEach(tab => {
+    tab.classList.toggle('is-active', tab.dataset.qrmode === activeMode);
+  });
+  const targetUrl = activeMode === 'maps' ? payload.mapsUrl : payload.appUrl;
+  if (urlEl) {
+    urlEl.textContent = targetUrl;
+    urlEl.title = targetUrl;
+  }
+  qrBox.innerHTML = '';
+  if (typeof QRCode !== 'function') {
+    qrBox.innerHTML = '<span style="color:#b91c1c;font-size:11px;font-weight:700">تعذر تحميل مولّد QR</span>';
+    return;
+  }
+  try {
+    new QRCode(qrBox, {
+      text: targetUrl,
+      width: 132,
+      height: 132,
+      colorDark: '#0f172a',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } catch (_) {
+    try {
+      qrBox.innerHTML = '';
+      new QRCode(qrBox, {
+        text: targetUrl,
+        width: 132,
+        height: 132,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.L
+      });
+    } catch (err) {
+      qrBox.innerHTML = '<span style="color:#b91c1c;font-size:11px">الرابط طويل جداً لإنشاء QR</span>';
+    }
+  }
+  if (activePivotPopup && typeof activePivotPopup.update === 'function') activePivotPopup.update();
+}
+function switchProbeQrMode(btn, mode, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const drawer = btn && btn.closest('.probe-share-drawer');
+  renderProbeShareQr(drawer, mode);
+}
+function downloadProbeQr(btn, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const drawer = btn && btn.closest('.probe-share-drawer');
+  const qrBox = drawer && drawer.querySelector('.probe-qr-box');
+  if (!qrBox) return;
+  const canvas = qrBox.querySelector('canvas');
+  const img = qrBox.querySelector('img');
+  const dataUrl = (canvas && typeof canvas.toDataURL === 'function' ? canvas.toDataURL('image/png') : '') || (img && img.src) || '';
+  if (!dataUrl) { toast('⚠️ رمز QR غير جاهز بعد'); return; }
+  const mode = drawer.dataset.qrMode === 'maps' ? 'maps' : 'app';
+  const loc = locations.find(x => String(x.id) === String(drawer.dataset.loc));
+  const safeName = ((loc && loc.name) || 'warehouse').replace(/[^\w\u0600-\u06FF-]+/g, '_');
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = `QR-${safeName}-${mode}.png`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('⬇️ تم حفظ صورة رمز QR بنجاح');
+}
+function toggleProbeShareMenu(btn, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const box = btn && btn.closest('.probe-nearest');
+  const drawer = box && box.querySelector('.probe-share-drawer');
+  if (!drawer) return;
+  const isOpen = drawer.classList.toggle('open');
+  btn.classList.toggle('is-open', isOpen);
+  if (isOpen) renderProbeShareQr(drawer, drawer.dataset.qrMode || 'app');
+  if (activePivotPopup && typeof activePivotPopup.update === 'function') activePivotPopup.update();
+}
+function copyNearestWarehouseLink(locId, mode, evt, pivotId) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const payload = getNearestSharePayload(locId, pivotId);
+  if (!payload) { toast('⚠️ تعذر العثور على المخزن'); return; }
+  if (mode === 'maps') copyText(payload.mapsUrl, '📍 تم نسخ رابط خرائط جوجل');
+  else copyText(payload.appUrl, '🔗 تم نسخ رابط المحور والمخزن الأقرب');
+}
+async function nativeShareNearestWarehouse(locId, pivotId, evt) {
+  if (evt && evt.stopPropagation) evt.stopPropagation();
+  const payload = getNearestSharePayload(locId, pivotId);
+  if (!payload) { toast('⚠️ تعذر العثور على المخزن'); return; }
+  if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title: payload.title, text: payload.text, url: payload.appUrl });
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+  copyText(payload.text, '📋 تم نسخ تفاصيل ورابط المخزن للمشاركة');
 }
 function pvPopup(p) {
   const ha = pivotHa(p.radius_m).toFixed(2), ll = (+p.lat).toFixed(6) + ', ' + (+p.lng).toFixed(6);
-  L.popup().setLatLng([p.lat, p.lng]).setContent(`<div class="probe"><b>🌀 محور دوّار</b><br>👨‍🌾 يتبع للفلاح: <b>${esc(p.farmer_name)}</b><br>${p.phone ? '📞 ' + esc(p.phone) + '<br>' : ''}${p.crop ? '🌾 ' + esc(p.crop) + '<br>' : ''}<div style="background:rgba(0,229,255,0.12);border:1px solid rgba(0,229,255,0.35);border-radius:6px;padding:6px 8px;margin:6px 0;text-align:center">📐 المساحة: <b style="color:#00E5FF;font-size:15px">${ha} هكتار</b><div style="font-size:11px;color:#bcd5c0">نصف القطر: ${Math.round(p.radius_m)} م • القطر: ${Math.round(p.radius_m * 2)} م</div></div><span class="ltr">${ll}</span>${p.notes ? '📝 ' + esc(p.notes) + '<br>' : ''}
-    <button class="panel-btn gps-btn" style="width:100%" onclick="copyText('${ll}')">📋 نسخ الإحداثيات</button>
-    <div class="admin-only" style="display:flex;gap:4px;margin-top:4px"><button class="panel-btn edit-btn" data-id="${p.id}" onclick="pvOpen(+this.dataset.id)">✏️ تعديل</button><button class="panel-btn delete-btn" data-id="${p.id}" onclick="pvDel(+this.dataset.id)">🗑️ حذف</button></div></div>`).openOn(map);
+  const nw = findNearestWarehouse(p);
+  const sharePayload = nw ? getNearestSharePayload(nw.id, p.id) : null;
+  const waHref = sharePayload ? `https://wa.me/?text=${encodeURIComponent(sharePayload.text)}` : '#';
+  const tgHref = sharePayload ? `https://t.me/share/url?url=${encodeURIComponent(sharePayload.appUrl)}&text=${encodeURIComponent(sharePayload.text)}` : '#';
+  const nwBox = nw
+    ? `<div class="probe-nearest">
+        <div class="probe-nearest-top">
+          <span style="color:#FFD54F;font-weight:700;font-size:11.5px">🏭 المخزن الأقرب</span>
+          <span class="probe-dist-badge">📏 ${nw.distLabel}</span>
+        </div>
+        <div class="probe-wh-name">${esc(nw.name)}</div>
+        ${renderProbeStorageBadges(nw)}
+        <div class="probe-wh-sub">
+          <span>📍 ${esc(nw.province)}</span>
+          <span>${nw.pct != null ? `📦 الامتلاء: <b>${nw.pct}%</b>` : '📦 السعة: ' + esc((nw.loc && nw.loc.cap) || '—')}</span>
+        </div>
+        <div class="probe-wh-actions">
+          ${(() => { const rk = `pv:${p.id}:${nw.id}`; const on = _activePivotRouteKey === rk && pivotDirectRouteLayer.getLayers().length > 0; return `<button type="button" class="probe-route-btn${on ? ' is-active' : ''}" data-pv="${esc(p.id)}" data-loc="${esc(nw.id)}" onclick="showPivotWarehouseRoute(this.dataset.pv, this.dataset.loc, event)">${on ? '🧭 إخفاء المسار' : '🧭 عرض المسار'}</button>`; })()}
+          <button type="button" class="probe-focus-btn" data-loc="${esc(nw.id)}" data-pv="${esc(p.id)}" onclick="focusNearestWarehouseOnMap(this.dataset.loc, this.dataset.pv, event)">🎯 تسليط الضوء</button>
+          <button type="button" class="probe-wh-btn" data-loc="${esc(nw.id)}" onclick="openWarehouseFromPivot(this.dataset.loc, event)">🏭 فتح صفحة المخزن</button>
+          <button type="button" class="probe-share-btn" data-loc="${esc(nw.id)}" data-pv="${esc(p.id)}" onclick="toggleProbeShareMenu(this, event)">🔗 نسخ / مشاركة</button>
+          <button type="button" class="probe-gis-btn" data-pv="${esc(p.id)}" onclick="openGisModal({targetType:'pivot',targetId:this.dataset.pv,tab:'surround',autoScan:true}, event)">🛰️ فحص المرافق والطرق (GIS)</button>
+        </div>
+        <div class="probe-share-drawer" data-loc="${esc(nw.id)}" data-pv="${esc(p.id)}">
+          <button type="button" class="probe-share-item is-copy" data-loc="${esc(nw.id)}" data-pv="${esc(p.id)}" onclick="copyNearestWarehouseLink(this.dataset.loc, 'app', event, this.dataset.pv)">📋 نسخ رابط المخزن</button>
+          <button type="button" class="probe-share-item is-copy" data-loc="${esc(nw.id)}" data-pv="${esc(p.id)}" onclick="copyNearestWarehouseLink(this.dataset.loc, 'maps', event, this.dataset.pv)">📍 رابط الخرائط</button>
+          <a class="probe-share-item is-wa" href="${waHref}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">💬 واتساب</a>
+          <a class="probe-share-item is-tg" href="${tgHref}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">✈️ تيليغرام</a>
+          <button type="button" class="probe-share-item is-sys" data-loc="${esc(nw.id)}" data-pv="${esc(p.id)}" onclick="nativeShareNearestWarehouse(this.dataset.loc, this.dataset.pv, event)">📤 مشاركة عبر تطبيقات الجهاز</button>
+          <div class="probe-qr-card">
+            <div class="probe-qr-head">
+              <span>📱 رمز QR الفوري للمشاركة</span>
+              <div class="probe-qr-tabs">
+                <button type="button" class="probe-qr-tab is-active" data-qrmode="app" onclick="switchProbeQrMode(this, 'app', event)">المنصة</button>
+                <button type="button" class="probe-qr-tab" data-qrmode="maps" onclick="switchProbeQrMode(this, 'maps', event)">الخرائط</button>
+              </div>
+            </div>
+            <div class="probe-qr-box"></div>
+            <div class="probe-qr-foot">
+              <span class="probe-qr-url"></span>
+              <button type="button" class="probe-qr-dl" onclick="downloadProbeQr(this, event)">⬇️ حفظ QR</button>
+            </div>
+          </div>
+        </div>
+      </div>`
+    : '<div class="probe-nearest" style="text-align:center;color:#bcd5c0;font-size:11px">لا توجد مخازن مسجلة لحساب المسافة</div>';
+  const popup = L.popup({ maxWidth: 330 }).setLatLng([p.lat, p.lng]).setContent(`<div class="probe">
+    <div class="probe-hdr"><b>🌀 محور دوّار</b><span style="font-size:11px;color:#80DEEA">${ha} هـ</span></div>
+    <div class="probe-meta">
+      <div>👨‍🌾 يتبع للفلاح: <b>${esc(p.farmer_name)}</b></div>
+      ${p.phone ? `<div>📞 ${esc(p.phone)}</div>` : ''}
+      ${p.crop ? `<div>🌾 المحصول: <b>${esc(p.crop)}</b></div>` : ''}
+    </div>
+    <div class="probe-area">📐 المساحة: <b style="color:#00E5FF;font-size:15px">${ha} هكتار</b><div style="font-size:11px;color:#bcd5c0">نصف القطر: ${Math.round(p.radius_m)} م • القطر: ${Math.round(p.radius_m * 2)} م</div></div>
+    ${nwBox}
+    <span class="ltr">${ll}</span>${p.notes ? `<div style="margin-top:3px">📝 ${esc(p.notes)}</div>` : ''}
+    <button class="panel-btn gps-btn" style="width:100%;margin-top:5px" onclick="copyText('${ll}')">📋 نسخ الإحداثيات</button>
+    <div class="admin-only" style="display:flex;gap:4px;margin-top:4px"><button class="panel-btn edit-btn" data-id="${p.id}" onclick="pvOpen(+this.dataset.id)">✏️ تعديل</button><button class="panel-btn delete-btn" data-id="${p.id}" onclick="pvDel(+this.dataset.id)">🗑️ حذف</button></div>
+  </div>`);
+  activePivotPopup = popup;
+  popup.openOn(map);
+  drawPivotNearestLink(p, nw);
 }
 function togglePivots() { if (map.hasLayer(pivotLayer)) map.removeLayer(pivotLayer); else { pivotLayer.addTo(map); loadPivots(); } }
 function pvCancel() { [pvTmp, pvDraw].forEach(x => x && map.removeLayer(x)); pvTmp = pvDraw = pvC = null; }
@@ -3007,7 +4694,7 @@ async function pvSave() {
 }
 async function pvDel(id) {
   if (!confirm('حذف هذا المحور؟')) return;
-  const r = await fetch(`${REST}/pivots?id=eq.${id}`, { method: 'DELETE', headers: hdr() }); toast(r.ok ? '🗑️ تم الحذف' : '❌ فشل'); map.closePopup(); loadPivots();
+  const r = await fetch(`${REST}/pivots?id=eq.${id}`, { method: 'DELETE', headers: hdr() }); toast(r.ok ? '🗑️ تم الحذف' : '❌ فشل'); pivotLinkLayer.clearLayers(); map.closePopup(); loadPivots();
 }
 
 // ===== كشف المحاور تلقائيًا: معالجة صور القمر الصناعي داخل المتصفح (منطق OpenCV مبسّط بـ JavaScript) =====
